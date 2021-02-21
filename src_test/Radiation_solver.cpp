@@ -350,6 +350,16 @@ Radiation_solver_longwave<TF>::Radiation_solver_longwave(
 }
 
 template<typename TF>
+void Radiation_solver_longwave<TF>::init_work_arrays(const int n_lev, const int n_lay)
+{
+    if(n_lev == this->n_lev_work and n_lay == this->n_lay_work) return;
+    constexpr int n_col_block = 16;
+    this->col_dry_subset = Array<TF,2>({n_col_block, n_lay});
+    this->gpt_flux_up = Array<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
+    this->gpt_flux_dn = Array<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
+}
+
+template<typename TF>
 void Radiation_solver_longwave<TF>::solve(
         const bool switch_fluxes,
         const bool switch_cloud_optics,
@@ -365,13 +375,14 @@ void Radiation_solver_longwave<TF>::solve(
         Array<TF,3>& tau, Array<TF,3>& lay_source,
         Array<TF,3>& lev_source_inc, Array<TF,3>& lev_source_dec, Array<TF,2>& sfc_source,
         Array<TF,2>& lw_flux_up, Array<TF,2>& lw_flux_dn, Array<TF,2>& lw_flux_net,
-        Array<TF,3>& lw_bnd_flux_up, Array<TF,3>& lw_bnd_flux_dn, Array<TF,3>& lw_bnd_flux_net) const
+        Array<TF,3>& lw_bnd_flux_up, Array<TF,3>& lw_bnd_flux_dn, Array<TF,3>& lw_bnd_flux_net)
 {
     const int n_col = p_lay.dim(1);
     const int n_lay = p_lay.dim(2);
     const int n_lev = p_lev.dim(2);
     const int n_gpt = this->kdist->get_ngpt();
     const int n_bnd = this->kdist->get_nband();
+    this->init_work_arrays(n_lev, n_lay);
 
     const BOOL_TYPE top_at_1 = p_lay({1, 1}) < p_lay({1, n_lay});
 
@@ -422,11 +433,10 @@ void Radiation_solver_longwave<TF>::solve(
 
         auto p_lev_subset = p_lev.subset({{ {col_s_in, col_e_in}, {1, n_lev} }});
 
-        Array<TF,2> col_dry_subset({n_col_in, n_lay});
         if (col_dry.size() == 0)
-            Gas_optics_rrtmgp<TF>::get_col_dry(col_dry_subset, gas_concs_subset.get_vmr("h2o"), p_lev_subset);
+            Gas_optics_rrtmgp<TF>::get_col_dry(this->col_dry_subset, gas_concs_subset.get_vmr("h2o"), p_lev_subset);
         else
-            col_dry_subset = std::move(col_dry.subset({{ {col_s_in, col_e_in}, {1, n_lay} }}));
+            col_dry.subset_copy(this->col_dry_subset, {col_s_in, 1});
 
         kdist->gas_optics(
                 p_lay.subset({{ {col_s_in, col_e_in}, {1, n_lay} }}),
@@ -436,7 +446,7 @@ void Radiation_solver_longwave<TF>::solve(
                 gas_concs_subset,
                 optical_props_subset_in,
                 sources_subset_in,
-                col_dry_subset,
+                this->col_dry_subset,
                 t_lev.subset({{ {col_s_in, col_e_in}, {1, n_lev} }}) );
 
         if (switch_cloud_optics)
@@ -477,8 +487,6 @@ void Radiation_solver_longwave<TF>::solve(
         if (!switch_fluxes)
             return;
 
-        Array<TF,3> gpt_flux_up({n_col_in, n_lev, n_gpt});
-        Array<TF,3> gpt_flux_dn({n_col_in, n_lev, n_gpt});
 
         constexpr int n_ang = 1;
 
@@ -488,10 +496,10 @@ void Radiation_solver_longwave<TF>::solve(
                 sources_subset_in,
                 emis_sfc_subset_in,
                 Array<TF,2>(), // Add an empty array, no inc_flux.
-                gpt_flux_up, gpt_flux_dn,
+                this->gpt_flux_up, this->gpt_flux_dn,
                 n_ang);
 
-        fluxes.reduce(gpt_flux_up, gpt_flux_dn, optical_props_subset_in, top_at_1);
+        fluxes.reduce(this->gpt_flux_up, this->gpt_flux_dn, optical_props_subset_in, top_at_1);
 
         // Copy the data to the output.
         for (int ilev=1; ilev<=n_lev; ++ilev)
@@ -504,7 +512,7 @@ void Radiation_solver_longwave<TF>::solve(
 
         if (switch_output_bnd_fluxes)
         {
-            bnd_fluxes.reduce(gpt_flux_up, gpt_flux_dn, optical_props_subset_in, top_at_1);
+            bnd_fluxes.reduce(this->gpt_flux_up, this->gpt_flux_dn, optical_props_subset_in, top_at_1);
 
             for (int ibnd=1; ibnd<=n_bnd; ++ibnd)
                 for (int ilev=1; ilev<=n_lev; ++ilev)
@@ -521,6 +529,7 @@ void Radiation_solver_longwave<TF>::solve(
     {
         const int col_s = (b-1) * n_col_block + 1;
         const int col_e =  b    * n_col_block;
+
 
         Array<TF,2> emis_sfc_subset = emis_sfc.subset({{ {1, n_bnd}, {col_s, col_e} }});
 

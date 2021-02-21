@@ -39,6 +39,8 @@ class Radiation_solver_longwave
                 const std::string& file_name_gas,
                 const std::string& file_name_cloud);
 
+        void init_work_arrays(const int n_lev, const int n_lay);
+
         void solve(
                 const bool switch_fluxes,
                 const bool switch_cloud_optics,
@@ -54,7 +56,7 @@ class Radiation_solver_longwave
                 Array<TF,3>& tau, Array<TF,3>& lay_source,
                 Array<TF,3>& lev_source_inc, Array<TF,3>& lev_source_dec, Array<TF,2>& sfc_source,
                 Array<TF,2>& lw_flux_up, Array<TF,2>& lw_flux_dn, Array<TF,2>& lw_flux_net,
-                Array<TF,3>& lw_bnd_flux_up, Array<TF,3>& lw_bnd_flux_dn, Array<TF,3>& lw_bnd_flux_net) const;
+                Array<TF,3>& lw_bnd_flux_up, Array<TF,3>& lw_bnd_flux_dn, Array<TF,3>& lw_bnd_flux_net);
         
         int get_n_gpt() const { return this->kdist->get_ngpt(); };
         int get_n_bnd() const { return this->kdist->get_nband(); };
@@ -100,6 +102,18 @@ class Radiation_solver_longwave
         #ifdef __CUDACC__
         std::unique_ptr<Gas_optics_rrtmgp_gpu<TF>> kdist_gpu;
         std::unique_ptr<Cloud_optics_gpu<TF>> cloud_optics_gpu;
+        #endif
+
+        int n_lay_work;
+        int n_lev_work;
+        #ifdef __CUDACC__
+        Array_gpu<TF,2> col_dry_subset;
+        Array_gpu<TF,3> gpt_flux_up;
+        Array_gpu<TF,3> gpt_flux_dn;
+        #else
+        Array<TF,2> col_dry_subset;
+        Array<TF,3> gpt_flux_up;
+        Array<TF,3> gpt_flux_dn;
         #endif
 };
 

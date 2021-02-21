@@ -221,32 +221,35 @@ class Array
         {
             // Calculate the dimension sizes based on the range.
             std::array<int, N> subdims;
-            std::array<bool, N> do_spread;
-
+            std::array<int, N> start_indices;
             for (int i=0; i<N; ++i)
             {
                 subdims[i] = ranges[i].second - ranges[i].first + 1;
-                // CvH how flexible / tolerant are we?
-                do_spread[i] = (dims[i] == 1);
+                start_indices[i] = ranges[i].first;
             }
+            Array<T, N>a_sub(subdims);
+            return subset_copy(a_sub, start_indices);
+        }
 
-            // Create the array and fill it with the subset.
-            Array<T, N> a_sub(subdims);
+        inline Array<T, N> subset_copy(Array<T, N>& a_sub,
+            const std::array<int, N> block_corner) const
+        {
             for (int i=0; i<a_sub.ncells; ++i)
             {
                 std::array<int, N> indices;
                 int ic = i;
                 for (int n=N-1; n>0; --n)
                 {
-                    indices[n] = do_spread[n] ? 1 : ic / a_sub.strides[n] + ranges[n].first;
+                    indices[n] = (dims[n] == 1) ? 1 : ic / a_sub.strides[n] + block_corner[n];
                     ic %= a_sub.strides[n];
                 }
-                indices[0] = do_spread[0] ? 1 : ic + ranges[0].first;
+                indices[0] = (dims[0] == 1) ? 1 : ic + block_corner[0];
                 a_sub.data[i] = (*this)(indices);
             }
 
             return a_sub;
         }
+
 
         inline void fill(const T value)
         {
@@ -561,6 +564,7 @@ class Array_gpu
 
             return a_sub;
         }
+
         #endif
 
         // inline void fill(const T value)
@@ -594,3 +598,4 @@ class Array_gpu
         friend class Array<T, N>;
 };
 #endif
+

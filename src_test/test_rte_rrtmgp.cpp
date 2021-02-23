@@ -304,6 +304,7 @@ void solve_radiation(int argc, char** argv)
             lw_bnd_flux_net.set_dims({n_col, n_lev, n_bnd_lw});
         }
 
+        rad_lw.init_work_arrays(n_col, n_lev, n_lay, switch_cloud_optics);
 
         // Solve the radiation.
         Status::print_message("Solving the longwave radiation.");

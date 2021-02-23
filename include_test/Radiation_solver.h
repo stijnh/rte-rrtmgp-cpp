@@ -42,7 +42,8 @@ class Radiation_solver_longwave
         void init_work_arrays(
                 const int n_col,
                 const int n_lev,
-                const int n_lay);
+                const int n_lay,
+                const bool switch_cloud_optics);
 
         void solve(
                 const bool switch_fluxes,
@@ -119,6 +120,16 @@ class Radiation_solver_longwave
             Array<TF,2> col_dry_subset;
             Array<TF,3> gpt_flux_up;
             Array<TF,3> gpt_flux_dn;
+            Array<TF,2> p_lev_subset;
+            Array<TF,2> p_lay_subset;
+            Array<TF,2> t_lev_subset;
+            Array<TF,2> t_lay_subset;
+            Array<TF,1> t_sfc_subset;
+            Array<TF,2> emis_sfc_subset;
+            Array<TF,2> lwp_lay_subset;
+            Array<TF,2> iwp_lay_subset;
+            Array<TF,2> rel_lay_subset;
+            Array<TF,2> rei_lay_subset;
         };
         work_arrays work_blocks;
         work_arrays work_residual;

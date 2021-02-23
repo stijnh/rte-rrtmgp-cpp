@@ -350,13 +350,23 @@ Radiation_solver_longwave<TF>::Radiation_solver_longwave(
 }
 
 template<typename TF>
-void Radiation_solver_longwave<TF>::init_work_arrays(const int n_lev, const int n_lay)
+void Radiation_solver_longwave<TF>::init_work_arrays(
+        const int n_col, 
+        const int n_lev, 
+        const int n_lay)
 {
     if(n_lev == this->n_lev_work and n_lay == this->n_lay_work) return;
     constexpr int n_col_block = 16;
-    this->col_dry_subset = Array<TF,2>({n_col_block, n_lay});
-    this->gpt_flux_up = Array<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
-    this->gpt_flux_dn = Array<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
+    this->work_blocks.col_dry_subset = Array<TF,2>({n_col_block, n_lay});
+    this->work_blocks.gpt_flux_up = Array<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
+    this->work_blocks.gpt_flux_dn = Array<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
+    int n_col_block_residual = n_col % n_col_block;
+    if(n_col_block_residual > 0)
+    {
+        this->work_blocks.col_dry_subset = Array<TF,2>({n_col_block_residual, n_lay});
+        this->work_blocks.gpt_flux_up = Array<TF,3>({n_col_block_residual, n_lev, this->get_n_gpt()});
+        this->work_blocks.gpt_flux_dn = Array<TF,3>({n_col_block_residual, n_lev, this->get_n_gpt()});
+    }
 }
 
 template<typename TF>
@@ -382,7 +392,7 @@ void Radiation_solver_longwave<TF>::solve(
     const int n_lev = p_lev.dim(2);
     const int n_gpt = this->kdist->get_ngpt();
     const int n_bnd = this->kdist->get_nband();
-    this->init_work_arrays(n_lev, n_lay);
+    this->init_work_arrays(n_col, n_lev, n_lay);
 
     const BOOL_TYPE top_at_1 = p_lay({1, 1}) < p_lay({1, n_lay});
 
@@ -426,7 +436,8 @@ void Radiation_solver_longwave<TF>::solve(
             Source_func_lw<TF>& sources_subset_in,
             const Array<TF,2>& emis_sfc_subset_in,
             Fluxes_broadband<TF>& fluxes,
-            Fluxes_broadband<TF>& bnd_fluxes)
+            Fluxes_broadband<TF>& bnd_fluxes,
+            Radiation_solver_longwave<TF>::work_arrays& work)
     {
         const int n_col_in = col_e_in - col_s_in + 1;
         Gas_concs<TF> gas_concs_subset(gas_concs, col_s_in, n_col_in);
@@ -434,9 +445,9 @@ void Radiation_solver_longwave<TF>::solve(
         auto p_lev_subset = p_lev.subset({{ {col_s_in, col_e_in}, {1, n_lev} }});
 
         if (col_dry.size() == 0)
-            Gas_optics_rrtmgp<TF>::get_col_dry(this->col_dry_subset, gas_concs_subset.get_vmr("h2o"), p_lev_subset);
+            Gas_optics_rrtmgp<TF>::get_col_dry(work.col_dry_subset, gas_concs_subset.get_vmr("h2o"), p_lev_subset);
         else
-            col_dry.subset_copy(this->col_dry_subset, {col_s_in, 1});
+            col_dry.subset_copy(work.col_dry_subset, {col_s_in, 1});
 
         kdist->gas_optics(
                 p_lay.subset({{ {col_s_in, col_e_in}, {1, n_lay} }}),
@@ -446,7 +457,7 @@ void Radiation_solver_longwave<TF>::solve(
                 gas_concs_subset,
                 optical_props_subset_in,
                 sources_subset_in,
-                this->col_dry_subset,
+                work.col_dry_subset,
                 t_lev.subset({{ {col_s_in, col_e_in}, {1, n_lev} }}) );
 
         if (switch_cloud_optics)
@@ -496,10 +507,10 @@ void Radiation_solver_longwave<TF>::solve(
                 sources_subset_in,
                 emis_sfc_subset_in,
                 Array<TF,2>(), // Add an empty array, no inc_flux.
-                this->gpt_flux_up, this->gpt_flux_dn,
+                work.gpt_flux_up, work.gpt_flux_dn,
                 n_ang);
 
-        fluxes.reduce(this->gpt_flux_up, this->gpt_flux_dn, optical_props_subset_in, top_at_1);
+        fluxes.reduce(work.gpt_flux_up, work.gpt_flux_dn, optical_props_subset_in, top_at_1);
 
         // Copy the data to the output.
         for (int ilev=1; ilev<=n_lev; ++ilev)
@@ -512,7 +523,7 @@ void Radiation_solver_longwave<TF>::solve(
 
         if (switch_output_bnd_fluxes)
         {
-            bnd_fluxes.reduce(this->gpt_flux_up, this->gpt_flux_dn, optical_props_subset_in, top_at_1);
+            bnd_fluxes.reduce(work.gpt_flux_up, work.gpt_flux_dn, optical_props_subset_in, top_at_1);
 
             for (int ibnd=1; ibnd<=n_bnd; ++ibnd)
                 for (int ilev=1; ilev<=n_lev; ++ilev)
@@ -545,7 +556,8 @@ void Radiation_solver_longwave<TF>::solve(
                 *sources_subset,
                 emis_sfc_subset,
                 *fluxes_subset,
-                *bnd_fluxes_subset);
+                *bnd_fluxes_subset,
+                this->work_blocks);
     }
 
     if (n_col_block_residual > 0)
@@ -566,7 +578,8 @@ void Radiation_solver_longwave<TF>::solve(
                 *sources_residual,
                 emis_sfc_residual,
                 *fluxes_residual,
-                *bnd_fluxes_residual);
+                *bnd_fluxes_residual,
+                this->work_residual);
     }
 }
 

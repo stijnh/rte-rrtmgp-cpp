@@ -39,7 +39,10 @@ class Radiation_solver_longwave
                 const std::string& file_name_gas,
                 const std::string& file_name_cloud);
 
-        void init_work_arrays(const int n_lev, const int n_lay);
+        void init_work_arrays(
+                const int n_col,
+                const int n_lev,
+                const int n_lay);
 
         void solve(
                 const bool switch_fluxes,
@@ -111,9 +114,14 @@ class Radiation_solver_longwave
         Array_gpu<TF,3> gpt_flux_up;
         Array_gpu<TF,3> gpt_flux_dn;
         #else
-        Array<TF,2> col_dry_subset;
-        Array<TF,3> gpt_flux_up;
-        Array<TF,3> gpt_flux_dn;
+        struct work_arrays
+        {
+            Array<TF,2> col_dry_subset;
+            Array<TF,3> gpt_flux_up;
+            Array<TF,3> gpt_flux_dn;
+        };
+        work_arrays work_blocks;
+        work_arrays work_residual;
         #endif
 };
 

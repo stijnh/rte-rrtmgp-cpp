@@ -396,15 +396,18 @@ void Radiation_solver_longwave<TF>::init_work_arrays_gpu(
 
     constexpr int n_col_block = 16;
 
+    const int n_gpt = this->kdist_gpu->get_ngpt();
+    const int n_bnd = this->kdist_gpu->get_nband();
+
     this->work_blocks_gpu.col_dry_subset = Array_gpu<TF,2>({n_col_block, n_lay});
-    this->work_blocks_gpu.gpt_flux_up = Array_gpu<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
-    this->work_blocks_gpu.gpt_flux_dn = Array_gpu<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
+    this->work_blocks_gpu.gpt_flux_up = Array_gpu<TF,3>({n_col_block, n_lev, n_gpt});
+    this->work_blocks_gpu.gpt_flux_dn = Array_gpu<TF,3>({n_col_block, n_lev, n_gpt});
     this->work_blocks_gpu.p_lev_subset = Array_gpu<TF,2>({n_col_block, n_lev});
     this->work_blocks_gpu.p_lay_subset = Array_gpu<TF,2>({n_col_block, n_lay});
     this->work_blocks_gpu.t_lev_subset = Array_gpu<TF,2>({n_col_block, n_lev});
     this->work_blocks_gpu.t_lay_subset = Array_gpu<TF,2>({n_col_block, n_lay});
     this->work_blocks_gpu.t_sfc_subset = Array_gpu<TF,1>({n_col_block});
-    this->work_blocks_gpu.emis_sfc_subset = Array_gpu<TF,2>({this->get_n_bnd(), n_col_block});
+    this->work_blocks_gpu.emis_sfc_subset = Array_gpu<TF,2>({n_bnd, n_col_block});
 
     if(switch_cloud_optics)
     {
@@ -418,14 +421,14 @@ void Radiation_solver_longwave<TF>::init_work_arrays_gpu(
     if(n_col_block_residual > 0)
     {
         this->work_residual_gpu.col_dry_subset = Array_gpu<TF,2>({n_col_block_residual, n_lay});
-        this->work_residual_gpu.gpt_flux_up = Array_gpu<TF,3>({n_col_block_residual, n_lev, this->get_n_gpt()});
-        this->work_residual_gpu.gpt_flux_dn = Array_gpu<TF,3>({n_col_block_residual, n_lev, this->get_n_gpt()});
+        this->work_residual_gpu.gpt_flux_up = Array_gpu<TF,3>({n_col_block_residual, n_lev, n_gpt});
+        this->work_residual_gpu.gpt_flux_dn = Array_gpu<TF,3>({n_col_block_residual, n_lev, n_gpt});
         this->work_residual_gpu.p_lev_subset = Array_gpu<TF,2>({n_col_block_residual, n_lev});
         this->work_residual_gpu.p_lay_subset = Array_gpu<TF,2>({n_col_block_residual, n_lay});
         this->work_residual_gpu.t_lev_subset = Array_gpu<TF,2>({n_col_block_residual, n_lev});
         this->work_residual_gpu.t_lay_subset = Array_gpu<TF,2>({n_col_block_residual, n_lay});
         this->work_residual_gpu.t_sfc_subset = Array_gpu<TF,1>({n_col_block_residual});
-        this->work_residual_gpu.emis_sfc_subset = Array_gpu<TF,2>({this->get_n_bnd(), n_col_block_residual});
+        this->work_residual_gpu.emis_sfc_subset = Array_gpu<TF,2>({n_bnd, n_col_block_residual});
 
         if(switch_cloud_optics)
         {

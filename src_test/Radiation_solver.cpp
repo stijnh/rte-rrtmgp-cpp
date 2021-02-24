@@ -364,16 +364,18 @@ void Radiation_solver_longwave<TF>::init_work_arrays(
     }
 
     constexpr int n_col_block = 16;
+    const int n_gpt = this->get_n_gpt();
+    const int n_bnd = this->get_n_bnd();
 
     this->work_blocks.col_dry_subset = Array<TF,2>({n_col_block, n_lay});
-    this->work_blocks.gpt_flux_up = Array<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
-    this->work_blocks.gpt_flux_dn = Array<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
+    this->work_blocks.gpt_flux_up = Array<TF,3>({n_col_block, n_lev, n_gpt});
+    this->work_blocks.gpt_flux_dn = Array<TF,3>({n_col_block, n_lev, n_gpt});
     this->work_blocks.p_lev_subset = Array<TF,2>({n_col_block, n_lev});
     this->work_blocks.p_lay_subset = Array<TF,2>({n_col_block, n_lay});
     this->work_blocks.t_lev_subset = Array<TF,2>({n_col_block, n_lev});
     this->work_blocks.t_lay_subset = Array<TF,2>({n_col_block, n_lay});
     this->work_blocks.t_sfc_subset = Array<TF,1>({n_col_block});
-    this->work_blocks.emis_sfc_subset = Array<TF,2>({this->get_n_bnd(), n_col_block});
+    this->work_blocks.emis_sfc_subset = Array<TF,2>({n_bnd, n_col_block});
 
     if(switch_cloud_optics)
     {
@@ -387,14 +389,14 @@ void Radiation_solver_longwave<TF>::init_work_arrays(
     if(n_col_block_residual > 0)
     {
         this->work_residual.col_dry_subset = Array<TF,2>({n_col_block_residual, n_lay});
-        this->work_residual.gpt_flux_up = Array<TF,3>({n_col_block_residual, n_lev, this->get_n_gpt()});
-        this->work_residual.gpt_flux_dn = Array<TF,3>({n_col_block_residual, n_lev, this->get_n_gpt()});
+        this->work_residual.gpt_flux_up = Array<TF,3>({n_col_block_residual, n_lev, n_gpt});
+        this->work_residual.gpt_flux_dn = Array<TF,3>({n_col_block_residual, n_lev, n_gpt});
         this->work_residual.p_lev_subset = Array<TF,2>({n_col_block_residual, n_lev});
         this->work_residual.p_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
         this->work_residual.t_lev_subset = Array<TF,2>({n_col_block_residual, n_lev});
         this->work_residual.t_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
         this->work_residual.t_sfc_subset = Array<TF,1>({n_col_block_residual});
-        this->work_residual.emis_sfc_subset = Array<TF,2>({this->get_n_bnd(), n_col_block_residual});
+        this->work_residual.emis_sfc_subset = Array<TF,2>({n_bnd, n_col_block_residual});
 
         if(switch_cloud_optics)
         {

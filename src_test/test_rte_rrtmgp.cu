@@ -323,6 +323,8 @@ void solve_radiation(int argc, char** argv)
         Array_gpu<TF,2> rel_gpu(rel);
         Array_gpu<TF,2> rei_gpu(rei);
 
+        rad_lw.init_work_arrays_gpu(n_col, n_lev, n_lay, switch_cloud_optics);
+
         auto time_start = std::chrono::high_resolution_clock::now();
 
         cudaProfilerStart();

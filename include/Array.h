@@ -514,27 +514,33 @@ class Array_gpu
         {
             // Calculate the dimension sizes based on the range.
             std::array<int, N> subdims;
-            std::array<bool, N> do_spread;
+            std::array<int, N> block_corners;
 
             for (int i=0; i<N; ++i)
             {
                 subdims[i] = ranges[i].second - ranges[i].first + 1;
                 // CvH how flexible / tolerant are we?
-                do_spread[i] = (dims[i] == 1);
+                block_corners[i] = ranges[i].first;
             }
 
             // Create the array and fill it with the subset.
             Array_gpu<T, N> a_sub(subdims);
 
+            return subset_copy(a_sub, block_corners);
+        }
+
+        inline Array_gpu<T, N> subset_copy(Array_gpu<T, N>& a_sub,
+                const std::array<int, N>& block_corners) const
+        {
             Subset_data<N> subset_data;
 
             for (int i=0; i<N; ++i)
             {
                 subset_data.sub_strides[i] = a_sub.strides[i];
                 subset_data.strides[i] = strides[i];
-                subset_data.starts[i] = ranges[i].first;
+                subset_data.starts[i] = block_corners[i];
                 subset_data.offsets[i] = offsets[i];
-                subset_data.do_spread[i] = do_spread[i];
+                subset_data.do_spread[i] = (dims[i] == 1);
             }
 
             constexpr int block_ncells = 64;

@@ -339,7 +339,7 @@ template<typename TF>
 Radiation_solver_longwave<TF>::Radiation_solver_longwave(
         const Gas_concs<TF>& gas_concs,
         const std::string& file_name_gas,
-        const std::string& file_name_cloud)
+        const std::string& file_name_cloud): work_array_config({-1, -1, false})
 {
     // Construct the gas optics classes for the solver.
     this->kdist = std::make_unique<Gas_optics_rrtmgp<TF>>(
@@ -356,9 +356,15 @@ void Radiation_solver_longwave<TF>::init_work_arrays(
         const int n_lay,
         const bool switch_cloud_optics)
 {
-    if(n_lev == this->n_lev_work and n_lay == this->n_lay_work) return;
+    if(n_lev == std::get<0>(this->work_array_config) and 
+       n_lay == std::get<1>(this->work_array_config) and
+       switch_cloud_optics == std::get<2>(this->work_array_config))
+    {
+        return;
+    }
+
     constexpr int n_col_block = 16;
-    
+
     this->work_blocks.col_dry_subset = Array<TF,2>({n_col_block, n_lay});
     this->work_blocks.gpt_flux_up = Array<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
     this->work_blocks.gpt_flux_dn = Array<TF,3>({n_col_block, n_lev, this->get_n_gpt()});
@@ -398,6 +404,7 @@ void Radiation_solver_longwave<TF>::init_work_arrays(
             this->work_residual.rei_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
         }
     }
+    this->work_array_config = {n_lev, n_lay, switch_cloud_optics};
 }
 
 template<typename TF>

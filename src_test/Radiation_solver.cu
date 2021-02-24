@@ -581,7 +581,7 @@ void Radiation_solver_longwave<TF>::solve_gpu(
                 Array_gpu<TF,2>(), // Add an empty array, no inc_flux.
                 work.gpt_flux_up, work.gpt_flux_dn,
                 n_ang);
-        fluxes.reduce(gpt_flux_up, gpt_flux_dn, optical_props_subset_in, top_at_1);
+        fluxes.reduce(work.gpt_flux_up, work.gpt_flux_dn, optical_props_subset_in, top_at_1);
 
         // Copy the data to the output.
         subset_kernel_launcher_cuda::get_from_subset(

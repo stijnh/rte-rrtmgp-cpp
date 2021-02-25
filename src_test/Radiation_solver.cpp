@@ -384,6 +384,8 @@ void Radiation_solver_longwave<TF>::init_work_arrays(
         this->work_blocks.rel_lay_subset = Array<TF,2>({n_col_block, n_lay});
         this->work_blocks.rei_lay_subset = Array<TF,2>({n_col_block, n_lay});
     }
+    this->work_blocks.fluxes_subset = std::make_unique<Fluxes_broadband<TF>>(n_col_block, n_lev);
+    this->work_blocks.bnd_fluxes_subset = std::make_unique<Fluxes_byband<TF>>(n_col_block, n_lev, n_bnd);
 
     int n_col_block_residual = n_col % n_col_block;
     if(n_col_block_residual > 0)
@@ -405,6 +407,8 @@ void Radiation_solver_longwave<TF>::init_work_arrays(
             this->work_residual.rel_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
             this->work_residual.rei_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
         }
+        this->work_residual.fluxes_subset = std::make_unique<Fluxes_broadband<TF>>(n_col_block_residual, n_lev);
+        this->work_residual.bnd_fluxes_subset = std::make_unique<Fluxes_byband<TF>>(n_col_block_residual, n_lev, n_bnd);
     }
     this->work_array_config = {n_lev, n_lay, switch_cloud_optics};
 }
@@ -591,19 +595,14 @@ void Radiation_solver_longwave<TF>::solve(
 
         emis_sfc.subset_copy(this->work_blocks.emis_sfc_subset, {1, col_s});
 
-        std::unique_ptr<Fluxes_broadband<TF>> fluxes_subset =
-                std::make_unique<Fluxes_broadband<TF>>(n_col_block, n_lev);
-        std::unique_ptr<Fluxes_broadband<TF>> bnd_fluxes_subset =
-                std::make_unique<Fluxes_byband<TF>>(n_col_block, n_lev, n_bnd);
-
         call_kernels(
                 col_s, col_e,
                 optical_props_subset,
                 cloud_optical_props_subset,
                 *sources_subset,
                 this->work_blocks.emis_sfc_subset,
-                *fluxes_subset,
-                *bnd_fluxes_subset,
+                *(this->work_blocks.fluxes_subset),
+                *(this->work_blocks.bnd_fluxes_subset),
                 this->work_blocks);
     }
 
@@ -614,19 +613,14 @@ void Radiation_solver_longwave<TF>::solve(
 
         emis_sfc.subset_copy(this->work_residual.emis_sfc_subset, {1, col_s});
 
-        std::unique_ptr<Fluxes_broadband<TF>> fluxes_residual =
-                std::make_unique<Fluxes_broadband<TF>>(n_col_block_residual, n_lev);
-        std::unique_ptr<Fluxes_broadband<TF>> bnd_fluxes_residual =
-                std::make_unique<Fluxes_byband<TF>>(n_col_block_residual, n_lev, n_bnd);
-
         call_kernels(
                 col_s, col_e,
                 optical_props_residual,
                 cloud_optical_props_residual,
                 *sources_residual,
                 this->work_residual.emis_sfc_subset,
-                *fluxes_residual,
-                *bnd_fluxes_residual,
+                *(this->work_residual.fluxes_subset),
+                *(this->work_residual.bnd_fluxes_subset),
                 this->work_residual);
     }
 }

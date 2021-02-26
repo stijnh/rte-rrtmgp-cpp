@@ -910,6 +910,22 @@ std::unique_ptr<gas_taus_work_arrays_gpu<TF>> Gas_optics_rrtmgp_gpu<TF>::create_
 
 
 template<typename TF>
+std::unique_ptr<gas_source_work_arrays_gpu<TF>> Gas_optics_rrtmgp_gpu<TF>::create_source_work_arrays(
+        const int n_cols,
+        const int n_gpts,
+        const int n_lays) const
+{
+    auto result = new gas_source_work_arrays_gpu<TF>({
+        Array_gpu<TF,3>({n_gpts, n_lays, n_cols}),
+        Array_gpu<TF,3>({n_gpts, n_lays, n_cols}),
+        Array_gpu<TF,3>({n_gpts, n_lays, n_cols}),
+        Array_gpu<TF,2>({n_gpts, n_cols}),
+        Array_gpu<TF,2>({n_gpts, n_cols})});
+    return std::unique_ptr<gas_source_work_arrays_gpu<TF>>(result);
+}
+
+
+template<typename TF>
 std::unique_ptr<gas_optics_work_arrays_gpu<TF>> Gas_optics_rrtmgp_gpu<TF>::create_work_arrays(
         const int n_cols,
         const int n_levs,
@@ -924,7 +940,8 @@ std::unique_ptr<gas_optics_work_arrays_gpu<TF>> Gas_optics_rrtmgp_gpu<TF>::creat
         Array_gpu<BOOL_TYPE,2>({n_cols, n_lays}),
         Array_gpu<TF,6>({2, 2, 2, this->get_nflav(), n_cols, n_lays}),
         Array_gpu<int,4>({2, this->get_nflav(), n_cols, n_lays}),
-        std::move(this->create_taus_work_arrays(n_cols, this->get_ngpt(), n_lays, this->get_ngas(), this->get_nflav()))});
+        std::move(this->create_taus_work_arrays(n_cols, this->get_ngpt(), n_lays, this->get_ngas(), this->get_nflav())),
+        std::move(this->create_source_work_arrays(n_cols, this->get_ngpt(), n_lays))});
     return std::unique_ptr<gas_optics_work_arrays_gpu<TF>>(result);
 }
 
@@ -1196,11 +1213,15 @@ void Gas_optics_rrtmgp_gpu<TF>::source(
     auto gpoint_bands = this->get_gpoint_bands_gpu();
     auto band_lims_gpoint = this->get_band_lims_gpoint_gpu();
 
-    Array_gpu<TF,3> lay_source_t({ngpt, nlay, ncol});
-    Array_gpu<TF,3> lev_source_inc_t({ngpt, nlay, ncol});
-    Array_gpu<TF,3> lev_source_dec_t({ngpt, nlay, ncol});
-    Array_gpu<TF,2> sfc_source_t({ngpt, ncol});
-    Array_gpu<TF,2> sfc_source_jac({ngpt, ncol});
+    std::shared_ptr<gas_source_work_arrays_gpu<TF>> wrk;
+    if(this->work_arrays != nullptr and ncol == this->work_arrays->n_cols and nlay == this->work_arrays->n_lays)
+    {
+        wrk = this->work_arrays->source_work_arrays;
+    }
+    else
+    {
+        wrk = std::move(this->create_source_work_arrays(ncol, ngpt, nlay));
+    }
 
     int sfc_lay = play({1, 1}) > play({1, nlay}) ? 1 : nlay;
     rrtmgp_kernel_launcher_cuda::Planck_source(
@@ -1210,23 +1231,23 @@ void Gas_optics_rrtmgp_gpu<TF>::source(
             fmajor, jeta, tropo, jtemp, jpress,
             gpoint_bands, band_lims_gpoint, this->planck_frac_gpu, this->temp_ref_min,
             this->totplnk_delta, this->totplnk_gpu, this->gpoint_flavor_gpu,
-            sfc_source_t, lay_source_t, lev_source_inc_t, lev_source_dec_t,
-            sfc_source_jac);
+            wrk->sfc_source_t, wrk->lay_source_t, wrk->lev_source_inc_t, wrk->lev_source_dec_t,
+            wrk->sfc_source_jac);
 
     rrtmgp_kernel_launcher_cuda::reorder12x21(
-            ncol, ngpt, sfc_source_t, sources.get_sfc_source());
+            ncol, ngpt, wrk->sfc_source_t, sources.get_sfc_source());
 
     rrtmgp_kernel_launcher_cuda::reorder12x21<TF>(
-            ncol, ngpt, sfc_source_jac, sources.get_sfc_source_jac());
+            ncol, ngpt, wrk->sfc_source_jac, sources.get_sfc_source_jac());
 
     rrtmgp_kernel_launcher_cuda::reorder123x321<TF>(
-            ncol, nlay, ngpt, lay_source_t, sources.get_lay_source());
+            ncol, nlay, ngpt, wrk->lay_source_t, sources.get_lay_source());
 
     rrtmgp_kernel_launcher_cuda::reorder123x321<TF>(
-            ncol, nlay, ngpt, lev_source_inc_t, sources.get_lev_source_inc());
+            ncol, nlay, ngpt, wrk->lev_source_inc_t, sources.get_lev_source_inc());
 
     rrtmgp_kernel_launcher_cuda::reorder123x321<TF>(
-            ncol, nlay, ngpt, lev_source_dec_t, sources.get_lev_source_dec());
+            ncol, nlay, ngpt, wrk->lev_source_dec_t, sources.get_lev_source_dec());
 }
 
 

@@ -59,6 +59,16 @@ struct gas_taus_work_arrays
 };
 
 template<typename TF>
+struct gas_source_work_arrays
+{
+    Array<TF,3> lay_source_t;
+    Array<TF,3> lev_source_inc_t;
+    Array<TF,3> lev_source_dec_t;
+    Array<TF,2> sfc_source_t;
+    Array<TF,2> sfc_source_jac;
+};
+
+template<typename TF>
 struct gas_optics_work_arrays
 {
         int n_cols;
@@ -69,6 +79,7 @@ struct gas_optics_work_arrays
         Array<TF,6> fmajor;
         Array<int,4> jeta;
         std::shared_ptr<gas_taus_work_arrays<TF>> tau_work_arrays;
+        std::shared_ptr<gas_source_work_arrays<TF>> source_work_arrays;
 };
 
 template<typename TF>
@@ -207,6 +218,11 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>, public Work_array_owner<gas_opt
                 const int n_gas,
                 const int n_flavs) const;
 
+        std::unique_ptr<gas_source_work_arrays<TF>> create_source_work_arrays(
+                const int n_cols,
+                const int n_gpt,
+                const int n_lays) const;
+
     private:
         Array<TF,2> totplnk;
         Array<TF,4> planck_frac;
@@ -342,6 +358,16 @@ struct gas_taus_work_arrays_gpu
 };
 
 template<typename TF>
+struct gas_source_work_arrays_gpu
+{
+    Array_gpu<TF,3> lay_source_t;
+    Array_gpu<TF,3> lev_source_inc_t;
+    Array_gpu<TF,3> lev_source_dec_t;
+    Array_gpu<TF,2> sfc_source_t;
+    Array_gpu<TF,2> sfc_source_jac;
+};
+
+template<typename TF>
 struct gas_optics_work_arrays_gpu
 {
         int n_cols;
@@ -352,6 +378,7 @@ struct gas_optics_work_arrays_gpu
         Array_gpu<TF,6> fmajor;
         Array_gpu<int,4> jeta;
         std::shared_ptr<gas_taus_work_arrays_gpu<TF>> tau_work_arrays;
+        std::shared_ptr<gas_source_work_arrays_gpu<TF>> source_work_arrays;
 };
 
 template<typename TF>
@@ -489,6 +516,11 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>, public Work_array_owner
                 const int n_lays,
                 const int n_gas,
                 const int n_flavs) const;
+
+        std::unique_ptr<gas_source_work_arrays_gpu<TF>> create_source_work_arrays(
+                const int n_cols,
+                const int n_gpt,
+                const int n_lays) const;
 
     private:
         Array<TF,2> totplnk;

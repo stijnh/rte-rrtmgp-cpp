@@ -923,55 +923,37 @@ void Gas_optics_rrtmgp_gpu<TF>::gas_optics(
     const int ngpt = this->get_ngpt();
     const int nband = this->get_nband();
 
-
+    std::shared_ptr<gas_optics_work_arrays_gpu<TF>> wrk;
     if(this->work_arrays != nullptr and ncol == this->work_arrays->n_cols and nlay == this->work_arrays->n_lays)
     {
+        wrk = this->work_arrays;
+    }
+    else
+    {
+        wrk = std::move(this->create_work_arrays(ncol, -1, nlay, -1));
+    }
         // Gas optics.
         compute_gas_taus(
             ncol, nlay, ngpt, nband,
             play, plev, tlay, gas_desc,
             optical_props,
-            this->work_arrays->jtemp, 
-            this->work_arrays->jpress, 
-            this->work_arrays->jeta, 
-            this->work_arrays->tropo, 
-            this->work_arrays->fmajor,
+            wrk->jtemp, 
+            wrk->jpress, 
+            wrk->jeta, 
+            wrk->tropo, 
+            wrk->fmajor,
             col_dry);
 
         // External sources.
         source(
             ncol, nlay, nband, ngpt,
             play, plev, tlay, tsfc,
-            this->work_arrays->jtemp, 
-            this->work_arrays->jpress, 
-            this->work_arrays->jeta, 
-            this->work_arrays->tropo, 
-            this->work_arrays->fmajor,
+            wrk->jtemp, 
+            wrk->jpress, 
+            wrk->jeta, 
+            wrk->tropo, 
+            wrk->fmajor,
             sources, tlev);
-}
-    else
-    {
-        Array_gpu<int,2> jtemp({play.dim(1), play.dim(2)});
-        Array_gpu<int,2> jpress({play.dim(1), play.dim(2)});
-        Array_gpu<BOOL_TYPE,2> tropo({play.dim(1), play.dim(2)});
-        Array_gpu<TF,6> fmajor({2, 2, 2, this->get_nflav(), play.dim(1), play.dim(2)});
-        Array_gpu<int,4> jeta({2, this->get_nflav(), play.dim(1), play.dim(2)});
-
-        // Gas optics.
-        compute_gas_taus(
-                ncol, nlay, ngpt, nband,
-                play, plev, tlay, gas_desc,
-                optical_props,
-                jtemp, jpress, jeta, tropo, fmajor,
-                col_dry);
-
-        // External sources.
-        source(
-                ncol, nlay, nband, ngpt,
-                play, plev, tlay, tsfc,
-                jtemp, jpress, jeta, tropo, fmajor,
-                sources, tlev);
-    }
 }
 
 

@@ -41,6 +41,11 @@ template<typename TW> class Work_array_owner
             work_arrays = work_arrays_;
         }
 
+        void reset_work_arrays()
+        {
+            work_arrays.reset();
+        }
+
     protected:
 
         std::shared_ptr<TW> work_arrays;

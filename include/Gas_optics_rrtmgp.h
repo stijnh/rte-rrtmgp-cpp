@@ -48,6 +48,17 @@ template<typename TF> class Source_func_lw_gpu;
 
 
 template<typename TF>
+struct gas_taus_work_arrays
+{
+    Array<TF,3> tau;
+    Array<TF,3> tau_rayleigh;
+    Array<TF,3> vmr;
+    Array<TF,3> col_gas;
+    Array<TF,4> col_mix;
+    Array<TF,5> fminor;
+};
+
+template<typename TF>
 struct gas_optics_work_arrays
 {
         int n_cols;
@@ -57,6 +68,7 @@ struct gas_optics_work_arrays
         Array<BOOL_TYPE,2> tropo;
         Array<TF,6> fmajor;
         Array<int,4> jeta;
+        std::shared_ptr<gas_taus_work_arrays<TF>> tau_work_arrays;
 };
 
 template<typename TF>
@@ -188,6 +200,13 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>, public Work_array_owner<gas_opt
                 const int n_lays,
                 const int n_bnds) const;
 
+        std::unique_ptr<gas_taus_work_arrays<TF>> create_taus_work_arrays(
+                const int n_cols,
+                const int n_gpt,
+                const int n_lays,
+                const int n_gas,
+                const int n_flavs) const;
+
     private:
         Array<TF,2> totplnk;
         Array<TF,4> planck_frac;
@@ -312,6 +331,17 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>, public Work_array_owner<gas_opt
 
 #ifdef USECUDA
 template<typename TF>
+struct gas_taus_work_arrays_gpu
+{
+    Array_gpu<TF,3> tau;
+    Array_gpu<TF,3> tau_rayleigh;
+    Array_gpu<TF,3> vmr;
+    Array_gpu<TF,3> col_gas;
+    Array_gpu<TF,4> col_mix;
+    Array_gpu<TF,5> fminor;
+};
+
+template<typename TF>
 struct gas_optics_work_arrays_gpu
 {
         int n_cols;
@@ -321,6 +351,7 @@ struct gas_optics_work_arrays_gpu
         Array_gpu<BOOL_TYPE,2> tropo;
         Array_gpu<TF,6> fmajor;
         Array_gpu<int,4> jeta;
+        std::shared_ptr<gas_taus_work_arrays_gpu<TF>> tau_work_arrays;
 };
 
 template<typename TF>
@@ -451,6 +482,13 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>, public Work_array_owner
                 const int n_levs,
                 const int n_lays,
                 const int n_bnds) const;
+
+        std::unique_ptr<gas_taus_work_arrays_gpu<TF>> create_taus_work_arrays(
+                const int n_cols,
+                const int n_gpt,
+                const int n_lays,
+                const int n_gas,
+                const int n_flavs) const;
 
     private:
         Array<TF,2> totplnk;

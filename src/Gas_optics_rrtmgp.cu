@@ -887,6 +887,28 @@ void Gas_optics_rrtmgp_gpu<TF>::get_col_dry(
             col_dry.ptr());
 }
 
+
+template<typename TF>
+std::unique_ptr<gas_taus_work_arrays_gpu<TF>> Gas_optics_rrtmgp_gpu<TF>::create_taus_work_arrays(
+        const int n_cols,
+        const int n_gpts,
+        const int n_lays,
+        const int n_gas,
+        const int n_flavs) const
+{
+    auto result = new gas_taus_work_arrays_gpu<TF>({
+        Array_gpu<TF,3>({n_gpts, n_lays, n_cols}),
+        Array_gpu<TF,3>({n_gpts, n_lays, n_cols}),
+        Array_gpu<TF,3>({n_cols, n_lays, n_gas}),
+        Array_gpu<TF,3>({n_cols, n_lays, n_gas + 1}),
+        Array_gpu<TF,4>({2, n_flavs, n_cols, n_lays}),
+        Array_gpu<TF,5>({2, 2, n_flavs, n_cols, n_lays})
+    });
+    result->col_gas.set_offsets({0, 0, -1});
+    return std::unique_ptr<gas_taus_work_arrays_gpu<TF>>(result);
+}
+
+
 template<typename TF>
 std::unique_ptr<gas_optics_work_arrays_gpu<TF>> Gas_optics_rrtmgp_gpu<TF>::create_work_arrays(
         const int n_cols,
@@ -901,9 +923,11 @@ std::unique_ptr<gas_optics_work_arrays_gpu<TF>> Gas_optics_rrtmgp_gpu<TF>::creat
         Array_gpu<int,2>({n_cols, n_lays}),
         Array_gpu<BOOL_TYPE,2>({n_cols, n_lays}),
         Array_gpu<TF,6>({2, 2, 2, this->get_nflav(), n_cols, n_lays}),
-        Array_gpu<int,4>({2, this->get_nflav(), n_cols, n_lays})});
+        Array_gpu<int,4>({2, this->get_nflav(), n_cols, n_lays}),
+        std::move(this->create_taus_work_arrays(n_cols, this->get_ngpt(), n_lays, this->get_ngas(), this->get_nflav()))});
     return std::unique_ptr<gas_optics_work_arrays_gpu<TF>>(result);
 }
+
 
 // Gas optics solver longwave variant.
 template<typename TF>
@@ -957,6 +981,7 @@ void Gas_optics_rrtmgp_gpu<TF>::gas_optics(
 }
 
 
+// Gas optics solver shortwave variant.
 template<typename TF>
 void Gas_optics_rrtmgp_gpu<TF>::gas_optics(
         const Array_gpu<TF,2>& play,
@@ -1005,14 +1030,15 @@ void Gas_optics_rrtmgp_gpu<TF>::compute_gas_taus(
         Array_gpu<TF,6>& fmajor,
         const Array_gpu<TF,2>& col_dry) const
 {
-    Array_gpu<TF,3> tau({ngpt, nlay, ncol});
-    Array_gpu<TF,3> tau_rayleigh({ngpt, nlay, ncol});
-    Array_gpu<TF,3> vmr({ncol, nlay, this->get_ngas()});
-    Array_gpu<TF,3> col_gas({ncol, nlay, this->get_ngas()+1});
-    col_gas.set_offsets({0, 0, -1});
-    Array_gpu<TF,4> col_mix({2, this->get_nflav(), ncol, nlay});
-    Array_gpu<TF,5> fminor({2, 2, this->get_nflav(), ncol, nlay});
-
+    std::shared_ptr<gas_taus_work_arrays_gpu<TF>> wrk;
+    if(this->work_arrays != nullptr and ncol == this->work_arrays->n_cols and nlay == this->work_arrays->n_lays)
+    {
+        wrk = this->work_arrays->tau_work_arrays;
+    }
+    else
+    {
+        wrk = std::move(this->create_taus_work_arrays(ncol, ngpt, nlay, this->get_ngas(), this->get_nflav()));
+    }
 
     // CvH add all the checking...
     const int ngas = this->get_ngas();
@@ -1039,10 +1065,10 @@ void Gas_optics_rrtmgp_gpu<TF>::compute_gas_taus(
     {
         const Array_gpu<TF,2>& vmr_2d = igas > 0 ? gas_desc.get_vmr(this->gas_names({igas})) : gas_desc.get_vmr(this->gas_names({1}));
         fill_gases_kernel<<<grid_gpu, block_gpu>>>(
-            ncol, nlay, vmr_2d.dim(1), vmr_2d.dim(2), ngas, igas, vmr.ptr(), vmr_2d.ptr(), col_gas.ptr(), col_dry.ptr());
+            ncol, nlay, vmr_2d.dim(1), vmr_2d.dim(2), ngas, igas, wrk->vmr.ptr(), vmr_2d.ptr(), wrk->col_gas.ptr(), col_dry.ptr());
     }
 
-    rrtmgp_kernel_launcher_cuda::zero_array(ngpt, nlay, ncol, tau);
+    rrtmgp_kernel_launcher_cuda::zero_array(ngpt, nlay, ncol, wrk->tau);
 
     rrtmgp_kernel_launcher_cuda::interpolation(
             ncol, nlay,
@@ -1057,10 +1083,10 @@ void Gas_optics_rrtmgp_gpu<TF>::compute_gas_taus(
             vmr_ref_gpu,
             play,
             tlay,
-            col_gas,
+            wrk->col_gas,
             jtemp,
-            fmajor, fminor,
-            col_mix,
+            fmajor, wrk->fminor,
+            wrk->col_mix,
             tropo,
             jeta, jpress);
 
@@ -1100,10 +1126,10 @@ void Gas_optics_rrtmgp_gpu<TF>::compute_gas_taus(
             kminor_start_lower_gpu,
             kminor_start_upper_gpu,
             tropo,
-            col_mix, fmajor, fminor,
-            play, tlay, col_gas,
+            wrk->col_mix, fmajor, wrk->fminor,
+            play, tlay, wrk->col_gas,
             jeta, jtemp, jpress,
-            tau);
+            wrk->tau);
 
     bool has_rayleigh = (this->krayl.size() > 0);
 
@@ -1115,12 +1141,12 @@ void Gas_optics_rrtmgp_gpu<TF>::compute_gas_taus(
                 gpoint_flavor_gpu,
                 this->get_band_lims_gpoint(),
                 krayl_gpu,
-                idx_h2o, col_dry, col_gas,
-                fminor, jeta, tropo, jtemp,
-                tau_rayleigh);
+                idx_h2o, col_dry, wrk->col_gas,
+                wrk->fminor, jeta, tropo, jtemp,
+                wrk->tau_rayleigh);
     }
 
-    combine_and_reorder(tau, tau_rayleigh, has_rayleigh, optical_props);
+    combine_and_reorder(wrk->tau, wrk->tau_rayleigh, has_rayleigh, optical_props);
 }
 
 

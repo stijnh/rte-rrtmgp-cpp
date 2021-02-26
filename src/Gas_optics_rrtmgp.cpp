@@ -771,6 +771,28 @@ void Gas_optics_rrtmgp<TF>::get_col_dry(
         }
 }
 
+
+template<typename TF>
+std::unique_ptr<gas_taus_work_arrays<TF>> Gas_optics_rrtmgp<TF>::create_taus_work_arrays(
+        const int n_cols,
+        const int n_gpts,
+        const int n_lays,
+        const int n_gas,
+        const int n_flavs) const
+{
+    auto result = new gas_taus_work_arrays<TF>({
+        Array<TF,3>({n_gpts, n_lays, n_cols}),
+        Array<TF,3>({n_gpts, n_lays, n_cols}),
+        Array<TF,3>({n_cols, n_lays, n_gas}),
+        Array<TF,3>({n_cols, n_lays, n_gas + 1}),
+        Array<TF,4>({2, n_flavs, n_cols, n_lays}),
+        Array<TF,5>({2, 2, n_flavs, n_cols, n_lays})
+    });
+    result->col_gas.set_offsets({0, 0, -1});
+    return std::unique_ptr<gas_taus_work_arrays<TF>>(result);
+}
+
+
 template<typename TF>
 std::unique_ptr<gas_optics_work_arrays<TF>> Gas_optics_rrtmgp<TF>::create_work_arrays(
         const int n_cols,
@@ -785,9 +807,11 @@ std::unique_ptr<gas_optics_work_arrays<TF>> Gas_optics_rrtmgp<TF>::create_work_a
         Array<int,2>({n_cols, n_lays}),
         Array<BOOL_TYPE,2>({n_cols, n_lays}),
         Array<TF,6>({2, 2, 2, this->get_nflav(), n_cols, n_lays}),
-        Array<int,4>({2, this->get_nflav(), n_cols, n_lays})});
+        Array<int,4>({2, this->get_nflav(), n_cols, n_lays}),
+        std::move(this->create_taus_work_arrays(n_cols, this->get_ngpt(), n_lays, this->get_ngas(), this->get_nflav()))});
     return std::unique_ptr<gas_optics_work_arrays<TF>>(result);
 }
+
 
 // Gas optics solver longwave variant.
 template<typename TF>
@@ -1091,14 +1115,16 @@ void Gas_optics_rrtmgp<TF>::compute_gas_taus(
         Array<TF,6>& fmajor,
         const Array<TF,2>& col_dry) const
 {
-    Array<TF,3> tau({ngpt, nlay, ncol});
-    Array<TF,3> tau_rayleigh({ngpt, nlay, ncol});
-    Array<TF,3> vmr({ncol, nlay, this->get_ngas()});
-    Array<TF,3> col_gas({ncol, nlay, this->get_ngas()+1});
-    col_gas.set_offsets({0, 0, -1});
-    Array<TF,4> col_mix({2, this->get_nflav(), ncol, nlay});
-    Array<TF,5> fminor({2, 2, this->get_nflav(), ncol, nlay});
-
+    std::shared_ptr<gas_taus_work_arrays<TF>> wrk;
+    if(this->work_arrays != nullptr and ncol == this->work_arrays->n_cols and nlay == this->work_arrays->n_lays)
+    {
+        wrk = this->work_arrays->tau_work_arrays;
+    }
+    else
+    {
+        wrk = std::move(this->create_taus_work_arrays(ncol, ngpt, nlay, this->get_ngas(), this->get_nflav()));
+    }
+    
     // CvH add all the checking...
     const int ngas = this->get_ngas();
     const int nflav = this->get_nflav();
@@ -1121,7 +1147,7 @@ void Gas_optics_rrtmgp<TF>::compute_gas_taus(
             const TF vmr_c = vmr_2d({1, 1});
             for (int ilay=1; ilay<=nlay; ++ilay)
                 for (int icol=1; icol<=ncol; ++icol)
-                    vmr({icol, ilay, igas}) = vmr_c;
+                    wrk->vmr({icol, ilay, igas}) = vmr_c;
         }
         // Fill array with constant profile.
         else if (vmr_2d.dim(1) == 1)
@@ -1130,7 +1156,7 @@ void Gas_optics_rrtmgp<TF>::compute_gas_taus(
             {
                 const TF vmr_lay = vmr_2d({1, ilay});
                 for (int icol=1; icol<=ncol; ++icol)
-                    vmr({icol, ilay, igas}) = vmr_lay;
+                    wrk->vmr({icol, ilay, igas}) = vmr_lay;
             }
         }
         // Fill array with full 2d data.
@@ -1138,23 +1164,23 @@ void Gas_optics_rrtmgp<TF>::compute_gas_taus(
         {
             for (int ilay=1; ilay<=nlay; ++ilay)
                 for (int icol=1; icol<=ncol; ++icol)
-                    vmr({icol, ilay, igas}) = vmr_2d({icol, ilay});
+                    wrk->vmr({icol, ilay, igas}) = vmr_2d({icol, ilay});
         }
     }
 
     // CvH: Assume that col_dry is provided.
     for (int ilay=1; ilay<=nlay; ++ilay)
         for (int icol=1; icol<=ncol; ++icol)
-            col_gas({icol, ilay, 0}) = col_dry({icol, ilay});
+            wrk->col_gas({icol, ilay, 0}) = col_dry({icol, ilay});
 
     for (int igas=1; igas<=ngas; ++igas)
         for (int ilay=1; ilay<=nlay; ++ilay)
             for (int icol=1; icol<=ncol; ++icol)
-                col_gas({icol, ilay, igas}) = vmr({icol, ilay, igas}) * col_dry({icol, ilay});
+                wrk->col_gas({icol, ilay, igas}) = wrk->vmr({icol, ilay, igas}) * col_dry({icol, ilay});
 
 
     // Call the fortran kernels
-    rrtmgp_kernel_launcher::zero_array(ngpt, nlay, ncol, tau);
+    rrtmgp_kernel_launcher::zero_array(ngpt, nlay, ncol, wrk->tau);
 
     rrtmgp_kernel_launcher::interpolation(
             ncol, nlay,
@@ -1169,10 +1195,10 @@ void Gas_optics_rrtmgp<TF>::compute_gas_taus(
             this->vmr_ref,
             play,
             tlay,
-            col_gas,
+            wrk->col_gas,
             jtemp,
-            fmajor, fminor,
-            col_mix,
+            fmajor, wrk->fminor,
+            wrk->col_mix,
             tropo,
             jeta, jpress);
 
@@ -1211,10 +1237,10 @@ void Gas_optics_rrtmgp<TF>::compute_gas_taus(
             this->kminor_start_lower,
             this->kminor_start_upper,
             tropo,
-            col_mix, fmajor, fminor,
-            play, tlay, col_gas,
+            wrk->col_mix, fmajor, wrk->fminor,
+            play, tlay, wrk->col_gas,
             jeta, jtemp, jpress,
-            tau);
+            wrk->tau);
 
 
     bool has_rayleigh = (this->krayl.size() > 0);
@@ -1227,12 +1253,12 @@ void Gas_optics_rrtmgp<TF>::compute_gas_taus(
                 this->gpoint_flavor,
                 this->get_band_lims_gpoint(),
                 this->krayl,
-                idx_h2o, col_dry, col_gas,
-                fminor, jeta, tropo, jtemp,
-                tau_rayleigh);
+                idx_h2o, col_dry, wrk->col_gas,
+                wrk->fminor, jeta, tropo, jtemp,
+                wrk->tau_rayleigh);
 
     }
-    combine_and_reorder(tau, tau_rayleigh, has_rayleigh, optical_props);
+    combine_and_reorder(wrk->tau, wrk->tau_rayleigh, has_rayleigh, optical_props);
 }
 
 template<typename TF>

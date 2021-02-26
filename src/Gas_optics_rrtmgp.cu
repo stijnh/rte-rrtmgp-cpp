@@ -887,6 +887,23 @@ void Gas_optics_rrtmgp_gpu<TF>::get_col_dry(
             col_dry.ptr());
 }
 
+template<typename TF>
+std::unique_ptr<gas_optics_work_arrays_gpu<TF>> Gas_optics_rrtmgp_gpu<TF>::create_work_arrays(
+        const int n_cols,
+        const int n_levs,
+        const int n_lays,
+        const int n_bnd) const
+{
+    auto result = new gas_optics_work_arrays_gpu<TF>({
+        n_cols,
+        n_lays,
+        Array_gpu<int,2>({n_cols, n_lays}),
+        Array_gpu<int,2>({n_cols, n_lays}),
+        Array_gpu<BOOL_TYPE,2>({n_cols, n_lays}),
+        Array_gpu<TF,6>({2, 2, 2, this->get_nflav(), n_cols, n_lays}),
+        Array_gpu<int,4>({2, this->get_nflav(), n_cols, n_lays})});
+    return std::unique_ptr<gas_optics_work_arrays_gpu<TF>>(result);
+}
 
 // Gas optics solver longwave variant.
 template<typename TF>
@@ -906,26 +923,55 @@ void Gas_optics_rrtmgp_gpu<TF>::gas_optics(
     const int ngpt = this->get_ngpt();
     const int nband = this->get_nband();
 
-    Array_gpu<int,2> jtemp({play.dim(1), play.dim(2)});
-    Array_gpu<int,2> jpress({play.dim(1), play.dim(2)});
-    Array_gpu<BOOL_TYPE,2> tropo({play.dim(1), play.dim(2)});
-    Array_gpu<TF,6> fmajor({2, 2, 2, this->get_nflav(), play.dim(1), play.dim(2)});
-    Array_gpu<int,4> jeta({2, this->get_nflav(), play.dim(1), play.dim(2)});
 
-    // Gas optics.
-    compute_gas_taus(
+    if(this->work_arrays != nullptr and ncol == this->work_arrays->n_cols and nlay == this->work_arrays->n_lays)
+    {
+        // Gas optics.
+        compute_gas_taus(
             ncol, nlay, ngpt, nband,
             play, plev, tlay, gas_desc,
             optical_props,
-            jtemp, jpress, jeta, tropo, fmajor,
+            this->work_arrays->jtemp, 
+            this->work_arrays->jpress, 
+            this->work_arrays->jeta, 
+            this->work_arrays->tropo, 
+            this->work_arrays->fmajor,
             col_dry);
 
-    // External sources.
-    source(
+        // External sources.
+        source(
             ncol, nlay, nband, ngpt,
             play, plev, tlay, tsfc,
-            jtemp, jpress, jeta, tropo, fmajor,
+            this->work_arrays->jtemp, 
+            this->work_arrays->jpress, 
+            this->work_arrays->jeta, 
+            this->work_arrays->tropo, 
+            this->work_arrays->fmajor,
             sources, tlev);
+}
+    else
+    {
+        Array_gpu<int,2> jtemp({play.dim(1), play.dim(2)});
+        Array_gpu<int,2> jpress({play.dim(1), play.dim(2)});
+        Array_gpu<BOOL_TYPE,2> tropo({play.dim(1), play.dim(2)});
+        Array_gpu<TF,6> fmajor({2, 2, 2, this->get_nflav(), play.dim(1), play.dim(2)});
+        Array_gpu<int,4> jeta({2, this->get_nflav(), play.dim(1), play.dim(2)});
+
+        // Gas optics.
+        compute_gas_taus(
+                ncol, nlay, ngpt, nband,
+                play, plev, tlay, gas_desc,
+                optical_props,
+                jtemp, jpress, jeta, tropo, fmajor,
+                col_dry);
+
+        // External sources.
+        source(
+                ncol, nlay, nband, ngpt,
+                play, plev, tlay, tsfc,
+                jtemp, jpress, jeta, tropo, fmajor,
+                sources, tlev);
+    }
 }
 
 

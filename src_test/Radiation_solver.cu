@@ -419,6 +419,7 @@ void Radiation_solver_longwave<TF>::init_work_arrays_gpu(
 
     this->work_blocks_gpu.fluxes_subset = std::make_unique<Fluxes_broadband_gpu<TF>>(n_col_block, n_lev);
     this->work_blocks_gpu.bnd_fluxes_subset = std::make_unique<Fluxes_byband_gpu<TF>>(n_col_block, n_lev, n_bnd);
+    this->work_blocks_gpu.gas_optics_work = this->kdist_gpu->create_work_arrays(n_col_block, n_lev, n_lay, n_bnd);
 
     int n_col_block_residual = n_col % n_col_block;
     if(n_col_block_residual > 0)
@@ -443,6 +444,7 @@ void Radiation_solver_longwave<TF>::init_work_arrays_gpu(
 
         this->work_residual_gpu.fluxes_subset = std::make_unique<Fluxes_broadband_gpu<TF>>(n_col_block_residual, n_lev);
         this->work_residual_gpu.bnd_fluxes_subset = std::make_unique<Fluxes_byband_gpu<TF>>(n_col_block_residual, n_lev, n_bnd);
+        this->work_residual_gpu.gas_optics_work = this->kdist_gpu->create_work_arrays(n_col_block, n_lev, n_lay, n_bnd);
     }
     this->work_array_config_gpu = {n_lev, n_lay, switch_cloud_optics};
 }
@@ -532,7 +534,8 @@ void Radiation_solver_longwave<TF>::solve_gpu(
             Gas_optics_rrtmgp_gpu<TF>::get_col_dry(work.col_dry_subset, gas_concs_subset.get_vmr("h2o"), p_lev_subset);
         else
             col_dry.subset_copy(work.col_dry_subset, {col_s_in, 1});
-
+            
+        kdist_gpu->set_work_arrays(work.gas_optics_work);
         kdist_gpu->gas_optics(
                 work.p_lay_subset,
                 work.p_lev_subset,

@@ -386,6 +386,7 @@ void Radiation_solver_longwave<TF>::init_work_arrays(
     }
     this->work_blocks.fluxes_subset = std::make_unique<Fluxes_broadband<TF>>(n_col_block, n_lev);
     this->work_blocks.bnd_fluxes_subset = std::make_unique<Fluxes_byband<TF>>(n_col_block, n_lev, n_bnd);
+    this->work_blocks.gas_optics_work = this->kdist->create_work_arrays(n_col_block, n_lev, n_lay, n_bnd);
 
     int n_col_block_residual = n_col % n_col_block;
     if(n_col_block_residual > 0)
@@ -407,8 +408,10 @@ void Radiation_solver_longwave<TF>::init_work_arrays(
             this->work_residual.rel_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
             this->work_residual.rei_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
         }
+
         this->work_residual.fluxes_subset = std::make_unique<Fluxes_broadband<TF>>(n_col_block_residual, n_lev);
         this->work_residual.bnd_fluxes_subset = std::make_unique<Fluxes_byband<TF>>(n_col_block_residual, n_lev, n_bnd);
+        this->work_residual.gas_optics_work = this->kdist->create_work_arrays(n_col_block_residual, n_lev, n_lay, n_bnd);
     }
     this->work_array_config = {n_lev, n_lay, switch_cloud_optics};
 }
@@ -497,6 +500,7 @@ void Radiation_solver_longwave<TF>::solve(
         else
             col_dry.subset_copy(work.col_dry_subset, {col_s_in, 1});
 
+        kdist->set_work_arrays(work.gas_optics_work);
         kdist->gas_optics(
                 work.p_lay_subset,
                 work.p_lev_subset,

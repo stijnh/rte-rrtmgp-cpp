@@ -30,6 +30,7 @@
 #include "Array.h"
 #include "Gas_optics.h"
 #include "define_bool.h"
+#include "Work_array_owner.h"
 #ifdef __CUDACC__
 #include "tools_gpu.h"
 #endif
@@ -45,10 +46,24 @@ template<typename TF> class Gas_concs_gpu;
 template<typename TF> class Source_func_lw;
 template<typename TF> class Source_func_lw_gpu;
 
+
 template<typename TF>
-class Gas_optics_rrtmgp : public Gas_optics<TF>
+struct gas_optics_work_arrays
+{
+        int n_cols;
+        int n_lays;
+        Array<int,2> jtemp;
+        Array<int,2> jpress;
+        Array<BOOL_TYPE,2> tropo;
+        Array<TF,6> fmajor;
+        Array<int,4> jeta;
+};
+
+template<typename TF>
+class Gas_optics_rrtmgp : public Gas_optics<TF>, public Work_array_owner<gas_optics_work_arrays<TF>>
 {
     public:
+
         // Constructor for longwave variant.
         Gas_optics_rrtmgp(
                 const Gas_concs<TF>& available_gases,
@@ -166,6 +181,12 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>
                 std::unique_ptr<Optical_props_arry<TF>>& optical_props,
                 Array<TF,2>& toa_src,
                 const Array<TF,2>& col_dry) const;
+
+        std::unique_ptr<gas_optics_work_arrays<TF>> create_work_arrays(
+                const int n_cols,
+                const int n_levs,
+                const int n_lays,
+                const int n_bnds) const;
 
     private:
         Array<TF,2> totplnk;
@@ -291,7 +312,19 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>
 
 #ifdef USECUDA
 template<typename TF>
-class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>
+struct gas_optics_work_arrays_gpu
+{
+        int n_cols;
+        int n_lays;
+        Array_gpu<int,2> jtemp;
+        Array_gpu<int,2> jpress;
+        Array_gpu<BOOL_TYPE,2> tropo;
+        Array_gpu<TF,6> fmajor;
+        Array_gpu<int,4> jeta;
+};
+
+template<typename TF>
+class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>, public Work_array_owner<gas_optics_work_arrays_gpu<TF>>
 {
     public:
         // Constructor for longwave variant.
@@ -412,6 +445,12 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>
                 Array_gpu<TF,2>& toa_src,
                 const Array_gpu<TF,2>& col_dry) const;
 
+
+        std::unique_ptr<gas_optics_work_arrays_gpu<TF>> create_work_arrays(
+                const int n_cols,
+                const int n_levs,
+                const int n_lays,
+                const int n_bnds) const;
 
     private:
         Array<TF,2> totplnk;

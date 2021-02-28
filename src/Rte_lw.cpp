@@ -88,6 +88,27 @@ namespace rrtmgp_kernel_launcher
 }
 
 template<typename TF>
+void rte_lw_work_arrays<TF>::resize(
+        const int ncols, 
+        const int nlevs, 
+        const int ngpt)
+{
+        if(sfc_emis_gpt.get_dims() != std::array<int,2>({ncols, ngpt}))
+        {
+            sfc_emis_gpt = Array<TF,2>({ncols, ngpt});
+        }
+        if(sfc_src_jac.get_dims() != std::array<int,2>({ncols, ngpt}))
+        {
+            sfc_src_jac = Array<TF,2>({ncols, ngpt});
+        }
+        if(gpt_flux_up_jac.get_dims() != std::array<int,3>({ncols, nlevs, ngpt}))
+        {
+            gpt_flux_up_jac = Array<TF,3>({ncols, nlevs, ngpt});
+        }
+}
+
+
+template<typename TF>
 void Rte_lw<TF>::rte_lw(
         const std::unique_ptr<Optical_props_arry<TF>>& optical_props,
         const BOOL_TYPE top_at_1,
@@ -96,8 +117,20 @@ void Rte_lw<TF>::rte_lw(
         const Array<TF,2>& inc_flux,
         Array<TF,3>& gpt_flux_up,
         Array<TF,3>& gpt_flux_dn,
-        const int n_gauss_angles)
+        const int n_gauss_angles,
+        rte_lw_work_arrays<TF>* workptr)
 {
+    const int ncol = optical_props->get_ncol();
+    const int nlay = optical_props->get_nlay();
+    const int ngpt = optical_props->get_ngpt();
+
+    auto work = workptr;
+    if(workptr == nullptr)
+    {
+        work = new rte_lw_work_arrays<TF>();
+        work->resize(ncol, gpt_flux_up.get_dims()[1], ngpt);
+    }
+
     const int max_gauss_pts = 4;
     const Array<TF,2> gauss_Ds(
             {      1.66,         0.,         0.,         0.,
@@ -113,13 +146,7 @@ void Rte_lw<TF>::rte_lw(
              0.1355069134, 0.2034645680, 0.1298475476, 0.0311809710},
             { max_gauss_pts, max_gauss_pts });
 
-    const int ncol = optical_props->get_ncol();
-    const int nlay = optical_props->get_nlay();
-    const int ngpt = optical_props->get_ngpt();
-
-    Array<TF,2> sfc_emis_gpt({ncol, ngpt});
-
-    expand_and_transpose(optical_props, sfc_emis, sfc_emis_gpt);
+    expand_and_transpose(optical_props, sfc_emis, work->sfc_emis_gpt);
 
     // Upper boundary condition.
     if (inc_flux.size() == 0)
@@ -135,22 +162,22 @@ void Rte_lw<TF>::rte_lw(
     Array<TF,2> gauss_wts_subset = gauss_wts.subset(
             {{ {1, n_quad_angs}, {n_quad_angs, n_quad_angs} }});
 
-    // For now, just pass the arrays around.
-    Array<TF,2> sfc_src_jac(sources.get_sfc_source().get_dims());
-    Array<TF,3> gpt_flux_up_jac(gpt_flux_up.get_dims());
-
     rrtmgp_kernel_launcher::lw_solver_noscat_GaussQuad(
             ncol, nlay, ngpt, top_at_1, n_quad_angs,
             gauss_Ds_subset, gauss_wts_subset,
             optical_props->get_tau(),
             sources.get_lay_source(),
             sources.get_lev_source_inc(), sources.get_lev_source_dec(),
-            sfc_emis_gpt, sources.get_sfc_source(),
+            work->sfc_emis_gpt, sources.get_sfc_source(),
             gpt_flux_up, gpt_flux_dn,
-            sfc_src_jac, gpt_flux_up_jac);
+            work->sfc_src_jac, work->gpt_flux_up_jac);
 
     // CvH: In the fortran code this call is here, I removed it for performance and flexibility.
     // fluxes->reduce(gpt_flux_up, gpt_flux_dn, optical_props, top_at_1);
+    if(workptr == nullptr)
+    {
+        delete work;
+    }
 }
 
 template<typename TF>

@@ -27,6 +27,7 @@
 
 #include <memory>
 #include "define_bool.h"
+#include "Work_array_owner.h"
 
 // Forward declarations.
 template<typename, int> class Array;
@@ -38,9 +39,23 @@ template<typename> class Source_func_lw_gpu;
 template<typename> class Fluxes_broadband;
 
 template<typename TF>
+struct rte_lw_work_arrays
+{
+    Array<TF,2> sfc_emis_gpt;
+    Array<TF,2> sfc_src_jac;
+    Array<TF,3> gpt_flux_up_jac;
+
+    void resize(
+            const int ncols,
+            const int nlevs,
+            const int ngpt);
+};
+
+template<typename TF>
 class Rte_lw
 {
     public:
+
         static void rte_lw(
                 const std::unique_ptr<Optical_props_arry<TF>>& optical_props,
                 const BOOL_TYPE top_at_1,
@@ -49,7 +64,8 @@ class Rte_lw
                 const Array<TF,2>& inc_flux,
                 Array<TF,3>& gpt_flux_up,
                 Array<TF,3>& gpt_flux_dn,
-                const int n_gauss_angles);
+                const int n_gauss_angles,
+                rte_lw_work_arrays<TF>* work = nullptr);
 
         static void expand_and_transpose(
                 const std::unique_ptr<Optical_props_arry<TF>>& ops,
@@ -58,6 +74,19 @@ class Rte_lw
 };
 
 #ifdef USECUDA
+template<typename TF>
+struct rte_lw_work_arrays_gpu
+{
+    Array_gpu<TF,2> sfc_emis_gpt;
+    Array_gpu<TF,2> sfc_src_jac;
+    Array_gpu<TF,3> gpt_flux_up_jac;
+
+    void resize(
+            const int ncols,
+            const int nlevs,
+            const int ngpt);
+};
+
 template<typename TF>
 class Rte_lw_gpu
 {
@@ -70,7 +99,8 @@ class Rte_lw_gpu
                 const Array_gpu<TF,2>& inc_flux,
                 Array_gpu<TF,3>& gpt_flux_up,
                 Array_gpu<TF,3>& gpt_flux_dn,
-                const int n_gauss_angles);
+                const int n_gauss_angles,
+                rte_lw_work_arrays_gpu<TF>* work = nullptr);
 
         static void expand_and_transpose(
                 const std::unique_ptr<Optical_props_arry_gpu<TF>>& ops,

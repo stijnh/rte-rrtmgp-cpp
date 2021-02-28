@@ -25,6 +25,7 @@
 #include "Gas_optics_rrtmgp.h"
 #include "Cloud_optics.h"
 #include "Fluxes.h"
+#include "Rte_lw.h"
 
 template<typename TF>
 class Radiation_solver_longwave
@@ -132,6 +133,7 @@ class Radiation_solver_longwave
             std::unique_ptr<Fluxes_broadband<TF>> fluxes_subset;
             std::unique_ptr<Fluxes_broadband<TF>> bnd_fluxes_subset;
             std::shared_ptr<gas_optics_work_arrays<TF>> gas_optics_work;
+            struct rte_lw_work_arrays<TF> rte_lw_work_arrays;
         };
             
         work_arrays work_blocks;
@@ -157,6 +159,7 @@ class Radiation_solver_longwave
             std::unique_ptr<Fluxes_broadband_gpu<TF>> fluxes_subset;
             std::unique_ptr<Fluxes_broadband_gpu<TF>> bnd_fluxes_subset;
             std::shared_ptr<gas_optics_work_arrays_gpu<TF>> gas_optics_work;
+            struct rte_lw_work_arrays_gpu<TF> rte_lw_work_arrays;
         };
         work_arrays_gpu work_blocks_gpu;
         work_arrays_gpu work_residual_gpu;

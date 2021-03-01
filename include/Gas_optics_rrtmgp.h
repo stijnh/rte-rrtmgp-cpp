@@ -30,7 +30,6 @@
 #include "Array.h"
 #include "Gas_optics.h"
 #include "define_bool.h"
-#include "Work_array_owner.h"
 #ifdef __CUDACC__
 #include "tools_gpu.h"
 #endif
@@ -56,6 +55,13 @@ struct gas_taus_work_arrays
     Array<TF,3> col_gas;
     Array<TF,4> col_mix;
     Array<TF,5> fminor;
+
+    void resize(
+        const int ncols,
+        const int nlays,
+        const int ngpts,
+        const int ngas,
+        const int nflavs);
 };
 
 template<typename TF>
@@ -66,24 +72,33 @@ struct gas_source_work_arrays
     Array<TF,3> lev_source_dec_t;
     Array<TF,2> sfc_source_t;
     Array<TF,2> sfc_source_jac;
+
+    void resize(
+        const int ncols,
+        const int nlays,
+        const int ngpts);
 };
 
 template<typename TF>
 struct gas_optics_work_arrays
 {
-        int n_cols;
-        int n_lays;
         Array<int,2> jtemp;
         Array<int,2> jpress;
         Array<BOOL_TYPE,2> tropo;
         Array<TF,6> fmajor;
         Array<int,4> jeta;
-        std::shared_ptr<gas_taus_work_arrays<TF>> tau_work_arrays;
-        std::shared_ptr<gas_source_work_arrays<TF>> source_work_arrays;
+        
+        std::unique_ptr<gas_taus_work_arrays<TF>> tau_work_arrays;
+        std::unique_ptr<gas_source_work_arrays<TF>> source_work_arrays;
+
+        void resize(
+                const int ncols,
+                const int nlays,
+                const int nflavs);
 };
 
 template<typename TF>
-class Gas_optics_rrtmgp : public Gas_optics<TF>, public Work_array_owner<gas_optics_work_arrays<TF>>
+class Gas_optics_rrtmgp : public Gas_optics<TF>
 {
     public:
 
@@ -193,7 +208,8 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>, public Work_array_owner<gas_opt
                 std::unique_ptr<Optical_props_arry<TF>>& optical_props,
                 Source_func_lw<TF>& sources,
                 const Array<TF,2>& col_dry,
-                const Array<TF,2>& tlev) const;
+                const Array<TF,2>& tlev,
+                gas_optics_work_arrays<TF>* work_arrays=nullptr) const;
 
         // Shortwave variant.
         void gas_optics(
@@ -206,22 +222,9 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>, public Work_array_owner<gas_opt
                 const Array<TF,2>& col_dry) const;
 
         std::unique_ptr<gas_optics_work_arrays<TF>> create_work_arrays(
-                const int n_cols,
-                const int n_levs,
-                const int n_lays,
-                const int n_bnds) const;
-
-        std::unique_ptr<gas_taus_work_arrays<TF>> create_taus_work_arrays(
-                const int n_cols,
-                const int n_gpt,
-                const int n_lays,
-                const int n_gas,
-                const int n_flavs) const;
-
-        std::unique_ptr<gas_source_work_arrays<TF>> create_source_work_arrays(
-                const int n_cols,
-                const int n_gpt,
-                const int n_lays) const;
+                const int ncols, 
+                const int nlays,
+                const int ngpts) const;
 
     private:
         Array<TF,2> totplnk;
@@ -325,7 +328,8 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>, public Work_array_owner<gas_opt
                 Array<int,4>& jeta,
                 Array<BOOL_TYPE,2>& tropo,
                 Array<TF,6>& fmajor,
-                const Array<TF,2>& col_dry) const;
+                const Array<TF,2>& col_dry,
+                gas_taus_work_arrays<TF>* work_arrays=nullptr) const;
 
         void combine_and_reorder(
                 const Array<TF,3>& tau,
@@ -341,7 +345,8 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>, public Work_array_owner<gas_opt
                 const Array<int,4>& jeta, const Array<BOOL_TYPE,2>& tropo,
                 const Array<TF,6>& fmajor,
                 Source_func_lw<TF>& sources,
-                const Array<TF,2>& tlev) const;
+                const Array<TF,2>& tlev,
+                gas_source_work_arrays<TF>* work_arrays=nullptr) const;
 
 };
 
@@ -355,6 +360,13 @@ struct gas_taus_work_arrays_gpu
     Array_gpu<TF,3> col_gas;
     Array_gpu<TF,4> col_mix;
     Array_gpu<TF,5> fminor;
+
+    void resize(
+        const int ncols,
+        const int nlays,
+        const int ngpts,
+        const int ngas,
+        const int nflavs);
 };
 
 template<typename TF>
@@ -365,6 +377,12 @@ struct gas_source_work_arrays_gpu
     Array_gpu<TF,3> lev_source_dec_t;
     Array_gpu<TF,2> sfc_source_t;
     Array_gpu<TF,2> sfc_source_jac;
+
+    void resize(
+        const int ncols,
+        const int nlays,
+        const int ngpts);
+
 };
 
 template<typename TF>
@@ -377,12 +395,17 @@ struct gas_optics_work_arrays_gpu
         Array_gpu<BOOL_TYPE,2> tropo;
         Array_gpu<TF,6> fmajor;
         Array_gpu<int,4> jeta;
-        std::shared_ptr<gas_taus_work_arrays_gpu<TF>> tau_work_arrays;
-        std::shared_ptr<gas_source_work_arrays_gpu<TF>> source_work_arrays;
+        std::unique_ptr<gas_taus_work_arrays_gpu<TF>> tau_work_arrays;
+        std::unique_ptr<gas_source_work_arrays_gpu<TF>> source_work_arrays;
+
+        void resize(
+                const int ncols,
+                const int nlays,
+                const int ngpts);
 };
 
 template<typename TF>
-class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>, public Work_array_owner<gas_optics_work_arrays_gpu<TF>>
+class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>
 {
     public:
         // Constructor for longwave variant.
@@ -491,7 +514,8 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>, public Work_array_owner
                 std::unique_ptr<Optical_props_arry_gpu<TF>>& optical_props,
                 Source_func_lw_gpu<TF>& sources,
                 const Array_gpu<TF,2>& col_dry,
-                const Array_gpu<TF,2>& tlev) const;
+                const Array_gpu<TF,2>& tlev,
+                gas_optics_work_arrays_gpu<TF>* work_arrays=nullptr) const;
 
         //shortwave variant
            void gas_optics(
@@ -503,24 +527,10 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>, public Work_array_owner
                 Array_gpu<TF,2>& toa_src,
                 const Array_gpu<TF,2>& col_dry) const;
 
-
         std::unique_ptr<gas_optics_work_arrays_gpu<TF>> create_work_arrays(
-                const int n_cols,
-                const int n_levs,
-                const int n_lays,
-                const int n_bnds) const;
-
-        std::unique_ptr<gas_taus_work_arrays_gpu<TF>> create_taus_work_arrays(
-                const int n_cols,
-                const int n_gpt,
-                const int n_lays,
-                const int n_gas,
-                const int n_flavs) const;
-
-        std::unique_ptr<gas_source_work_arrays_gpu<TF>> create_source_work_arrays(
-                const int n_cols,
-                const int n_gpt,
-                const int n_lays) const;
+                const int ncols, 
+                const int nlays,
+                const int ngpts) const;
 
     private:
         Array<TF,2> totplnk;
@@ -652,7 +662,8 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>, public Work_array_owner
                 Array_gpu<int,4>& jeta,
                 Array_gpu<BOOL_TYPE,2>& tropo,
                 Array_gpu<TF,6>& fmajor,
-                const Array_gpu<TF,2>& col_dry) const;
+                const Array_gpu<TF,2>& col_dry,
+                gas_taus_work_arrays_gpu<TF>* work_arrays=nullptr) const;
 
         void combine_and_reorder(
                 const Array_gpu<TF,3>& tau,
@@ -668,7 +679,8 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>, public Work_array_owner
                 const Array_gpu<int,4>& jeta, const Array_gpu<BOOL_TYPE,2>& tropo,
                 const Array_gpu<TF,6>& fmajor,
                 Source_func_lw_gpu<TF>& sources,
-                const Array_gpu<TF,2>& tlev) const;
+                const Array_gpu<TF,2>& tlev,
+                gas_source_work_arrays_gpu<TF>* work=nullptr) const;
 
 };
 

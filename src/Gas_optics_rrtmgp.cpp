@@ -773,60 +773,96 @@ void Gas_optics_rrtmgp<TF>::get_col_dry(
 
 
 template<typename TF>
-std::unique_ptr<gas_taus_work_arrays<TF>> Gas_optics_rrtmgp<TF>::create_taus_work_arrays(
+void gas_taus_work_arrays<TF>::resize(
         const int n_cols,
-        const int n_gpts,
         const int n_lays,
+        const int n_gpts,
         const int n_gas,
-        const int n_flavs) const
+        const int n_flavs)
 {
-    auto result = new gas_taus_work_arrays<TF>({
-        Array<TF,3>({n_gpts, n_lays, n_cols}),
-        Array<TF,3>({n_gpts, n_lays, n_cols}),
-        Array<TF,3>({n_cols, n_lays, n_gas}),
-        Array<TF,3>({n_cols, n_lays, n_gas + 1}),
-        Array<TF,4>({2, n_flavs, n_cols, n_lays}),
-        Array<TF,5>({2, 2, n_flavs, n_cols, n_lays})
-    });
-    result->col_gas.set_offsets({0, 0, -1});
-    return std::unique_ptr<gas_taus_work_arrays<TF>>(result);
+    if(tau.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
+    {
+        tau = Array<TF,3>({n_gpts, n_lays, n_cols});
+    }
+    if(tau_rayleigh.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
+    {
+        tau_rayleigh = Array<TF,3>({n_gpts, n_lays, n_cols});
+    }
+    if(vmr.get_dims() != std::array<int,3>({n_cols, n_lays, n_gas}))
+    {
+        vmr = Array<TF,3>({n_cols, n_lays, n_gas});
+    }
+    if(col_gas.get_dims() != std::array<int,3>({n_cols, n_lays, n_gas + 1}))
+    {
+        col_gas = Array<TF,3>({n_cols, n_lays, n_gas + 1});
+        col_gas.set_offsets({0, 0, -1});
+    }
+    if(col_mix.get_dims() != std::array<int,4>({2, n_flavs, n_cols, n_lays}))
+    {
+        col_mix = Array<TF,4>({2, n_flavs, n_cols, n_lays});
+    }
+    if(fminor.get_dims() != std::array<int,5>({2, 2, n_flavs, n_cols, n_lays}))
+    {
+        fminor = Array<TF,5>({2, 2, n_flavs, n_cols, n_lays});
+    }
 }
 
 
 template<typename TF>
-std::unique_ptr<gas_source_work_arrays<TF>> Gas_optics_rrtmgp<TF>::create_source_work_arrays(
+void gas_source_work_arrays<TF>::resize(
         const int n_cols,
-        const int n_gpts,
-        const int n_lays) const
-{
-    auto result = new gas_source_work_arrays<TF>({
-        Array<TF,3>({n_gpts, n_lays, n_cols}),
-        Array<TF,3>({n_gpts, n_lays, n_cols}),
-        Array<TF,3>({n_gpts, n_lays, n_cols}),
-        Array<TF,2>({n_gpts, n_cols}),
-        Array<TF,2>({n_gpts, n_cols})});
-    return std::unique_ptr<gas_source_work_arrays<TF>>(result);
-}
-
-
-template<typename TF>
-std::unique_ptr<gas_optics_work_arrays<TF>> Gas_optics_rrtmgp<TF>::create_work_arrays(
-        const int n_cols,
-        const int n_levs,
         const int n_lays,
-        const int n_bnd) const
+        const int n_gpts)
 {
-    auto result = new gas_optics_work_arrays<TF>({
-        n_cols,
-        n_lays,
-        Array<int,2>({n_cols, n_lays}),
-        Array<int,2>({n_cols, n_lays}),
-        Array<BOOL_TYPE,2>({n_cols, n_lays}),
-        Array<TF,6>({2, 2, 2, this->get_nflav(), n_cols, n_lays}),
-        Array<int,4>({2, this->get_nflav(), n_cols, n_lays}),
-        std::move(this->create_taus_work_arrays(n_cols, this->get_ngpt(), n_lays, this->get_ngas(), this->get_nflav())),
-        std::move(this->create_source_work_arrays(n_cols, this->get_ngpt(), n_lays))});
-    return std::unique_ptr<gas_optics_work_arrays<TF>>(result);
+    if(lay_source_t.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
+    {
+        lay_source_t = Array<TF,3>({n_gpts, n_lays, n_cols});
+    }
+    if(lev_source_inc_t.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
+    {
+        lev_source_inc_t = Array<TF,3>({n_gpts, n_lays, n_cols});
+    }
+    if(lev_source_dec_t.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
+    {
+        lev_source_dec_t = Array<TF,3>({n_gpts, n_lays, n_cols});
+    }
+    if(sfc_source_t.get_dims() != std::array<int,2>({n_gpts, n_cols}))
+    {
+        sfc_source_t = Array<TF,2>({n_gpts, n_cols});
+    }
+    if(sfc_source_jac.get_dims() != std::array<int,2>({n_gpts, n_cols}))
+    {
+        sfc_source_jac = Array<TF,2>({n_gpts, n_cols});
+    }
+}
+
+
+template<typename TF>
+void gas_optics_work_arrays<TF>::resize(
+        const int n_cols,
+        const int n_lays,
+        const int n_flav)
+{
+    if(jtemp.get_dims() != std::array<int,2>({n_cols, n_lays}))
+    {
+        jtemp = Array<int,2>({n_cols, n_lays});
+    }
+    if(jpress.get_dims() != std::array<int,2>({n_cols, n_lays}))
+    {
+        jpress = Array<int,2>({n_cols, n_lays});
+    }
+    if(tropo.get_dims() != std::array<int,2>({n_cols, n_lays}))
+    {
+        tropo = Array<BOOL_TYPE,2>({n_cols, n_lays});
+    }
+    if(fmajor.get_dims() != std::array<int,6>({2, 2, 2, n_flav, n_cols, n_lays}))
+    {
+        fmajor = Array<TF,6>({2, 2, 2, n_flav, n_cols, n_lays});
+    }
+    if(jeta.get_dims() != std::array<int,4>({2, n_flav, n_cols, n_lays}))
+    {
+        jeta = Array<int,4>({2, n_flav, n_cols, n_lays});
+    }
 }
 
 
@@ -841,21 +877,20 @@ void Gas_optics_rrtmgp<TF>::gas_optics(
         std::unique_ptr<Optical_props_arry<TF>>& optical_props,
         Source_func_lw<TF>& sources,
         const Array<TF,2>& col_dry,
-        const Array<TF,2>& tlev) const
+        const Array<TF,2>& tlev,
+        gas_optics_work_arrays<TF>* work_arrays) const
 {
     const int ncol = play.dim(1);
     const int nlay = play.dim(2);
     const int ngpt = this->get_ngpt();
     const int nband = this->get_nband();
 
-    std::shared_ptr<gas_optics_work_arrays<TF>> wrk;
-    if(this->work_arrays != nullptr and ncol == this->work_arrays->n_cols and nlay == this->work_arrays->n_lays)
+    auto wrk = work_arrays;
+    
+    if(work_arrays == nullptr)
     {
-        wrk = this->work_arrays;
-    }
-    else
-    {
-        wrk = std::move(this->create_work_arrays(ncol, -1, nlay, -1));
+        wrk = new gas_optics_work_arrays<TF>();
+        wrk->resize(ncol, nlay, this->get_nflav());
     }
 
     // Gas optics.
@@ -868,7 +903,8 @@ void Gas_optics_rrtmgp<TF>::gas_optics(
             wrk->jeta, 
             wrk->tropo, 
             wrk->fmajor,
-            col_dry);
+            col_dry,
+            wrk->tau_work_arrays.get());
 
     // External sources.
     source(
@@ -879,7 +915,13 @@ void Gas_optics_rrtmgp<TF>::gas_optics(
             wrk->jeta, 
             wrk->tropo, 
             wrk->fmajor,
-            sources, tlev);
+            sources, tlev,
+            wrk->source_work_arrays.get());
+    
+    if(work_arrays == nullptr)
+    {
+        delete wrk;
+    }
 }
 
 // Gas optics solver shortwave variant.
@@ -1130,16 +1172,14 @@ void Gas_optics_rrtmgp<TF>::compute_gas_taus(
         Array<int,4>& jeta,
         Array<BOOL_TYPE,2>& tropo,
         Array<TF,6>& fmajor,
-        const Array<TF,2>& col_dry) const
+        const Array<TF,2>& col_dry,
+        gas_taus_work_arrays<TF>* work_arrays) const
 {
-    std::shared_ptr<gas_taus_work_arrays<TF>> wrk;
-    if(this->work_arrays != nullptr and ncol == this->work_arrays->n_cols and nlay == this->work_arrays->n_lays)
+    auto wrk = work_arrays;
+    if(work_arrays == nullptr)
     {
-        wrk = this->work_arrays->tau_work_arrays;
-    }
-    else
-    {
-        wrk = std::move(this->create_taus_work_arrays(ncol, ngpt, nlay, this->get_ngas(), this->get_nflav()));
+        wrk = new gas_taus_work_arrays<TF>();
+        wrk->resize(ncol, nlay, ngpt, this->get_ngas(), this->get_nflav());
     }
 
     // CvH add all the checking...
@@ -1275,7 +1315,13 @@ void Gas_optics_rrtmgp<TF>::compute_gas_taus(
                 wrk->tau_rayleigh);
 
     }
+    
     combine_and_reorder(wrk->tau, wrk->tau_rayleigh, has_rayleigh, optical_props);
+
+    if(work_arrays == nullptr)
+    {
+        delete wrk;
+    }
 }
 
 template<typename TF>
@@ -1323,7 +1369,8 @@ void Gas_optics_rrtmgp<TF>::source(
         const Array<int,4>& jeta, const Array<BOOL_TYPE,2>& tropo,
         const Array<TF,6>& fmajor,
         Source_func_lw<TF>& sources,
-        const Array<TF,2>& tlev) const
+        const Array<TF,2>& tlev,
+        gas_source_work_arrays<TF>* work_arrays) const
 {
     // CvH Assume tlev is available.
     // Compute internal (Planck) source functions at layers and levels,
@@ -1336,14 +1383,11 @@ void Gas_optics_rrtmgp<TF>::source(
     auto gpoint_bands = this->get_gpoint_bands();
     auto band_lims_gpoint = this->get_band_lims_gpoint();
 
-    std::shared_ptr<gas_source_work_arrays<TF>> wrk;
-    if(this->work_arrays != nullptr and ncol == this->work_arrays->n_cols and nlay == this->work_arrays->n_lays)
+    auto wrk = work_arrays;
+    if(work_arrays == nullptr)
     {
-        wrk = this->work_arrays->source_work_arrays;
-    }
-    else
-    {
-        wrk = std::move(this->create_source_work_arrays(ncol, ngpt, nlay));
+        wrk = new gas_source_work_arrays<TF>();
+        wrk->resize(ncol, nlay, ngpt);
     }
 
     int sfc_lay = play({1, 1}) > play({1, nlay}) ? 1 : nlay;
@@ -1371,6 +1415,26 @@ void Gas_optics_rrtmgp<TF>::source(
     // reorder123x321_test(sources.get_lay_source    ().ptr(), lay_source_t    .ptr(), ngpt, nlay, ncol);
     // reorder123x321_test(sources.get_lev_source_inc().ptr(), lev_source_inc_t.ptr(), ngpt, nlay, ncol);
     // reorder123x321_test(sources.get_lev_source_dec().ptr(), lev_source_dec_t.ptr(), ngpt, nlay, ncol);
+
+    if(work_arrays == nullptr)
+    {
+        delete wrk;
+    }
+}
+
+template<typename TF>
+std::unique_ptr<gas_optics_work_arrays<TF>> Gas_optics_rrtmgp<TF>::create_work_arrays(
+    const int ncols, 
+    const int nlays,
+    const int ngpts) const
+{
+    auto result = std::make_unique<gas_optics_work_arrays<TF>>();
+    result->resize(ncols, nlays, this->get_nflav());
+    result->tau_work_arrays = std::make_unique<gas_taus_work_arrays<TF>>();
+    result->tau_work_arrays->resize(ncols, nlays, ngpts, this->get_ngas(), this->get_nflav());
+    result->source_work_arrays = std::make_unique<gas_source_work_arrays<TF>>();
+    result->source_work_arrays->resize(ncols, nlays, ngpts);
+    return result;
 }
 
 template<typename TF>

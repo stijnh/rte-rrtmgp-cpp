@@ -132,8 +132,8 @@ class Radiation_solver_longwave
             Array<TF,2> rei_lay_subset;
             std::unique_ptr<Fluxes_broadband<TF>> fluxes_subset;
             std::unique_ptr<Fluxes_broadband<TF>> bnd_fluxes_subset;
-            std::shared_ptr<gas_optics_work_arrays<TF>> gas_optics_work;
-            struct rte_lw_work_arrays<TF> rte_lw_work_arrays;
+            std::unique_ptr<gas_optics_work_arrays<TF>> gas_optics_work;
+            std::unique_ptr<rte_lw_work_arrays<TF>> rte_lw_work;
         };
             
         work_arrays work_blocks;
@@ -158,8 +158,8 @@ class Radiation_solver_longwave
             Array_gpu<TF,2> rei_lay_subset;
             std::unique_ptr<Fluxes_broadband_gpu<TF>> fluxes_subset;
             std::unique_ptr<Fluxes_broadband_gpu<TF>> bnd_fluxes_subset;
-            std::shared_ptr<gas_optics_work_arrays_gpu<TF>> gas_optics_work;
-            struct rte_lw_work_arrays_gpu<TF> rte_lw_work_arrays;
+            std::unique_ptr<gas_optics_work_arrays_gpu<TF>> gas_optics_work;
+            std::unique_ptr<rte_lw_work_arrays_gpu<TF>> rte_lw_work;
         };
         work_arrays_gpu work_blocks_gpu;
         work_arrays_gpu work_residual_gpu;

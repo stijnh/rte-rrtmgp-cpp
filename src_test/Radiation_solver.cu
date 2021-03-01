@@ -419,8 +419,9 @@ void Radiation_solver_longwave<TF>::init_work_arrays_gpu(
 
     this->work_blocks_gpu.fluxes_subset = std::make_unique<Fluxes_broadband_gpu<TF>>(n_col_block, n_lev);
     this->work_blocks_gpu.bnd_fluxes_subset = std::make_unique<Fluxes_byband_gpu<TF>>(n_col_block, n_lev, n_bnd);
-    this->work_blocks_gpu.gas_optics_work = this->kdist_gpu->create_work_arrays(n_col_block, n_lev, n_lay, n_bnd);
-    this->work_blocks_gpu.rte_lw_work_arrays.resize(n_col_block, n_lev, n_gpt);
+    this->work_blocks_gpu.gas_optics_work = kdist_gpu->create_work_arrays(n_col_block, n_lay, n_gpt);
+    this->work_blocks_gpu.rte_lw_work = std::make_unique<rte_lw_work_arrays_gpu<TF>>();
+    this->work_blocks_gpu.rte_lw_work->resize(n_col_block, n_lev, n_gpt);
 
     int n_col_block_residual = n_col % n_col_block;
     if(n_col_block_residual > 0)
@@ -445,9 +446,10 @@ void Radiation_solver_longwave<TF>::init_work_arrays_gpu(
 
         this->work_residual_gpu.fluxes_subset = std::make_unique<Fluxes_broadband_gpu<TF>>(n_col_block_residual, n_lev);
         this->work_residual_gpu.bnd_fluxes_subset = std::make_unique<Fluxes_byband_gpu<TF>>(n_col_block_residual, n_lev, n_bnd);
-        this->work_residual_gpu.gas_optics_work = this->kdist_gpu->create_work_arrays(n_col_block_residual, n_lev, n_lay, n_bnd);
-        this->work_residual.rte_lw_work_arrays.resize(n_col_block_residual, n_lev, n_gpt);
-    }
+        this->work_residual_gpu.gas_optics_work = kdist_gpu->create_work_arrays(n_col_block_residual, n_lay, n_gpt);
+        this->work_residual_gpu.rte_lw_work = std::make_unique<rte_lw_work_arrays_gpu<TF>>();
+        this->work_residual_gpu.rte_lw_work->resize(n_col_block_residual, n_lev, n_gpt);
+        }
     this->work_array_config_gpu = {n_lev, n_lay, switch_cloud_optics};
 }
 
@@ -537,7 +539,6 @@ void Radiation_solver_longwave<TF>::solve_gpu(
         else
             col_dry.subset_copy(work.col_dry_subset, {col_s_in, 1});
             
-        kdist_gpu->set_work_arrays(work.gas_optics_work);
         kdist_gpu->gas_optics(
                 work.p_lay_subset,
                 work.p_lev_subset,
@@ -547,7 +548,8 @@ void Radiation_solver_longwave<TF>::solve_gpu(
                 optical_props_subset_in,
                 sources_subset_in,
                 work.col_dry_subset,
-                work.t_lev_subset);
+                work.t_lev_subset,
+                work.gas_optics_work.get());
 
         if (switch_cloud_optics)
         {
@@ -594,7 +596,7 @@ void Radiation_solver_longwave<TF>::solve_gpu(
                 emis_sfc_subset_in,
                 Array_gpu<TF,2>(), // Add an empty array, no inc_flux.
                 work.gpt_flux_up, work.gpt_flux_dn,
-                n_ang, &(work.rte_lw_work_arrays));
+                n_ang, work.rte_lw_work.get());
         fluxes.reduce(work.gpt_flux_up, work.gpt_flux_dn, optical_props_subset_in, top_at_1);
 
         // Copy the data to the output.

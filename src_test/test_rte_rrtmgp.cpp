@@ -304,8 +304,10 @@ void solve_radiation(int argc, char** argv)
             lw_bnd_flux_net.set_dims({n_col, n_lev, n_bnd_lw});
         }
 
-        rad_lw.init_work_arrays(n_col, n_lev, n_lay, switch_cloud_optics);
+//        rad_lw.init_work_arrays(n_col, n_lev, n_lay, switch_cloud_optics);
 
+        auto work_arrays = rad_lw.create_work_arrays(16, n_lev, n_lay, switch_cloud_optics);
+//        auto work_arrays = std::unique_ptr<radiation_solver_work_arrays<TF>>();
         // Solve the radiation.
         Status::print_message("Solving the longwave radiation.");
 
@@ -325,7 +327,7 @@ void solve_radiation(int argc, char** argv)
                 rel, rei,
                 lw_tau, lay_source, lev_source_inc, lev_source_dec, sfc_source,
                 lw_flux_up, lw_flux_dn, lw_flux_net,
-                lw_bnd_flux_up, lw_bnd_flux_dn, lw_bnd_flux_net);
+                lw_bnd_flux_up, lw_bnd_flux_dn, lw_bnd_flux_net, work_arrays.get());
 
         auto time_end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration<double, std::milli>(time_end-time_start).count();

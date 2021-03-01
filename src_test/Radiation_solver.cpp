@@ -336,10 +336,77 @@ namespace
 }
 
 template<typename TF>
+void radiation_block_work_arrays<TF>::resize(
+        const int ncols,
+        const int nlevs,
+        const int nlays,
+        const int ngpts,
+        const int nbnd,
+        const bool switch_cloud_optics)
+{
+    if(col_dry_subset.get_dims() != std::array<int,2>({ncols, nlays}))
+    {
+        col_dry_subset = Array<TF,2>({ncols, nlays});
+    }
+    if(p_lev_subset.get_dims() != std::array<int,2>({ncols, nlevs}))
+    {
+        p_lev_subset = Array<TF,2>({ncols, nlevs});
+    }
+    if(p_lay_subset.get_dims() != std::array<int,2>({ncols, nlays}))
+    {
+        p_lay_subset = Array<TF,2>({ncols, nlays});
+    }
+    if(t_lev_subset.get_dims() != std::array<int,2>({ncols, nlevs}))
+    {
+        t_lev_subset = Array<TF,2>({ncols, nlevs});
+    }
+    if(t_lay_subset.get_dims() != std::array<int,2>({ncols, nlays}))
+    {
+        t_lay_subset = Array<TF,2>({ncols, nlays});
+    }
+    if(t_sfc_subset.get_dims() != std::array<int,1>({ncols}))
+    {
+        t_sfc_subset = Array<TF,1>({ncols});
+    }
+    if(gpt_flux_up.get_dims() != std::array<int,3>({ncols, nlevs, ngpts}))
+    {
+        gpt_flux_up = Array<TF,3>({ncols, nlevs, ngpts});
+    }
+    if(gpt_flux_dn.get_dims() != std::array<int,3>({ncols, nlevs, ngpts}))
+    {
+        gpt_flux_dn = Array<TF,3>({ncols, nlevs, ngpts});
+    }
+    if(emis_sfc_subset.get_dims() != std::array<int,2>({nbnd, ncols}))
+    {
+        emis_sfc_subset = Array<TF,2>({nbnd, ncols});
+    }
+    if(switch_cloud_optics)
+    {
+        if(lwp_lay_subset.get_dims() != std::array<int,2>({ncols, nlays}))
+        {
+            lwp_lay_subset = Array<TF,2>({ncols, nlays});
+        }
+        if(iwp_lay_subset.get_dims() != std::array<int,2>({ncols, nlays}))
+        {
+            iwp_lay_subset = Array<TF,2>({ncols, nlays});
+        }
+        if(rel_lay_subset.get_dims() != std::array<int,2>({ncols, nlays}))
+        {
+            rel_lay_subset = Array<TF,2>({ncols, nlays});
+        }
+        if(rei_lay_subset.get_dims() != std::array<int,2>({ncols, nlays}))
+        {
+            rei_lay_subset = Array<TF,2>({ncols, nlays});
+        }
+    }
+}
+
+
+template<typename TF>
 Radiation_solver_longwave<TF>::Radiation_solver_longwave(
         const Gas_concs<TF>& gas_concs,
         const std::string& file_name_gas,
-        const std::string& file_name_cloud): work_array_config({-1, -1, false})
+        const std::string& file_name_cloud)
 {
     // Construct the gas optics classes for the solver.
     this->kdist = std::make_unique<Gas_optics_rrtmgp<TF>>(
@@ -349,75 +416,52 @@ Radiation_solver_longwave<TF>::Radiation_solver_longwave(
             load_and_init_cloud_optics<TF>(file_name_cloud));
 }
 
+
 template<typename TF>
-void Radiation_solver_longwave<TF>::init_work_arrays(
+std::unique_ptr<radiation_block_work_arrays<TF>> Radiation_solver_longwave<TF>::create_block_work_arrays(
+        const int n_col,
+        const int n_lev,
+        const int n_lay,
+        const int n_gpt,
+        const int n_bnd,
+        const bool switch_cloud_optics)
+{
+    auto result = std::make_unique<radiation_block_work_arrays<TF>>();
+    result->resize(n_col, n_lev, n_lay, n_gpt, n_bnd, switch_cloud_optics);
+    result->fluxes_subset = std::make_unique<Fluxes_broadband<TF>>(n_col, n_lev);
+    result->bnd_fluxes_subset = std::make_unique<Fluxes_byband<TF>>(n_col, n_lev, n_bnd);
+    return result;
+}
+
+
+template<typename TF>
+std::unique_ptr<radiation_solver_work_arrays<TF>> Radiation_solver_longwave<TF>::create_work_arrays(
         const int n_col, 
         const int n_lev, 
         const int n_lay,
-        const bool switch_cloud_optics)
+        const bool switch_cloud_optics) const
 {
-    if(n_lev == std::get<0>(this->work_array_config) and 
-       n_lay == std::get<1>(this->work_array_config) and
-       switch_cloud_optics == std::get<2>(this->work_array_config))
-    {
-        return;
-    }
-
     constexpr int n_col_block = 16;
     const int n_gpt = this->get_n_gpt();
     const int n_bnd = this->get_n_bnd();
 
-    this->work_blocks.col_dry_subset = Array<TF,2>({n_col_block, n_lay});
-    this->work_blocks.gpt_flux_up = Array<TF,3>({n_col_block, n_lev, n_gpt});
-    this->work_blocks.gpt_flux_dn = Array<TF,3>({n_col_block, n_lev, n_gpt});
-    this->work_blocks.p_lev_subset = Array<TF,2>({n_col_block, n_lev});
-    this->work_blocks.p_lay_subset = Array<TF,2>({n_col_block, n_lay});
-    this->work_blocks.t_lev_subset = Array<TF,2>({n_col_block, n_lev});
-    this->work_blocks.t_lay_subset = Array<TF,2>({n_col_block, n_lay});
-    this->work_blocks.t_sfc_subset = Array<TF,1>({n_col_block});
-    this->work_blocks.emis_sfc_subset = Array<TF,2>({n_bnd, n_col_block});
+    auto result = std::make_unique<radiation_solver_work_arrays<TF>>();
 
-    if(switch_cloud_optics)
-    {
-        this->work_blocks.lwp_lay_subset = Array<TF,2>({n_col_block, n_lay});
-        this->work_blocks.iwp_lay_subset = Array<TF,2>({n_col_block, n_lay});
-        this->work_blocks.rel_lay_subset = Array<TF,2>({n_col_block, n_lay});
-        this->work_blocks.rei_lay_subset = Array<TF,2>({n_col_block, n_lay});
-    }
-    this->work_blocks.fluxes_subset = std::make_unique<Fluxes_broadband<TF>>(n_col_block, n_lev);
-    this->work_blocks.bnd_fluxes_subset = std::make_unique<Fluxes_byband<TF>>(n_col_block, n_lev, n_bnd);
-    this->work_blocks.gas_optics_work = kdist->create_work_arrays(n_col_block, n_lay, n_gpt);
-    this->work_blocks.rte_lw_work = std::make_unique<rte_lw_work_arrays<TF>>();
-    this->work_blocks.rte_lw_work->resize(n_col_block, n_lev, n_gpt);
+    result->blocks_work_arrays = create_block_work_arrays(n_col_block, n_lev, n_lay, n_gpt, n_bnd, switch_cloud_optics);
+    result->blocks_work_arrays->gas_optics_work = kdist->create_work_arrays(n_col_block, n_lay, n_gpt);
+    result->blocks_work_arrays->rte_lw_work = std::make_unique<rte_lw_work_arrays<TF>>();
+    result->blocks_work_arrays->rte_lw_work->resize(n_col_block, n_lev, n_gpt);
 
     int n_col_block_residual = n_col % n_col_block;
     if(n_col_block_residual > 0)
     {
-        this->work_residual.col_dry_subset = Array<TF,2>({n_col_block_residual, n_lay});
-        this->work_residual.gpt_flux_up = Array<TF,3>({n_col_block_residual, n_lev, n_gpt});
-        this->work_residual.gpt_flux_dn = Array<TF,3>({n_col_block_residual, n_lev, n_gpt});
-        this->work_residual.p_lev_subset = Array<TF,2>({n_col_block_residual, n_lev});
-        this->work_residual.p_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
-        this->work_residual.t_lev_subset = Array<TF,2>({n_col_block_residual, n_lev});
-        this->work_residual.t_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
-        this->work_residual.t_sfc_subset = Array<TF,1>({n_col_block_residual});
-        this->work_residual.emis_sfc_subset = Array<TF,2>({n_bnd, n_col_block_residual});
-
-        if(switch_cloud_optics)
-        {
-            this->work_residual.lwp_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
-            this->work_residual.iwp_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
-            this->work_residual.rel_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
-            this->work_residual.rei_lay_subset = Array<TF,2>({n_col_block_residual, n_lay});
-        }
-
-        this->work_residual.fluxes_subset = std::make_unique<Fluxes_broadband<TF>>(n_col_block_residual, n_lev);
-        this->work_residual.bnd_fluxes_subset = std::make_unique<Fluxes_byband<TF>>(n_col_block_residual, n_lev, n_bnd);
-        this->work_residual.gas_optics_work = kdist->create_work_arrays(n_col_block_residual, n_lay, n_gpt);
-        this->work_residual.rte_lw_work = std::make_unique<rte_lw_work_arrays<TF>>();
-        this->work_residual.rte_lw_work->resize(n_col_block_residual, n_lev, n_gpt);
+        result->residual_work_arrays = create_block_work_arrays(n_col_block_residual, n_lev, n_lay, n_gpt, n_bnd, switch_cloud_optics);
+        result->residual_work_arrays->gas_optics_work = kdist->create_work_arrays(n_col_block_residual, n_lay, n_gpt);
+        result->residual_work_arrays->rte_lw_work = std::make_unique<rte_lw_work_arrays<TF>>();
+        result->residual_work_arrays->rte_lw_work->resize(n_col_block_residual, n_lev, n_gpt);
     }
-    this->work_array_config = {n_lev, n_lay, switch_cloud_optics};
+
+    return result;
 }
 
 template<typename TF>
@@ -436,14 +480,14 @@ void Radiation_solver_longwave<TF>::solve(
         Array<TF,3>& tau, Array<TF,3>& lay_source,
         Array<TF,3>& lev_source_inc, Array<TF,3>& lev_source_dec, Array<TF,2>& sfc_source,
         Array<TF,2>& lw_flux_up, Array<TF,2>& lw_flux_dn, Array<TF,2>& lw_flux_net,
-        Array<TF,3>& lw_bnd_flux_up, Array<TF,3>& lw_bnd_flux_dn, Array<TF,3>& lw_bnd_flux_net)
+        Array<TF,3>& lw_bnd_flux_up, Array<TF,3>& lw_bnd_flux_dn, Array<TF,3>& lw_bnd_flux_net,
+        radiation_solver_work_arrays<TF>* work_arrays)
 {
     const int n_col = p_lay.dim(1);
     const int n_lay = p_lay.dim(2);
     const int n_lev = p_lev.dim(2);
     const int n_gpt = this->kdist->get_ngpt();
     const int n_bnd = this->kdist->get_nband();
-    this->init_work_arrays(n_col, n_lev, n_lay, switch_cloud_optics);
 
     const BOOL_TYPE top_at_1 = p_lay({1, 1}) < p_lay({1, n_lay});
 
@@ -452,6 +496,19 @@ void Radiation_solver_longwave<TF>::solve(
     // Read the sources and create containers for the substeps.
     int n_blocks = n_col / n_col_block;
     int n_col_block_residual = n_col % n_col_block;
+
+    std::unique_ptr<radiation_solver_work_arrays<TF>> local_work_arrays;
+    radiation_solver_work_arrays<TF>* wrk;
+
+    if(work_arrays == nullptr)
+    {
+        local_work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>();
+        wrk = local_work_arrays.get();
+    }
+    else
+    {
+        wrk = work_arrays;
+    }
 
     std::unique_ptr<Optical_props_arry<TF>> optical_props_subset;
     std::unique_ptr<Optical_props_arry<TF>> optical_props_residual;
@@ -488,45 +545,45 @@ void Radiation_solver_longwave<TF>::solve(
             const Array<TF,2>& emis_sfc_subset_in,
             Fluxes_broadband<TF>& fluxes,
             Fluxes_broadband<TF>& bnd_fluxes,
-            Radiation_solver_longwave<TF>::work_arrays& work)
+            radiation_block_work_arrays<TF>* work)
     {
         const int n_col_in = col_e_in - col_s_in + 1;
         Gas_concs<TF> gas_concs_subset(gas_concs, col_s_in, n_col_in);
 
-        p_lev.subset_copy(work.p_lev_subset, {col_s_in, 1});
-        p_lay.subset_copy(work.p_lay_subset, {col_s_in, 1});
-        t_lev.subset_copy(work.t_lev_subset, {col_s_in, 1});
-        t_lay.subset_copy(work.t_lay_subset, {col_s_in, 1});
-        t_sfc.subset_copy(work.t_sfc_subset, {col_s_in});
+        p_lev.subset_copy(work->p_lev_subset, {col_s_in, 1});
+        p_lay.subset_copy(work->p_lay_subset, {col_s_in, 1});
+        t_lev.subset_copy(work->t_lev_subset, {col_s_in, 1});
+        t_lay.subset_copy(work->t_lay_subset, {col_s_in, 1});
+        t_sfc.subset_copy(work->t_sfc_subset, {col_s_in});
 
         if (col_dry.size() == 0)
-            Gas_optics_rrtmgp<TF>::get_col_dry(work.col_dry_subset, gas_concs_subset.get_vmr("h2o"), work.p_lev_subset);
+            Gas_optics_rrtmgp<TF>::get_col_dry(work->col_dry_subset, gas_concs_subset.get_vmr("h2o"), work->p_lev_subset);
         else
-            col_dry.subset_copy(work.col_dry_subset, {col_s_in, 1});
+            col_dry.subset_copy(work->col_dry_subset, {col_s_in, 1});
 
         kdist->gas_optics(
-                work.p_lay_subset,
-                work.p_lev_subset,
-                work.t_lay_subset,
-                work.t_sfc_subset,
+                work->p_lay_subset,
+                work->p_lev_subset,
+                work->t_lay_subset,
+                work->t_sfc_subset,
                 gas_concs_subset,
                 optical_props_subset_in,
                 sources_subset_in,
-                work.col_dry_subset,
-                work.t_lev_subset,
-                work.gas_optics_work.get());
+                work->col_dry_subset,
+                work->t_lev_subset,
+                work->gas_optics_work.get());
 
         if (switch_cloud_optics)
         {
-            lwp.subset_copy(work.lwp_lay_subset, {col_s_in, 1});
-            iwp.subset_copy(work.iwp_lay_subset, {col_s_in, 1});
-            rel.subset_copy(work.rel_lay_subset, {col_s_in, 1});
-            rei.subset_copy(work.rei_lay_subset, {col_s_in, 1});
+            lwp.subset_copy(work->lwp_lay_subset, {col_s_in, 1});
+            iwp.subset_copy(work->iwp_lay_subset, {col_s_in, 1});
+            rel.subset_copy(work->rel_lay_subset, {col_s_in, 1});
+            rei.subset_copy(work->rei_lay_subset, {col_s_in, 1});
             cloud_optics->cloud_optics(
-                    work.lwp_lay_subset,
-                    work.iwp_lay_subset,
-                    work.rel_lay_subset,
-                    work.rei_lay_subset,
+                    work->lwp_lay_subset,
+                    work->iwp_lay_subset,
+                    work->rel_lay_subset,
+                    work->rei_lay_subset,
                     *cloud_optical_props_subset_in);
 
             // cloud->delta_scale();
@@ -567,10 +624,10 @@ void Radiation_solver_longwave<TF>::solve(
                 sources_subset_in,
                 emis_sfc_subset_in,
                 Array<TF,2>(), // Add an empty array, no inc_flux.
-                work.gpt_flux_up, work.gpt_flux_dn,
-                n_ang, work.rte_lw_work.get());
+                work->gpt_flux_up, work->gpt_flux_dn,
+                n_ang, work->rte_lw_work.get());
 
-        fluxes.reduce(work.gpt_flux_up, work.gpt_flux_dn, optical_props_subset_in, top_at_1);
+        fluxes.reduce(work->gpt_flux_up, work->gpt_flux_dn, optical_props_subset_in, top_at_1);
 
         // Copy the data to the output.
         for (int ilev=1; ilev<=n_lev; ++ilev)
@@ -583,7 +640,7 @@ void Radiation_solver_longwave<TF>::solve(
 
         if (switch_output_bnd_fluxes)
         {
-            bnd_fluxes.reduce(work.gpt_flux_up, work.gpt_flux_dn, optical_props_subset_in, top_at_1);
+            bnd_fluxes.reduce(work->gpt_flux_up, work->gpt_flux_dn, optical_props_subset_in, top_at_1);
 
             for (int ibnd=1; ibnd<=n_bnd; ++ibnd)
                 for (int ilev=1; ilev<=n_lev; ++ilev)
@@ -601,17 +658,22 @@ void Radiation_solver_longwave<TF>::solve(
         const int col_s = (b-1) * n_col_block + 1;
         const int col_e =  b    * n_col_block;
 
-        emis_sfc.subset_copy(this->work_blocks.emis_sfc_subset, {1, col_s});
+        if(!wrk->blocks_work_arrays)
+        {
+            wrk->blocks_work_arrays = create_block_work_arrays(n_col_block, n_lev, n_lay, n_gpt, n_bnd, switch_cloud_optics);
+        }
+
+        emis_sfc.subset_copy(wrk->blocks_work_arrays->emis_sfc_subset, {1, col_s});
 
         call_kernels(
                 col_s, col_e,
                 optical_props_subset,
                 cloud_optical_props_subset,
                 *sources_subset,
-                this->work_blocks.emis_sfc_subset,
-                *(this->work_blocks.fluxes_subset),
-                *(this->work_blocks.bnd_fluxes_subset),
-                this->work_blocks);
+                wrk->blocks_work_arrays->emis_sfc_subset,
+                *(wrk->blocks_work_arrays->fluxes_subset),
+                *(wrk->blocks_work_arrays->bnd_fluxes_subset),
+                wrk->blocks_work_arrays.get());
     }
 
     if (n_col_block_residual > 0)
@@ -619,17 +681,22 @@ void Radiation_solver_longwave<TF>::solve(
         const int col_s = n_col - n_col_block_residual + 1;
         const int col_e = n_col;
 
-        emis_sfc.subset_copy(this->work_residual.emis_sfc_subset, {1, col_s});
+        if(!wrk->residual_work_arrays)
+        {
+            wrk->residual_work_arrays = create_block_work_arrays(n_col_block_residual, n_lev, n_lay, n_gpt, n_bnd, switch_cloud_optics);
+        }
+
+        emis_sfc.subset_copy(wrk->residual_work_arrays->emis_sfc_subset, {1, col_s});
 
         call_kernels(
                 col_s, col_e,
                 optical_props_residual,
                 cloud_optical_props_residual,
                 *sources_residual,
-                this->work_residual.emis_sfc_subset,
-                *(this->work_residual.fluxes_subset),
-                *(this->work_residual.bnd_fluxes_subset),
-                this->work_residual);
+                wrk->residual_work_arrays->emis_sfc_subset,
+                *(wrk->residual_work_arrays->fluxes_subset),
+                *(wrk->residual_work_arrays->bnd_fluxes_subset),
+                wrk->residual_work_arrays.get());
     }
 }
 

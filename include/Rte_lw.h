@@ -27,7 +27,6 @@
 
 #include <memory>
 #include "define_bool.h"
-#include "Work_array_owner.h"
 
 // Forward declarations.
 template<typename, int> class Array;

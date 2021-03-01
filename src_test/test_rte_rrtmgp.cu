@@ -323,8 +323,9 @@ void solve_radiation(int argc, char** argv)
         Array_gpu<TF,2> rel_gpu(rel);
         Array_gpu<TF,2> rei_gpu(rei);
 
-        rad_lw.init_work_arrays_gpu(n_col, n_lev, n_lay, switch_cloud_optics);
-
+        auto work_arrays = rad_lw.create_work_arrays_gpu(16, n_lev, n_lay, switch_cloud_optics);
+        // Skip work arrays usage:
+//        auto work_arrays = std::unique_ptr<radiation_solver_work_arrays<TF>>();
         auto time_start = std::chrono::high_resolution_clock::now();
 
         cudaProfilerStart();
@@ -342,7 +343,7 @@ void solve_radiation(int argc, char** argv)
                 rel_gpu, rei_gpu,
                 lw_tau, lay_source, lev_source_inc, lev_source_dec, sfc_source,
                 lw_flux_up, lw_flux_dn, lw_flux_net,
-                lw_bnd_flux_up, lw_bnd_flux_dn, lw_bnd_flux_net);
+                lw_bnd_flux_up, lw_bnd_flux_dn, lw_bnd_flux_net, work_arrays.get());
         cudaProfilerStop();
 
         auto time_end = std::chrono::high_resolution_clock::now();

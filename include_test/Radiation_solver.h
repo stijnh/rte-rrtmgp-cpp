@@ -64,6 +64,44 @@ struct radiation_solver_work_arrays
     std::unique_ptr<radiation_block_work_arrays<TF>> residual_work_arrays;
 };
 
+#ifdef __CUDACC__
+template<typename TF>
+struct radiation_block_work_arrays_gpu
+{
+    Array_gpu<TF,2> col_dry_subset;
+    Array_gpu<TF,3> gpt_flux_up;
+    Array_gpu<TF,3> gpt_flux_dn;
+    Array_gpu<TF,2> p_lev_subset;
+    Array_gpu<TF,2> p_lay_subset;
+    Array_gpu<TF,2> t_lev_subset;
+    Array_gpu<TF,2> t_lay_subset;
+    Array_gpu<TF,1> t_sfc_subset;
+    Array_gpu<TF,2> emis_sfc_subset;
+    Array_gpu<TF,2> lwp_lay_subset;
+    Array_gpu<TF,2> iwp_lay_subset;
+    Array_gpu<TF,2> rel_lay_subset;
+    Array_gpu<TF,2> rei_lay_subset;
+    std::unique_ptr<Fluxes_broadband_gpu<TF>> fluxes_subset;
+    std::unique_ptr<Fluxes_broadband_gpu<TF>> bnd_fluxes_subset;
+    std::unique_ptr<gas_optics_work_arrays_gpu<TF>> gas_optics_work;
+    std::unique_ptr<rte_lw_work_arrays_gpu<TF>> rte_lw_work;
+
+    void resize(const int ncols, 
+                const int nlevs, 
+                const int nlays, 
+                const int ngpts,
+                const int nbnd,
+                const bool switch_cloud_optics);
+};
+
+template<typename TF>
+struct radiation_solver_work_arrays_gpu
+{
+    std::unique_ptr<radiation_block_work_arrays_gpu<TF>> blocks_work_arrays;
+    std::unique_ptr<radiation_block_work_arrays_gpu<TF>> residual_work_arrays;
+};
+#endif
+
 template<typename TF>
 class Radiation_solver_longwave
 {
@@ -100,7 +138,7 @@ class Radiation_solver_longwave
                 Array<TF,3>& lev_source_inc, Array<TF,3>& lev_source_dec, Array<TF,2>& sfc_source,
                 Array<TF,2>& lw_flux_up, Array<TF,2>& lw_flux_dn, Array<TF,2>& lw_flux_net,
                 Array<TF,3>& lw_bnd_flux_up, Array<TF,3>& lw_bnd_flux_dn, Array<TF,3>& lw_bnd_flux_net,
-                radiation_solver_work_arrays<TF>* work_arrays=nullptr);
+                radiation_solver_work_arrays<TF>* work_arrays=nullptr) const;
         
         int get_n_gpt() const { return this->kdist->get_ngpt(); };
         int get_n_bnd() const { return this->kdist->get_nband(); };
@@ -112,6 +150,12 @@ class Radiation_solver_longwave
         { return this->kdist->get_band_lims_wavenumber(); }
 
         #ifdef __CUDACC__
+
+        std::unique_ptr<radiation_solver_work_arrays_gpu<TF>> create_work_arrays_gpu(
+                const int n_col,
+                const int n_lev,
+                const int n_lay,
+                const bool switch_cloud_optics) const;
 
         void solve_gpu(
                 const bool switch_fluxes,
@@ -128,7 +172,8 @@ class Radiation_solver_longwave
                 Array_gpu<TF,3>& tau, Array_gpu<TF,3>& lay_source,
                 Array_gpu<TF,3>& lev_source_inc, Array_gpu<TF,3>& lev_source_dec, Array_gpu<TF,2>& sfc_source,
                 Array_gpu<TF,2>& lw_flux_up, Array_gpu<TF,2>& lw_flux_dn, Array_gpu<TF,2>& lw_flux_net,
-                Array_gpu<TF,3>& lw_bnd_flux_up, Array_gpu<TF,3>& lw_bnd_flux_dn, Array_gpu<TF,3>& lw_bnd_flux_net);
+                Array_gpu<TF,3>& lw_bnd_flux_up, Array_gpu<TF,3>& lw_bnd_flux_dn, Array_gpu<TF,3>& lw_bnd_flux_net,
+                radiation_solver_work_arrays_gpu<TF>* work_arrays=nullptr) const;
 
         int get_n_gpt_gpu() const { return this->kdist_gpu->get_ngpt(); };
         int get_n_bnd_gpu() const { return this->kdist_gpu->get_nband(); };
@@ -138,16 +183,12 @@ class Radiation_solver_longwave
 
         Array<TF,2> get_band_lims_wavenumber_gpu() const
         { return this->kdist_gpu->get_band_lims_wavenumber(); }
+        
         #endif
 
     private:
         std::unique_ptr<Gas_optics_rrtmgp<TF>> kdist;
         std::unique_ptr<Cloud_optics<TF>> cloud_optics;
-
-        #ifdef __CUDACC__
-        std::unique_ptr<Gas_optics_rrtmgp_gpu<TF>> kdist_gpu;
-        std::unique_ptr<Cloud_optics_gpu<TF>> cloud_optics_gpu;
-        #endif
 
         static std::unique_ptr<radiation_block_work_arrays<TF>> create_block_work_arrays(
                 const int n_col,
@@ -156,6 +197,21 @@ class Radiation_solver_longwave
                 const int n_gpt,
                 const int n_bnd,
                 const bool switch_cloud_optics);
+
+        #ifdef __CUDACC__
+
+        std::unique_ptr<Gas_optics_rrtmgp_gpu<TF>> kdist_gpu;
+        std::unique_ptr<Cloud_optics_gpu<TF>> cloud_optics_gpu;
+
+        static std::unique_ptr<radiation_block_work_arrays_gpu<TF>> create_block_work_arrays_gpu(
+                const int n_col,
+                const int n_lev,
+                const int n_lay,
+                const int n_gpt,
+                const int n_bnd,
+                const bool switch_cloud_optics);
+
+        #endif
 };
 
 template<typename TF>

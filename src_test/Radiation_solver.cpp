@@ -335,6 +335,7 @@ namespace
     }
 }
 
+
 template<typename TF>
 void radiation_block_work_arrays<TF>::resize(
         const int ncols,
@@ -481,7 +482,7 @@ void Radiation_solver_longwave<TF>::solve(
         Array<TF,3>& lev_source_inc, Array<TF,3>& lev_source_dec, Array<TF,2>& sfc_source,
         Array<TF,2>& lw_flux_up, Array<TF,2>& lw_flux_dn, Array<TF,2>& lw_flux_net,
         Array<TF,3>& lw_bnd_flux_up, Array<TF,3>& lw_bnd_flux_dn, Array<TF,3>& lw_bnd_flux_net,
-        radiation_solver_work_arrays<TF>* work_arrays)
+        radiation_solver_work_arrays<TF>* work_arrays) const
 {
     const int n_col = p_lay.dim(1);
     const int n_lay = p_lay.dim(2);
@@ -636,8 +637,8 @@ void Radiation_solver_longwave<TF>::solve(
                 lw_flux_up ({icol+col_s_in-1, ilev}) = fluxes.get_flux_up ()({icol, ilev});
                 lw_flux_dn ({icol+col_s_in-1, ilev}) = fluxes.get_flux_dn ()({icol, ilev});
                 lw_flux_net({icol+col_s_in-1, ilev}) = fluxes.get_flux_net()({icol, ilev});
-            }
 
+            }
         if (switch_output_bnd_fluxes)
         {
             bnd_fluxes.reduce(work->gpt_flux_up, work->gpt_flux_dn, optical_props_subset_in, top_at_1);
@@ -660,7 +661,9 @@ void Radiation_solver_longwave<TF>::solve(
 
         if(!wrk->blocks_work_arrays)
         {
-            wrk->blocks_work_arrays = create_block_work_arrays(n_col_block, n_lev, n_lay, n_gpt, n_bnd, switch_cloud_optics);
+            wrk->blocks_work_arrays = create_block_work_arrays(n_col_block, 
+                n_lev, n_lay, n_gpt, n_bnd, 
+                switch_cloud_optics);
         }
 
         emis_sfc.subset_copy(wrk->blocks_work_arrays->emis_sfc_subset, {1, col_s});

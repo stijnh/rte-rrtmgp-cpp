@@ -323,7 +323,7 @@ void solve_radiation(int argc, char** argv)
         Array_gpu<TF,2> rel_gpu(rel);
         Array_gpu<TF,2> rei_gpu(rei);
 
-        auto work_arrays = rad_lw.create_work_arrays_gpu(16, n_lev, n_lay, switch_cloud_optics);
+        auto work_arrays = rad_lw.create_work_arrays_gpu(n_col, n_lev, n_lay, switch_cloud_optics);
         // Skip work arrays usage:
 //        auto work_arrays = std::unique_ptr<radiation_solver_work_arrays<TF>>();
         auto time_start = std::chrono::high_resolution_clock::now();

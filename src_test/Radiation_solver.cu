@@ -453,14 +453,21 @@ std::unique_ptr<radiation_block_work_arrays_gpu<TF>> Radiation_solver_longwave<T
         const int n_col,
         const int n_lev,
         const int n_lay,
-        const int n_gpt,
-        const int n_bnd,
-        const bool switch_cloud_optics)
+        const bool switch_cloud_optics) const
 {
+    const int n_gpt = this->get_n_gpt();
+    const int n_bnd = this->get_n_bnd();
+
     auto result = std::make_unique<radiation_block_work_arrays_gpu<TF>>();
     result->resize(n_col, n_lev, n_lay, n_gpt, n_bnd, switch_cloud_optics);
     result->fluxes_subset = std::make_unique<Fluxes_broadband_gpu<TF>>(n_col, n_lev);
     result->bnd_fluxes_subset = std::make_unique<Fluxes_byband_gpu<TF>>(n_col, n_lev, n_bnd);
+    result->optical_props_subset = std::make_unique<Optical_props_1scl_gpu<TF>>(n_col, n_lay, *kdist_gpu);
+    result->sources_subset = std::make_unique<Source_func_lw_gpu<TF>>(n_col, n_lay, *kdist_gpu);
+    if(switch_cloud_optics)
+    {
+        result->cloud_optical_props_subset = std::make_unique<Optical_props_1scl_gpu<TF>>(n_col, n_lay, *cloud_optics_gpu);
+    }    
     return result;
 }
 
@@ -472,13 +479,12 @@ std::unique_ptr<radiation_solver_work_arrays_gpu<TF>> Radiation_solver_longwave<
         const int n_lay,
         const bool switch_cloud_optics) const
 {
-    constexpr int n_col_block = 16;
     const int n_gpt = this->get_n_gpt();
     const int n_bnd = this->get_n_bnd();
 
     auto result = std::make_unique<radiation_solver_work_arrays_gpu<TF>>();
 
-    result->blocks_work_arrays = create_block_work_arrays_gpu(n_col_block, n_lev, n_lay, n_gpt, n_bnd, switch_cloud_optics);
+    result->blocks_work_arrays = create_block_work_arrays_gpu(n_col_block, n_lev, n_lay, switch_cloud_optics);
     result->blocks_work_arrays->gas_optics_work = kdist_gpu->create_work_arrays(n_col_block, n_lay, n_gpt);
     result->blocks_work_arrays->rte_lw_work = std::make_unique<rte_lw_work_arrays_gpu<TF>>();
     result->blocks_work_arrays->rte_lw_work->resize(n_col_block, n_lev, n_gpt);
@@ -486,7 +492,7 @@ std::unique_ptr<radiation_solver_work_arrays_gpu<TF>> Radiation_solver_longwave<
     int n_col_block_residual = n_col % n_col_block;
     if(n_col_block_residual > 0)
     {
-        result->residual_work_arrays = create_block_work_arrays_gpu(n_col_block_residual, n_lev, n_lay, n_gpt, n_bnd, switch_cloud_optics);
+        result->residual_work_arrays = create_block_work_arrays_gpu(n_col_block_residual, n_lev, n_lay, switch_cloud_optics);
         result->residual_work_arrays->gas_optics_work = kdist_gpu->create_work_arrays(n_col_block_residual, n_lay, n_gpt);
         result->residual_work_arrays->rte_lw_work = std::make_unique<rte_lw_work_arrays_gpu<TF>>();
         result->residual_work_arrays->rte_lw_work->resize(n_col_block_residual, n_lev, n_gpt);
@@ -524,8 +530,6 @@ void Radiation_solver_longwave<TF>::solve_gpu(
 
     const BOOL_TYPE top_at_1 = p_lay({1, 1}) < p_lay({1, n_lay});
 
-    constexpr int n_col_block = 16;
-
     // Read the sources and create containers for the substeps.
     int n_blocks = n_col / n_col_block;
     int n_col_block_residual = n_col % n_col_block;
@@ -541,32 +545,6 @@ void Radiation_solver_longwave<TF>::solve_gpu(
     else
     {
         wrk = work_arrays;
-    }
-
-    std::unique_ptr<Optical_props_arry_gpu<TF>> optical_props_subset;
-    std::unique_ptr<Optical_props_arry_gpu<TF>> optical_props_residual;
-
-    optical_props_subset = std::make_unique<Optical_props_1scl_gpu<TF>>(n_col_block, n_lay, *kdist_gpu);
-
-    std::unique_ptr<Source_func_lw_gpu<TF>> sources_subset;
-    std::unique_ptr<Source_func_lw_gpu<TF>> sources_residual;
-
-    sources_subset = std::make_unique<Source_func_lw_gpu<TF>>(n_col_block, n_lay, *kdist_gpu);
-
-    if (n_col_block_residual > 0)
-    {
-        optical_props_residual = std::make_unique<Optical_props_1scl_gpu<TF>>(n_col_block_residual, n_lay, *kdist_gpu);
-        sources_residual = std::make_unique<Source_func_lw_gpu<TF>>(n_col_block_residual, n_lay, *kdist_gpu);
-    }
-
-    std::unique_ptr<Optical_props_1scl_gpu<TF>> cloud_optical_props_subset;
-    std::unique_ptr<Optical_props_1scl_gpu<TF>> cloud_optical_props_residual;
-
-    if (switch_cloud_optics)
-    {
-        cloud_optical_props_subset = std::make_unique<Optical_props_1scl_gpu<TF>>(n_col_block, n_lay, *cloud_optics_gpu);
-        if (n_col_block_residual > 0)
-            cloud_optical_props_residual = std::make_unique<Optical_props_1scl_gpu<TF>>(n_col_block_residual, n_lay, *cloud_optics_gpu);
     }
 
     // Lambda function for solving optical properties subset.
@@ -678,19 +656,16 @@ void Radiation_solver_longwave<TF>::solve_gpu(
 
         if(!wrk->blocks_work_arrays)
         {
-            wrk->blocks_work_arrays = create_block_work_arrays_gpu(
-                    n_col_block, n_lev, n_lay, 
-                    n_gpt, n_bnd, 
-                    switch_cloud_optics);
+            wrk->blocks_work_arrays = create_block_work_arrays_gpu(n_col_block, n_lev, n_lay, switch_cloud_optics);
         }
 
         emis_sfc.subset_copy(wrk->blocks_work_arrays->emis_sfc_subset, {1, col_s});
 
         call_kernels(
                 col_s, col_e,
-                optical_props_subset,
-                cloud_optical_props_subset,
-                *sources_subset,
+                wrk->blocks_work_arrays->optical_props_subset,
+                wrk->blocks_work_arrays->cloud_optical_props_subset,
+                *(wrk->blocks_work_arrays->sources_subset),
                 wrk->blocks_work_arrays->emis_sfc_subset,
                 *(wrk->blocks_work_arrays->fluxes_subset),
                 *(wrk->blocks_work_arrays->bnd_fluxes_subset),
@@ -704,16 +679,17 @@ void Radiation_solver_longwave<TF>::solve_gpu(
 
         if(!wrk->residual_work_arrays)
         {
-            wrk->residual_work_arrays = create_block_work_arrays_gpu(n_col_block_residual, n_lev, n_lay, n_gpt, n_bnd, switch_cloud_optics);
+            wrk->residual_work_arrays = create_block_work_arrays_gpu(   n_col_block_residual, n_lev, 
+                                                                        n_lay, switch_cloud_optics);
         }
 
         emis_sfc.subset_copy(wrk->residual_work_arrays->emis_sfc_subset, {1, col_s});
 
         call_kernels(
                 col_s, col_e,
-                optical_props_residual,
-                cloud_optical_props_residual,
-                *sources_residual,
+                wrk->residual_work_arrays->optical_props_subset,
+                wrk->residual_work_arrays->cloud_optical_props_subset,
+                *(wrk->residual_work_arrays->sources_subset),
                 wrk->residual_work_arrays->emis_sfc_subset,
                 *(wrk->residual_work_arrays->fluxes_subset),
                 *(wrk->residual_work_arrays->bnd_fluxes_subset),

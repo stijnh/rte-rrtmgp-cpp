@@ -487,7 +487,7 @@ std::unique_ptr<radiation_solver_work_arrays_gpu<TF>> Radiation_solver_longwave<
     result->blocks_work_arrays = create_block_work_arrays_gpu(n_col_block, n_lev, n_lay, switch_cloud_optics);
     result->blocks_work_arrays->gas_optics_work = kdist_gpu->create_work_arrays(n_col_block, n_lay, n_gpt);
     result->blocks_work_arrays->rte_lw_work = std::make_unique<rte_lw_work_arrays_gpu<TF>>();
-    result->blocks_work_arrays->rte_lw_work->resize(n_col_block, n_lev, n_gpt);
+    result->blocks_work_arrays->rte_lw_work->resize(n_col_block, n_lev, n_lay, n_gpt);
 
     int n_col_block_residual = n_col % n_col_block;
     if(n_col_block_residual > 0)
@@ -495,7 +495,7 @@ std::unique_ptr<radiation_solver_work_arrays_gpu<TF>> Radiation_solver_longwave<
         result->residual_work_arrays = create_block_work_arrays_gpu(n_col_block_residual, n_lev, n_lay, switch_cloud_optics);
         result->residual_work_arrays->gas_optics_work = kdist_gpu->create_work_arrays(n_col_block_residual, n_lay, n_gpt);
         result->residual_work_arrays->rte_lw_work = std::make_unique<rte_lw_work_arrays_gpu<TF>>();
-        result->residual_work_arrays->rte_lw_work->resize(n_col_block_residual, n_lev, n_gpt);
+        result->residual_work_arrays->rte_lw_work->resize(n_col_block_residual, n_lev, n_lay, n_gpt);
     }
 
     return result;

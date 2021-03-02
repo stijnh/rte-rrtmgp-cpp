@@ -60,22 +60,22 @@ namespace
 
 //    template<typename TF>
 //    void apply_BC(
-//            int ncol, int nlay, int ngpt,
+//            int ncol, int nlay, int ngpts,
 //            BOOL_TYPE top_at_1, Array<TF,3>& gpt_flux_dn)
 //    {
 //        rrtmgp_kernels::apply_BC_0(
-//                &ncol, &nlay, &ngpt,
+//                &ncol, &nlay, &ngpts,
 //                &top_at_1, gpt_flux_dn.ptr());
 //    }
 //
 //    template<typename TF>
 //    void apply_BC(
-//            int ncol, int nlay, int ngpt,
+//            int ncol, int nlay, int ngpts,
 //            BOOL_TYPE top_at_1, const Array<TF,2>& inc_flux,
 //            Array<TF,3>& gpt_flux_dn)
 //    {
 //        rrtmgp_kernels::apply_BC_gpt(
-//                &ncol, &nlay, &ngpt,
+//                &ncol, &nlay, &ngpts,
 //                &top_at_1, const_cast<TF*>(inc_flux.ptr()), gpt_flux_dn.ptr());
 //    }
 
@@ -83,19 +83,60 @@ template<typename TF>
 void rte_lw_work_arrays_gpu<TF>::resize(
         const int ncols, 
         const int nlevs, 
-        const int ngpt)
+        const int nlays,
+        const int ngpts)
 {
-        if(sfc_emis_gpt.get_dims() != std::array<int,2>({ncols, ngpt}))
+        if(sfc_emis_gpt.get_dims() != std::array<int,2>({ncols, ngpts}))
         {
-            sfc_emis_gpt = Array_gpu<TF,2>({ncols, ngpt});
+            sfc_emis_gpt = Array_gpu<TF,2>({ncols, ngpts});
         }
-        if(sfc_src_jac.get_dims() != std::array<int,2>({ncols, ngpt}))
+        if(sfc_src_jac.get_dims() != std::array<int,2>({ncols, ngpts}))
         {
-            sfc_src_jac = Array_gpu<TF,2>({ncols, ngpt});
+            sfc_src_jac = Array_gpu<TF,2>({ncols, ngpts});
         }
-        if(gpt_flux_up_jac.get_dims() != std::array<int,3>({ncols, nlevs, ngpt}))
+        if(gpt_flux_up_jac.get_dims() != std::array<int,3>({ncols, nlevs, ngpts}))
         {
-            gpt_flux_up_jac = Array_gpu<TF,3>({ncols, nlevs, ngpt});
+            gpt_flux_up_jac = Array_gpu<TF,3>({ncols, nlevs, ngpts});
+        }
+        if(tau_loc.get_dims() != std::array<int,3>({ngpts, nlays, ncols}))
+        {
+            tau_loc = Array_gpu<TF,3>({ngpts, nlays, ncols});
+        }
+        if(trans.get_dims() != std::array<int,3>({ngpts, nlays, ncols}))
+        {
+            trans = Array_gpu<TF,3>({ngpts, nlays, ncols});
+        }
+        if(source_up.get_dims() != std::array<int,3>({ngpts, nlays, ncols}))
+        {
+            source_up = Array_gpu<TF,3>({ngpts, nlays, ncols});
+        }
+        if(source_dn.get_dims() != std::array<int,3>({ngpts, nlays, ncols}))
+        {
+            source_dn = Array_gpu<TF,3>({ngpts, nlays, ncols});
+        }
+        if(radn_up.get_dims() != std::array<int,3>({ncols, nlevs, ngpts}))
+        {
+            radn_up = Array_gpu<TF,3>({ncols, nlevs, ngpts});
+        }
+        if(radn_up_jac.get_dims() != std::array<int,3>({ncols, nlevs, ngpts}))
+        {
+            radn_up_jac = Array_gpu<TF,3>({ncols, nlevs, ngpts});
+        }
+        if(radn_dn.get_dims() != std::array<int,3>({ncols, nlevs, ngpts}))
+        {
+            radn_dn = Array_gpu<TF,3>({ncols, nlevs, ngpts});
+        }
+        if(source_sfc.get_dims() != std::array<int,2>({ncols, ngpts}))
+        {
+            source_sfc = Array_gpu<TF,2>({ncols, ngpts});
+        }
+        if(source_sfc_jac.get_dims() != std::array<int,2>({ncols, ngpts}))
+        {
+            source_sfc_jac = Array_gpu<TF,2>({ncols, ngpts});
+        }
+        if(sfc_albedo.get_dims() != std::array<int,2>({ncols, ngpts}))
+        {
+            sfc_albedo = Array_gpu<TF,2>({ncols, ngpts});
         }
 }
 
@@ -113,13 +154,13 @@ void Rte_lw_gpu<TF>::rte_lw(
 {
     const int ncol = optical_props->get_ncol();
     const int nlay = optical_props->get_nlay();
-    const int ngpt = optical_props->get_ngpt();
+    const int ngpts = optical_props->get_ngpt();
 
     auto work = workptr;
     if(workptr == nullptr)
     {
         work = new rte_lw_work_arrays_gpu<TF>();
-        work->resize(ncol, gpt_flux_up.get_dims()[1], ngpt);
+        work->resize(ncol, gpt_flux_up.get_dims()[1], nlay, ngpts);
     }
 
     const int max_gauss_pts = 4;
@@ -141,9 +182,9 @@ void Rte_lw_gpu<TF>::rte_lw(
 
     // Upper boundary condition.
     if (inc_flux.size() == 0)
-        rte_kernel_launcher_cuda::apply_BC(ncol, nlay, ngpt, top_at_1, gpt_flux_dn);
+        rte_kernel_launcher_cuda::apply_BC(ncol, nlay, ngpts, top_at_1, gpt_flux_dn);
     else
-        rte_kernel_launcher_cuda::apply_BC(ncol, nlay, ngpt, top_at_1, inc_flux, gpt_flux_dn);
+        rte_kernel_launcher_cuda::apply_BC(ncol, nlay, ngpts, top_at_1, inc_flux, gpt_flux_dn);
 
     // Run the radiative transfer solver.
     const int n_quad_angs = n_gauss_angles;
@@ -154,7 +195,7 @@ void Rte_lw_gpu<TF>::rte_lw(
             {{ {1, n_quad_angs}, {n_quad_angs, n_quad_angs} }});
 
     rte_kernel_launcher_cuda::lw_solver_noscat_gaussquad(
-            ncol, nlay, ngpt, top_at_1, n_quad_angs,
+            ncol, nlay, ngpts, top_at_1, n_quad_angs,
             gauss_Ds_subset, gauss_wts_subset,
             optical_props->get_tau(),
             sources.get_lay_source(),

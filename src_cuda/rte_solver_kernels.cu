@@ -498,39 +498,31 @@ namespace rte_kernel_launcher_cuda
 
     template<typename TF>
     void lw_solver_noscat_gaussquad(const int ncol, const int nlay, const int ngpt, const BOOL_TYPE top_at_1, const int nmus,
-                                    const Array_gpu<TF,2>& ds, const Array_gpu<TF,2>& weights, const Array_gpu<TF,3>& tau, const Array_gpu<TF,3> lay_source,
-                                    const Array_gpu<TF,3>& lev_source_inc, const Array_gpu<TF,3>& lev_source_dec, const Array_gpu<TF,2>& sfc_emis,
-                                    const Array_gpu<TF,2>& sfc_src, Array_gpu<TF,3>& flux_up, Array_gpu<TF,3>& flux_dn,
-                                    const Array_gpu<TF,2>& sfc_src_jac, Array_gpu<TF,3>& flux_up_jac)
+                                    const Array_gpu<TF,2>& ds, 
+                                    const Array_gpu<TF,2>& weights, 
+                                    const Array_gpu<TF,3>& tau, 
+                                    const Array_gpu<TF,3> lay_source, 
+                                    const Array_gpu<TF,3>& lev_source_inc, 
+                                    const Array_gpu<TF,3>& lev_source_dec, 
+                                    const Array_gpu<TF,2>& sfc_emis,
+                                    const Array_gpu<TF,2>& sfc_src, 
+                                    Array_gpu<TF,3>& flux_up, 
+                                    Array_gpu<TF,3>& flux_dn,
+                                    const Array_gpu<TF,2>& sfc_src_jac, 
+                                    Array_gpu<TF,3>& flux_up_jac,
+                                    Array_gpu<TF,3>& tau_loc,
+                                    Array_gpu<TF,3>& radn_up,
+                                    Array_gpu<TF,3>& radn_up_jac,
+                                    Array_gpu<TF,3>& radn_dn,
+                                    Array_gpu<TF,3>& trans,
+                                    Array_gpu<TF,3>& source_dn,
+                                    Array_gpu<TF,3>& source_up,
+                                    Array_gpu<TF,2>& source_sfc,
+                                    Array_gpu<TF,2>& source_sfc_jac,
+                                    Array_gpu<TF,2>& sfc_albedo)
     {
         float elapsedtime;
         TF eps = std::numeric_limits<TF>::epsilon();
-        const int flx_size = flux_dn.size() * sizeof(TF);
-        const int opt_size = tau.size() * sizeof(TF);
-        const int mus_size = nmus * sizeof(TF);
-        const int sfc_size = sfc_src.size() * sizeof(TF);
-
-        TF* tau_loc;
-        TF* radn_up;
-        TF* radn_up_jac;
-        TF* radn_dn;
-        TF* trans;
-        TF* source_dn;
-        TF* source_up;
-        TF* source_sfc;
-        TF* source_sfc_jac;
-        TF* sfc_albedo;
-
-        cuda_safe_call(cudaMalloc((void **) &source_sfc, sfc_size));
-        cuda_safe_call(cudaMalloc((void **) &source_sfc_jac, sfc_size));
-        cuda_safe_call(cudaMalloc((void **) &sfc_albedo, sfc_size));
-        cuda_safe_call(cudaMalloc((void **) &tau_loc, opt_size));
-        cuda_safe_call(cudaMalloc((void **) &trans, opt_size));
-        cuda_safe_call(cudaMalloc((void **) &source_dn, opt_size));
-        cuda_safe_call(cudaMalloc((void **) &source_up, opt_size));
-        cuda_safe_call(cudaMalloc((void **) &radn_dn, flx_size));
-        cuda_safe_call(cudaMalloc((void **) &radn_up, flx_size));
-        cuda_safe_call(cudaMalloc((void **) &radn_up_jac, flx_size));
 
         const int block_col2d = 32;
         const int block_gpt2d = 1;
@@ -542,20 +534,10 @@ namespace rte_kernel_launcher_cuda
         dim3 block_gpu2d(block_col2d, block_gpt2d);
         lw_solver_noscat_gaussquad_kernel<<<grid_gpu2d, block_gpu2d>>>(
                 ncol, nlay, ngpt, eps, top_at_1, nmus, ds.ptr(), weights.ptr(), tau.ptr(), lay_source.ptr(),
-                lev_source_inc.ptr(), lev_source_dec.ptr(), sfc_emis.ptr(), sfc_src.ptr(), radn_up,
-                radn_dn, sfc_src_jac.ptr(), radn_up_jac, tau_loc, trans, source_dn, source_up,
-                source_sfc, sfc_albedo, source_sfc_jac, flux_up.ptr(), flux_dn.ptr(), flux_up_jac.ptr());
-
-        cuda_safe_call(cudaFree(tau_loc));
-        cuda_safe_call(cudaFree(radn_up));
-        cuda_safe_call(cudaFree(radn_up_jac));
-        cuda_safe_call(cudaFree(radn_dn));
-        cuda_safe_call(cudaFree(trans));
-        cuda_safe_call(cudaFree(source_dn));
-        cuda_safe_call(cudaFree(source_up));
-        cuda_safe_call(cudaFree(source_sfc));
-        cuda_safe_call(cudaFree(source_sfc_jac));
-        cuda_safe_call(cudaFree(sfc_albedo));
+                lev_source_inc.ptr(), lev_source_dec.ptr(), sfc_emis.ptr(), sfc_src.ptr(), radn_up.ptr(),
+                radn_dn.ptr(), sfc_src_jac.ptr(), radn_up_jac.ptr(), tau_loc.ptr(), trans.ptr(), source_dn.ptr(), 
+                source_up.ptr(), source_sfc.ptr(), sfc_albedo.ptr(), source_sfc_jac.ptr(), flux_up.ptr(), 
+                flux_dn.ptr(), flux_up_jac.ptr());
     }
 
     template<typename TF>
@@ -643,7 +625,10 @@ template void rte_kernel_launcher_cuda::lw_solver_noscat_gaussquad<float>(
             const Array_gpu<float,2>& ds, const Array_gpu<float,2>& weights, const Array_gpu<float,3>& tau, const Array_gpu<float,3> lay_source,
             const Array_gpu<float,3>& lev_source_inc, const Array_gpu<float,3>& lev_source_dec, const Array_gpu<float,2>& sfc_emis,
             const Array_gpu<float,2>& sfc_src, Array_gpu<float,3>& flux_dn, Array_gpu<float,3>& flux_up,
-            const Array_gpu<float,2>& sfc_src_jac, Array_gpu<float,3>& flux_up_jac);
+            const Array_gpu<float,2>& sfc_src_jac, Array_gpu<float,3>& flux_up_jac, Array_gpu<float,3>& tau_loc,
+            Array_gpu<float,3>& radn_up, Array_gpu<float,3>& radn_up_jac, Array_gpu<float,3>& radn_dn,
+            Array_gpu<float,3>& trans, Array_gpu<float,3>& source_dn, Array_gpu<float,3>& source_up,
+            Array_gpu<float,2>& source_sfc, Array_gpu<float,2>& source_sfc_jac, Array_gpu<float,2>& sfc_albedo);
 
 #else
 template void rte_kernel_launcher_cuda::apply_BC(const int, const int, const int, const BOOL_TYPE,
@@ -664,5 +649,8 @@ template void rte_kernel_launcher_cuda::lw_solver_noscat_gaussquad<double>(
             const Array_gpu<double,2>& ds, const Array_gpu<double,2>& weights, const Array_gpu<double,3>& tau, const Array_gpu<double,3> lay_source,
             const Array_gpu<double,3>& lev_source_inc, const Array_gpu<double,3>& lev_source_dec, const Array_gpu<double,2>& sfc_emis,
             const Array_gpu<double,2>& sfc_src, Array_gpu<double,3>& flux_up, Array_gpu<double,3>& flux_dn,
-            const Array_gpu<double,2>& sfc_src_jac,Array_gpu<double,3>& flux_up_jac);
+            const Array_gpu<double,2>& sfc_src_jac,Array_gpu<double,3>& flux_up_jac, Array_gpu<double,3>& tau_loc,
+            Array_gpu<double,3>& radn_up, Array_gpu<double,3>& radn_up_jac, Array_gpu<double,3>& radn_dn,
+            Array_gpu<double,3>& trans, Array_gpu<double,3>& source_dn, Array_gpu<double,3>& source_up,
+            Array_gpu<double,2>& source_sfc, Array_gpu<double,2>& source_sfc_jac, Array_gpu<double,2>& sfc_albedo);
 #endif

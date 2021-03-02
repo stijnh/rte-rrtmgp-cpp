@@ -667,12 +667,8 @@ namespace rrtmgp_kernel_launcher_cuda
             int idx_h2o, const Array_gpu<TF,2>& col_dry, const Array_gpu<TF,3>& col_gas,
             const Array_gpu<TF,5>& fminor, const Array_gpu<int,4>& jeta,
             const Array_gpu<BOOL_TYPE,2>& tropo, const Array_gpu<int,2>& jtemp,
-            Array_gpu<TF,3>& tau_rayleigh)
+            Array_gpu<TF,3>& tau_rayleigh, Array_gpu<TF,3>& k_rayleigh)
     {
-        const int k_size = ncol*nlay*ngpt*sizeof(TF);
-        TF* k;
-        cuda_safe_call(cudaMalloc((void**)&k, k_size));
-
         // Call the kernel.
         const int block_bnd = 14;
         const int block_lay = 1;
@@ -694,9 +690,7 @@ namespace rrtmgp_kernel_launcher_cuda
                 idx_h2o, col_dry.ptr(), col_gas.ptr(),
                 fminor.ptr(), jeta.ptr(),
                 tropo.ptr(), jtemp.ptr(),
-                tau_rayleigh.ptr(), k);
-
-        cuda_safe_call(cudaFree(k));
+                tau_rayleigh.ptr(), k_rayleigh.ptr());
     }
 
     template<typename TF>
@@ -872,7 +866,7 @@ template void rrtmgp_kernel_launcher_cuda::compute_tau_rayleigh<float>(
         const int, const int, const int, const int, const int, const int, const int, const int, const int,
         const Array_gpu<int,2>&, const Array_gpu<int,2>&, const Array_gpu<float,4>&, int, const Array_gpu<float,2>&,
         const Array_gpu<float,3>&, const Array_gpu<float,5>&, const Array_gpu<int,4>&, const Array_gpu<BOOL_TYPE,2>&,
-        const Array_gpu<int,2>&, Array_gpu<float,3>&);
+        const Array_gpu<int,2>&, Array_gpu<float,3>&, Array_gpu<float,3>&);
 
 template void rrtmgp_kernel_launcher_cuda::compute_tau_absorption<float>(const int, const int, const int, const int, const int, const int,
 	const int, const int, const int, const int, const int, const int, const int, const int,
@@ -881,7 +875,7 @@ template void rrtmgp_kernel_launcher_cuda::compute_tau_absorption<float>(const i
         const Array_gpu<BOOL_TYPE,1>&, const Array_gpu<BOOL_TYPE,1>&, const Array_gpu<int,1>&, const Array_gpu<int,1>&,
         const Array_gpu<int,1>&, const Array_gpu<int,1>&, const Array_gpu<int,1>&, const Array_gpu<int,1>&, const Array_gpu<BOOL_TYPE,2>& tropo,
         const Array_gpu<float,4>&, const Array_gpu<float,6>&, const Array_gpu<float,5>&, const Array_gpu<float,2>&, const Array_gpu<float,2>&, const Array_gpu<float,3>&,
-        const Array_gpu<int,4>&, const Array_gpu<int,2>&, const Array_gpu<int,2>&, Array_gpu<float,3>&);
+        const Array_gpu<int,4>&, const Array_gpu<int,2>&, const Array_gpu<int,2>&, Array_gpu<float,3>&, Array_gpu<double,3>&, Array_gpu<double,3>&);
 
 template void rrtmgp_kernel_launcher_cuda::Planck_source<float>(const int ncol, const int nlay, const int nbnd, const int ngpt,
         const int nflav, const int neta, const int npres, const int ntemp,
@@ -915,7 +909,7 @@ template void rrtmgp_kernel_launcher_cuda::compute_tau_rayleigh<double>(
         const int, const int, const int, const int, const int, const int, const int, const int, const int,
         const Array_gpu<int,2>&, const Array_gpu<int,2>&, const Array_gpu<double,4>&, int, const Array_gpu<double,2>&,
         const Array_gpu<double,3>&, const Array_gpu<double,5>&, const Array_gpu<int,4>&, const Array_gpu<BOOL_TYPE,2>&,
-        const Array_gpu<int,2>&, Array_gpu<double,3>&);
+        const Array_gpu<int,2>&, Array_gpu<double,3>&, Array_gpu<double,3>&);
 
 template void rrtmgp_kernel_launcher_cuda::compute_tau_absorption<double>(const int, const int, const int, const int, const int, const int,
 	const int, const int, const int, const int, const int, const int, const int, const int,

@@ -358,6 +358,7 @@ struct gas_taus_work_arrays_gpu
     Array_gpu<TF,3> tau_major;
     Array_gpu<TF,3> tau_minor;
     Array_gpu<TF,3> tau_rayleigh;
+    Array_gpu<TF,3> k_rayleigh;
     Array_gpu<TF,3> vmr;
     Array_gpu<TF,3> col_gas;
     Array_gpu<TF,4> col_mix;

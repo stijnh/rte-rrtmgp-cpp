@@ -408,6 +408,10 @@ void gas_taus_work_arrays_gpu<TF>::resize(
     {
         tau_rayleigh = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
     }
+    if(k_rayleigh.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
+    {
+        k_rayleigh = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
+    }
     if(vmr.get_dims() != std::array<int,3>({n_cols, n_lays, n_gas}))
     {
         vmr = Array_gpu<TF,3>({n_cols, n_lays, n_gas});
@@ -1209,7 +1213,7 @@ void Gas_optics_rrtmgp_gpu<TF>::compute_gas_taus(
                 krayl_gpu,
                 idx_h2o, col_dry, wrk->col_gas,
                 wrk->fminor, jeta, tropo, jtemp,
-                wrk->tau_rayleigh);
+                wrk->tau_rayleigh, wrk->k_rayleigh);
     }
 
     combine_and_reorder(wrk->tau, wrk->tau_rayleigh, has_rayleigh, optical_props);

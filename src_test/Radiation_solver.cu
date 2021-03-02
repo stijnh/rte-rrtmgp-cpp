@@ -455,9 +455,9 @@ std::unique_ptr<radiation_block_work_arrays_gpu<TF>> Radiation_solver_longwave<T
         const int n_lay,
         const bool switch_cloud_optics) const
 {
-    const int n_gpt = this->get_n_gpt();
-    const int n_bnd = this->get_n_bnd();
-
+    const int n_gpt = this->kdist_gpu->get_ngpt();
+    const int n_bnd = this->kdist_gpu->get_nband();
+    
     auto result = std::make_unique<radiation_block_work_arrays_gpu<TF>>();
     result->resize(n_col, n_lev, n_lay, n_gpt, n_bnd, switch_cloud_optics);
     result->fluxes_subset = std::make_unique<Fluxes_broadband_gpu<TF>>(n_col, n_lev);
@@ -479,9 +479,9 @@ std::unique_ptr<radiation_solver_work_arrays_gpu<TF>> Radiation_solver_longwave<
         const int n_lay,
         const bool switch_cloud_optics) const
 {
-    const int n_gpt = this->get_n_gpt();
-    const int n_bnd = this->get_n_bnd();
-
+    const int n_gpt = this->kdist_gpu->get_ngpt();
+    const int n_bnd = this->kdist_gpu->get_nband();
+    
     auto result = std::make_unique<radiation_solver_work_arrays_gpu<TF>>();
 
     result->blocks_work_arrays = create_block_work_arrays_gpu(n_col_block, n_lev, n_lay, switch_cloud_optics);
@@ -526,7 +526,6 @@ void Radiation_solver_longwave<TF>::solve_gpu(
     const int n_lev = p_lev.dim(2);
     const int n_gpt = this->kdist_gpu->get_ngpt();
     const int n_bnd = this->kdist_gpu->get_nband();
-//    this->init_work_arrays_gpu(n_col, n_lev, n_lay, switch_cloud_optics);
 
     const BOOL_TYPE top_at_1 = p_lay({1, 1}) < p_lay({1, n_lay});
 

@@ -396,6 +396,14 @@ void gas_taus_work_arrays_gpu<TF>::resize(
     {
         tau = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
     }
+    if(tau_major.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
+    {
+        tau_major = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
+    }
+    if(tau_minor.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
+    {
+        tau_minor = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
+    }
     if(tau_rayleigh.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
     {
         tau_rayleigh = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
@@ -1187,7 +1195,7 @@ void Gas_optics_rrtmgp_gpu<TF>::compute_gas_taus(
             wrk->col_mix, fmajor, wrk->fminor,
             play, tlay, wrk->col_gas,
             jeta, jtemp, jpress,
-            wrk->tau);
+            wrk->tau, wrk->tau_major, wrk->tau_minor);
 
     bool has_rayleigh = (this->krayl.size() > 0);
 

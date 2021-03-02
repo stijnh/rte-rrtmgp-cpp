@@ -49,6 +49,9 @@ namespace rte_kernel_launcher_cuda
                                     const Array_gpu<TF,2>& ds, const Array_gpu<TF,2>& weights, const Array_gpu<TF,3>& tau, const Array_gpu<TF,3> lay_source,
                                     const Array_gpu<TF,3>& lev_source_inc, const Array_gpu<TF,3>& lev_source_dec, const Array_gpu<TF,2>& sfc_emis,
                                     const Array_gpu<TF,2>& sfc_src, Array_gpu<TF,3>& flux_up, Array_gpu<TF,3>& flux_dn,
-                                    const Array_gpu<TF,2>& sfc_src_jac, Array_gpu<TF,3>& flux_up_jac);
+                                    const Array_gpu<TF,2>& sfc_src_jac, Array_gpu<TF,3>& flux_up_jac, Array_gpu<TF,3>& tau_loc,
+                                    Array_gpu<TF,3>& radn_up, Array_gpu<TF,3>& radn_up_jac, Array_gpu<TF,3>& radn_dn,
+                                    Array_gpu<TF,3>& trans, Array_gpu<TF,3>& source_dn, Array_gpu<TF,3>& source_up,
+                                    Array_gpu<TF,2>& source_sfc, Array_gpu<TF,2>& source_sfc_jac, Array_gpu<TF,2>& sfc_albedo);
 }
 #endif

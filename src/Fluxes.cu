@@ -253,7 +253,7 @@ void Fluxes_byband_gpu<TF>::reduce(
     const int ngpt = spectral_disc->get_ngpt();
     const int nbnd = spectral_disc->get_nband();
 
-    const Array_gpu<int,2>& band_lims = spectral_disc->get_band_lims_gpoint();
+    const Array_gpu<int,2>& band_lims = spectral_disc->get_band_lims_gpoint_gpu();
     const int block_bnd = 1;
     const int block_lev = 16;
     const int block_col = 16;
@@ -296,7 +296,7 @@ void Fluxes_byband_gpu<TF>::reduce(
     const int ngpt = spectral_disc->get_ngpt();
     const int nbnd = spectral_disc->get_nband();
 
-    const Array_gpu<int,2>& band_lims = spectral_disc->get_band_lims_gpoint();
+    const Array_gpu<int,2>& band_lims = spectral_disc->get_band_lims_gpoint_gpu();
 
     Fluxes_broadband_gpu<TF>::reduce(
             gpt_flux_up, gpt_flux_dn, gpt_flux_dn_dir,

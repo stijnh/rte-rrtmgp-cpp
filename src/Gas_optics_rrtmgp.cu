@@ -458,6 +458,12 @@ void gas_source_work_arrays_gpu<TF>::resize(
     {
         sfc_source_jac = Array_gpu<TF,2>({n_gpts, n_cols});
     }
+    if(p_frac.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
+    {
+        p_frac = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
+    }
+    std::vector<TF> ones_cpu = {(TF)1, (TF)1};
+    ones = Array_gpu<TF,1>(Array<TF,1>(ones_cpu, std::array<int,1>({2})));
 }
 
 
@@ -1288,7 +1294,7 @@ void Gas_optics_rrtmgp_gpu<TF>::source(
             gpoint_bands, band_lims_gpoint, this->planck_frac_gpu, this->temp_ref_min,
             this->totplnk_delta, this->totplnk_gpu, this->gpoint_flavor_gpu,
             wrk->sfc_source_t, wrk->lay_source_t, wrk->lev_source_inc_t, wrk->lev_source_dec_t,
-            wrk->sfc_source_jac);
+            wrk->sfc_source_jac, wrk->p_frac, wrk->ones);
 
     rrtmgp_kernel_launcher_cuda::reorder12x21(
             ncol, ngpt, wrk->sfc_source_t, sources.get_sfc_source());

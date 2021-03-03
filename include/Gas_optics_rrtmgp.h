@@ -380,6 +380,8 @@ struct gas_source_work_arrays_gpu
     Array_gpu<TF,3> lev_source_dec_t;
     Array_gpu<TF,2> sfc_source_t;
     Array_gpu<TF,2> sfc_source_jac;
+    Array_gpu<TF,3> p_frac;
+    Array_gpu<TF,1> ones;
 
     void resize(
         const int ncols,

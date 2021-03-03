@@ -799,21 +799,11 @@ namespace rrtmgp_kernel_launcher_cuda
             Array_gpu<TF,3>& lay_src,
             Array_gpu<TF,3>& lev_src_inc,
             Array_gpu<TF,3>& lev_src_dec,
-            Array_gpu<TF,2>& sfc_src_jac)
+            Array_gpu<TF,2>& sfc_src_jac,
+            Array_gpu<TF,3>& p_frac,
+            Array_gpu<TF,1>& ones)
     {
-        TF ones_cpu[2] = {TF(1.), TF(1.)};
         const TF delta_Tsurf = TF(1.);
-
-        const int pfrac_size = lay_src.size() * sizeof(TF);
-        const int ones_size = 2 * sizeof(TF);
-        TF* pfrac;
-        TF* ones;
-
-        cuda_safe_call(cudaMalloc((void**)& pfrac, pfrac_size));
-        cuda_safe_call(cudaMalloc((void**)& ones, ones_size));
-
-        // Copy the data to the GPU.
-        cuda_safe_call(cudaMemcpy(ones, ones_cpu, ones_size, cudaMemcpyHostToDevice));
 
         // Call the kernel.
         const int block_bnd = 14;
@@ -834,15 +824,11 @@ namespace rrtmgp_kernel_launcher_cuda
                 fmajor.ptr(), jeta.ptr(), tropo.ptr(), jtemp.ptr(),
                 jpress.ptr(), gpoint_bands.ptr(), band_lims_gpt.ptr(),
                 pfracin.ptr(), temp_ref_min, totplnk_delta,
-                totplnk.ptr(), gpoint_flavor.ptr(), ones,
+                totplnk.ptr(), gpoint_flavor.ptr(), ones.ptr(),
                 delta_Tsurf, sfc_src.ptr(), lay_src.ptr(),
                 lev_src_inc.ptr(), lev_src_dec.ptr(),
-                sfc_src_jac.ptr(), pfrac);
-
-        cuda_safe_call(cudaFree(pfrac));
-        cuda_safe_call(cudaFree(ones));
+                sfc_src_jac.ptr(), p_frac.ptr());
     }
-
 }
 
 
@@ -886,7 +872,7 @@ template void rrtmgp_kernel_launcher_cuda::Planck_source<float>(const int ncol, 
         const Array_gpu<float,4>& pfracin, const float temp_ref_min, const float totplnk_delta,
         const Array_gpu<float,2>& totplnk, const Array_gpu<int,2>& gpoint_flavor,
         Array_gpu<float,2>& sfc_src,  Array_gpu<float,3>& lay_src, Array_gpu<float,3>& lev_src_inc,
-        Array_gpu<float,3>& lev_src_dec, Array_gpu<float,2>& sfc_src_jac);
+        Array_gpu<float,3>& lev_src_dec, Array_gpu<float,2>& sfc_src_jac, Array_gpu<float,3>& p_frac, Array_gpu<float,1>& ones);
 
 #else
 template void rrtmgp_kernel_launcher_cuda::reorder123x321<double>(const int, const int, const int, const Array_gpu<double,3>&, Array_gpu<double,3>&);
@@ -929,7 +915,7 @@ template void rrtmgp_kernel_launcher_cuda::Planck_source<double>(const int ncol,
         const Array_gpu<double,4>& pfracin, const double temp_ref_min, const double totplnk_delta,
         const Array_gpu<double,2>& totplnk, const Array_gpu<int,2>& gpoint_flavor,
         Array_gpu<double,2>& sfc_src,  Array_gpu<double,3>& lay_src, Array_gpu<double,3>& lev_src_inc,
-        Array_gpu<double,3>& lev_src_dec, Array_gpu<double,2>& sfc_src_jac);
+        Array_gpu<double,3>& lev_src_dec, Array_gpu<double,2>& sfc_src_jac, Array_gpu<double,3>& p_frac, Array_gpu<double,1>& ones);
 
 #endif
 

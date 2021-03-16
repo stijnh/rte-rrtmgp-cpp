@@ -270,6 +270,21 @@ class Array
             }
         }
 
+        inline std::vector<T>&& move_data_out()
+        {
+            return std::move(data);
+        }
+
+        inline void move_data_in(std::vector<T>&& other_data)
+        {
+            data = std::move(other_data);
+        }
+
+        inline int data_size() const
+        {
+            return data.size();
+        }
+
     private:
         std::array<int, N> dims;
         int ncells;

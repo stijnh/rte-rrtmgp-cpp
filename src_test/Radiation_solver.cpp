@@ -637,7 +637,7 @@ void Radiation_solver_longwave<TF>::solve(
     {
         if(!wrk->residual_work_arrays)
         {
-            wrk->blocks_work_arrays = std::make_unique<radiation_block_work_arrays<TF>>(
+            wrk->residual_work_arrays = std::make_unique<radiation_block_work_arrays<TF>>(
                 n_col_block_residual, n_lev, n_lay, switch_fluxes, switch_cloud_optics, this, nullptr, false);
         }
 
@@ -706,23 +706,6 @@ void Radiation_solver_shortwave<TF>::solve(
     const int n_bnd = this->kdist->get_nband();
 
     const BOOL_TYPE top_at_1 = p_lay({1, 1}) < p_lay({1, n_lay});
-
-/*    std::unique_ptr<Optical_props_arry<TF>> optical_props_subset;
-    std::unique_ptr<Optical_props_arry<TF>> optical_props_residual;
-
-    optical_props_subset = std::make_unique<Optical_props_2str<TF>>(n_col_block, n_lay, *kdist);
-    if (n_col_block_residual > 0)
-        optical_props_residual = std::make_unique<Optical_props_2str<TF>>(n_col_block_residual, n_lay, *kdist);
-
-    std::unique_ptr<Optical_props_2str<TF>> cloud_optical_props_subset;
-    std::unique_ptr<Optical_props_2str<TF>> cloud_optical_props_residual;
-
-    if (switch_cloud_optics)
-    {
-        cloud_optical_props_subset = std::make_unique<Optical_props_2str<TF>>(n_col_block, n_lay, *cloud_optics);
-        if (n_col_block_residual > 0)
-            cloud_optical_props_residual = std::make_unique<Optical_props_2str<TF>>(n_col_block_residual, n_lay, *cloud_optics);
-    }*/
 
     // Lambda function for solving optical properties subset.
     auto call_kernels = [&](

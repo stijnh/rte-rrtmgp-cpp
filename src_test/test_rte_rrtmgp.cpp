@@ -268,7 +268,15 @@ void solve_radiation(int argc, char** argv)
     }
     auto work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>(
             n_col, n_lev, n_lay, switch_fluxes, switch_cloud_optics, rad_lw.get(), rad_sw.get());
+//    auto work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>(
+//            n_col, n_lev, n_lay, switch_fluxes, switch_cloud_optics, rad_lw.get(), nullptr);
+//    auto work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>(
+//            n_col, n_lev, n_lay, switch_fluxes, switch_cloud_optics, nullptr, rad_sw.get());
+//    auto work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>(
+//            n_col, n_lev, n_lay, switch_fluxes, switch_cloud_optics, nullptr, nullptr);
 
+    radiation_solver_work_arrays<TF>* lw_work_arrays = work_arrays.get();
+    radiation_solver_work_arrays<TF>* sw_work_arrays = work_arrays.get();
 
     ////// RUN THE LONGWAVE SOLVER //////
     if (rad_lw != nullptr)
@@ -340,7 +348,7 @@ void solve_radiation(int argc, char** argv)
                 rel, rei,
                 lw_tau, lay_source, lev_source_inc, lev_source_dec, sfc_source,
                 lw_flux_up, lw_flux_dn, lw_flux_net,
-                lw_bnd_flux_up, lw_bnd_flux_dn, lw_bnd_flux_net, work_arrays.get());
+                lw_bnd_flux_up, lw_bnd_flux_dn, lw_bnd_flux_net, lw_work_arrays);
 
         auto time_end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration<double, std::milli>(time_end-time_start).count();
@@ -491,7 +499,7 @@ void solve_radiation(int argc, char** argv)
                 sw_flux_up, sw_flux_dn,
                 sw_flux_dn_dir, sw_flux_net,
                 sw_bnd_flux_up, sw_bnd_flux_dn,
-                sw_bnd_flux_dn_dir, sw_bnd_flux_net);
+                sw_bnd_flux_dn_dir, sw_bnd_flux_net, sw_work_arrays);
 
         auto time_end = std::chrono::high_resolution_clock::now();
         auto duration = std::chrono::duration<double, std::milli>(time_end-time_start).count();

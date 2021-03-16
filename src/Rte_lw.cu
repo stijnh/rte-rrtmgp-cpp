@@ -219,7 +219,7 @@ void Rte_lw_gpu<TF>::rte_lw(
 template<typename TF>
 void Rte_lw_gpu<TF>::expand_and_transpose(
         const std::unique_ptr<Optical_props_arry_gpu<TF>>& ops,
-        const Array_gpu<TF,2> arr_in,
+        const Array_gpu<TF,2>& arr_in,
         Array_gpu<TF,2>& arr_out)
 {
     const int ncol = arr_in.dim(2);

@@ -252,16 +252,30 @@ void solve_radiation(int argc, char** argv)
     nc_lay.insert(p_lay.v(), {0, 0});
     nc_lev.insert(p_lev.v(), {0, 0});
 
-    ////// RUN THE LONGWAVE SOLVER //////
-    if (switch_longwave)
-    {
-        // Initialize the solver.
-        Status::print_message("Initializing the longwave solver.");
-        Radiation_solver_longwave<TF> rad_lw(gas_concs, "coefficients_lw.nc", "cloud_coefficients_lw.nc");
+    
+    std::unique_ptr<Radiation_solver_longwave<TF>> rad_lw;
+    std::unique_ptr<Radiation_solver_shortwave<TF>> rad_sw;
 
+    if(switch_longwave)
+    {
+        Status::print_message("Initializing the longwave solver.");
+        rad_lw = std::make_unique<Radiation_solver_longwave<TF>>(gas_concs, "coefficients_lw.nc", "cloud_coefficients_lw.nc");
+    }
+    if(switch_shortwave)
+    {
+        Status::print_message("Initializing the shortwave solver.");
+        rad_sw = std::make_unique<Radiation_solver_shortwave<TF>>(gas_concs, "coefficients_sw.nc", "cloud_coefficients_sw.nc");
+    }
+    auto work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>(
+            n_col, n_lev, n_lay, switch_fluxes, switch_cloud_optics, rad_lw.get(), rad_sw.get());
+
+
+    ////// RUN THE LONGWAVE SOLVER //////
+    if (rad_lw != nullptr)
+    {
         // Read the boundary conditions.
-        const int n_bnd_lw = rad_lw.get_n_bnd();
-        const int n_gpt_lw = rad_lw.get_n_gpt();
+        const int n_bnd_lw = rad_lw->get_n_bnd();
+        const int n_gpt_lw = rad_lw->get_n_gpt();
 
         Array<TF,2> emis_sfc(input_nc.get_variable<TF>("emis_sfc", {n_col, n_bnd_lw}), {n_bnd_lw, n_col});
         Array<TF,1> t_sfc(input_nc.get_variable<TF>("t_sfc", {n_col}), {n_col});
@@ -304,7 +318,7 @@ void solve_radiation(int argc, char** argv)
             lw_bnd_flux_net.set_dims({n_col, n_lev, n_bnd_lw});
         }
 
-        auto work_arrays = rad_lw.create_work_arrays(n_col, n_lev, n_lay, switch_cloud_optics);
+        //auto work_arrays = rad_lw.create_work_arrays(n_col, n_lev, n_lay, switch_cloud_optics);
         // Skip work arrays usage:
         //auto work_arrays = std::unique_ptr<radiation_solver_work_arrays<TF>>();
         // Solve the radiation.
@@ -312,7 +326,7 @@ void solve_radiation(int argc, char** argv)
 
         auto time_start = std::chrono::high_resolution_clock::now();
 
-        rad_lw.solve(
+        rad_lw->solve(
                 switch_fluxes,
                 switch_cloud_optics,
                 switch_output_optical,
@@ -341,12 +355,12 @@ void solve_radiation(int argc, char** argv)
         output_nc.add_dimension("band_lw", n_bnd_lw);
 
         auto nc_lw_band_lims_wvn = output_nc.add_variable<TF>("lw_band_lims_wvn", {"band_lw", "pair"});
-        nc_lw_band_lims_wvn.insert(rad_lw.get_band_lims_wavenumber().v(), {0, 0});
+        nc_lw_band_lims_wvn.insert(rad_lw->get_band_lims_wavenumber().v(), {0, 0});
 
         if (switch_output_optical)
         {
             auto nc_lw_band_lims_gpt = output_nc.add_variable<int>("lw_band_lims_gpt", {"band_lw", "pair"});
-            nc_lw_band_lims_gpt.insert(rad_lw.get_band_lims_gpoint().v(), {0, 0});
+            nc_lw_band_lims_gpt.insert(rad_lw->get_band_lims_gpoint().v(), {0, 0});
 
             auto nc_lw_tau = output_nc.add_variable<TF>("lw_tau", {"gpt_lw", "lay", "col"});
             nc_lw_tau.insert(lw_tau.v(), {0, 0, 0});
@@ -389,16 +403,11 @@ void solve_radiation(int argc, char** argv)
 
 
     ////// RUN THE SHORTWAVE SOLVER //////
-    if (switch_shortwave)
+    if (rad_sw != nullptr)
     {
-        // Initialize the solver.
-        Status::print_message("Initializing the shortwave solver.");
-
-        Radiation_solver_shortwave<TF> rad_sw(gas_concs, "coefficients_sw.nc", "cloud_coefficients_sw.nc");
-
         // Read the boundary conditions.
-        const int n_bnd_sw = rad_sw.get_n_bnd();
-        const int n_gpt_sw = rad_sw.get_n_gpt();
+        const int n_bnd_sw = rad_sw->get_n_bnd();
+        const int n_gpt_sw = rad_sw->get_n_gpt();
 
         Array<TF,1> mu0(input_nc.get_variable<TF>("mu0", {n_col}), {n_col});
         Array<TF,2> sfc_alb_dir(input_nc.get_variable<TF>("sfc_alb_dir", {n_col, n_bnd_sw}), {n_bnd_sw, n_col});
@@ -408,7 +417,7 @@ void solve_radiation(int argc, char** argv)
         if (input_nc.variable_exists("tsi"))
         {
             Array<TF,1> tsi(input_nc.get_variable<TF>("tsi", {n_col}), {n_col});
-            const TF tsi_ref = rad_sw.get_tsi();
+            const TF tsi_ref = rad_sw->get_tsi();
             for (int icol=1; icol<=n_col; ++icol)
                 tsi_scaling({icol}) = tsi({icol}) / tsi_ref;
         }
@@ -464,7 +473,7 @@ void solve_radiation(int argc, char** argv)
 
         auto time_start = std::chrono::high_resolution_clock::now();
 
-        rad_sw.solve(
+        rad_sw->solve(
                 switch_fluxes,
                 switch_cloud_optics,
                 switch_output_optical,
@@ -497,12 +506,12 @@ void solve_radiation(int argc, char** argv)
         output_nc.add_dimension("band_sw", n_bnd_sw);
 
         auto nc_sw_band_lims_wvn = output_nc.add_variable<TF>("sw_band_lims_wvn", {"band_sw", "pair"});
-        nc_sw_band_lims_wvn.insert(rad_sw.get_band_lims_wavenumber().v(), {0, 0});
+        nc_sw_band_lims_wvn.insert(rad_sw->get_band_lims_wavenumber().v(), {0, 0});
 
         if (switch_output_optical)
         {
             auto nc_sw_band_lims_gpt = output_nc.add_variable<int>("sw_band_lims_gpt", {"band_sw", "pair"});
-            nc_sw_band_lims_gpt.insert(rad_sw.get_band_lims_gpoint().v(), {0, 0});
+            nc_sw_band_lims_gpt.insert(rad_sw->get_band_lims_gpoint().v(), {0, 0});
 
             auto nc_sw_tau = output_nc.add_variable<TF>("sw_tau", {"gpt_sw", "lay", "col"});
             auto nc_ssa    = output_nc.add_variable<TF>("ssa"   , {"gpt_sw", "lay", "col"});

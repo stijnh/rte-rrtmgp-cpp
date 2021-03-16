@@ -183,7 +183,7 @@ void Rte_lw<TF>::rte_lw(
 template<typename TF>
 void Rte_lw<TF>::expand_and_transpose(
         const std::unique_ptr<Optical_props_arry<TF>>& ops,
-        const Array<TF,2> arr_in,
+        const Array<TF,2>& arr_in,
         Array<TF,2>& arr_out)
 {
     const int ncol = arr_in.dim(2);

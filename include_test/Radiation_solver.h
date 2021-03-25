@@ -46,10 +46,6 @@ struct radiation_block_work_arrays
     Array<TF,2> iwp_lay_subset;
     Array<TF,2> rel_lay_subset;
     Array<TF,2> rei_lay_subset;
-    Array<TF,3> lw_gpt_flux_up;
-    Array<TF,3> lw_gpt_flux_dn;
-    Array<TF,3> sw_gpt_flux_up;
-    Array<TF,3> sw_gpt_flux_dn;
     Array<TF,3> sw_gpt_flux_dn_dir;
     Array<TF,2> toa_src_subset;
     Array<TF,1> tsi_scaling_subset;
@@ -69,8 +65,6 @@ struct radiation_block_work_arrays
     std::unique_ptr<rte_lw_work_arrays<TF>> rte_lw_work;
     std::unique_ptr<rte_sw_work_arrays<TF>> rte_sw_work;
 
-    std::vector<TF> shared_gpt_flux_up;
-    std::vector<TF> shared_gpt_flux_dn;
     std::vector<TF> shared_tau;
     std::vector<TF> shared_ssa_lay_src_inc;
     std::vector<TF> shared_g_lay_src_dec;

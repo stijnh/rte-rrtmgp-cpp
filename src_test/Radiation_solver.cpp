@@ -370,12 +370,6 @@ radiation_block_work_arrays<TF>::radiation_block_work_arrays(
     shared_ssa_lay_src_inc = std::vector<TF>(ncols * nlays * ngptmax);
     shared_g_lay_src_dec = std::vector<TF>(ncols * nlays * ngptmax);
 
-    if(switch_fluxes)
-    {
-        shared_gpt_flux_up = std::vector<TF>(ncols * nlevs * ngptmax);
-        shared_gpt_flux_dn = std::vector<TF>(ncols * nlevs * ngptmax);
-    }
-
     if(sws == nullptr)
     {
         if(lws != nullptr)
@@ -417,14 +411,14 @@ void radiation_block_work_arrays<TF>::allocate_lw_data(
     sources_subset = std::make_unique<Source_func_lw<TF>>(ncols, nlays, *(lws->kdist), std::move(shared_ssa_lay_src_inc), std::move(shared_g_lay_src_dec));
     if(switch_fluxes)
     {
-        lw_gpt_flux_up = Array<TF,3>(std::move(shared_gpt_flux_up), {ncols, nlevs, lws->get_n_gpt()});
-        lw_gpt_flux_dn = Array<TF,3>(std::move(shared_gpt_flux_dn), {ncols, nlevs, lws->get_n_gpt()});
-
         if(recursive)
         {
             lw_gas_optics_work = lws->kdist->create_work_arrays(ncols, nlays, lws->get_n_gpt());
             rte_lw_work = std::make_unique<rte_lw_work_arrays<TF>>();
-            rte_lw_work->resize(ncols, nlevs, lws->get_n_gpt());
+            rte_lw_work->sfc_emis_gpt = Array<TF,2>({ncols, lws->get_n_gpt()});
+            rte_lw_work->sfc_src_jac = Array<TF,2>({ncols, lws->get_n_gpt()});
+            std::vector<TF> dummy;
+            rte_lw_work->gpt_flux_up_jac = Array<TF,3>(std::move(dummy), {ncols, nlevs, lws->get_n_gpt()});
         }
     }
     if(switch_cloud_optics)
@@ -432,46 +426,6 @@ void radiation_block_work_arrays<TF>::allocate_lw_data(
         lw_cloud_optical_props_subset = std::make_unique<Optical_props_1scl<TF>>(ncols, nlays, *(lws->cloud_optics));
     }
     reset_lw_shmem();
-}
-
-template<typename TF>
-void radiation_block_work_arrays<TF>::set_lw_shmem()
-{
-    lw_gpt_flux_up.move_data_in(std::move(shared_gpt_flux_up));
-    lw_gpt_flux_dn.move_data_in(std::move(shared_gpt_flux_dn));
-    lw_optical_props_subset->get_tau().move_data_in(std::move(shared_tau));
-    sources_subset->get_lev_source_inc().move_data_in(std::move(shared_ssa_lay_src_inc));
-    sources_subset->get_lev_source_dec().move_data_in(std::move(shared_g_lay_src_dec));
-}
-
-template<typename TF>
-void radiation_block_work_arrays<TF>::reset_lw_shmem()
-{
-    shared_gpt_flux_up = lw_gpt_flux_up.move_data_out();
-    shared_gpt_flux_dn = lw_gpt_flux_dn.move_data_out();
-    shared_tau = lw_optical_props_subset->get_tau().move_data_out();
-    shared_ssa_lay_src_inc = sources_subset->get_lev_source_inc().move_data_out();
-    shared_g_lay_src_dec = sources_subset->get_lev_source_dec().move_data_out();
-}
-
-template<typename TF>
-void radiation_block_work_arrays<TF>::set_sw_shmem()
-{
-    sw_gpt_flux_up.move_data_in(std::move(shared_gpt_flux_up));
-    sw_gpt_flux_dn.move_data_in(std::move(shared_gpt_flux_dn));
-    sw_optical_props_subset->get_tau().move_data_in(std::move(shared_tau));
-    sw_optical_props_subset->get_ssa().move_data_in(std::move(shared_ssa_lay_src_inc));
-    sw_optical_props_subset->get_g().move_data_in(std::move(shared_g_lay_src_dec));
-}
-
-template<typename TF>
-void radiation_block_work_arrays<TF>::reset_sw_shmem()
-{
-    shared_gpt_flux_up = sw_gpt_flux_up.move_data_out();
-    shared_gpt_flux_dn = sw_gpt_flux_dn.move_data_out();
-    shared_tau = sw_optical_props_subset->get_tau().move_data_out();
-    shared_ssa_lay_src_inc = sw_optical_props_subset->get_ssa().move_data_out();
-    shared_g_lay_src_dec = sw_optical_props_subset->get_g().move_data_out();
 }
 
 template<typename TF>
@@ -493,8 +447,6 @@ void radiation_block_work_arrays<TF>::allocate_sw_data(
     tsi_scaling_subset = Array<TF,1>({ncols});
     if(switch_fluxes)
     {
-        sw_gpt_flux_up = Array<TF,3>(std::move(shared_gpt_flux_up), {ncols, nlevs, sws->get_n_gpt()});
-        sw_gpt_flux_dn = Array<TF,3>(std::move(shared_gpt_flux_dn), {ncols, nlevs, sws->get_n_gpt()});
         sw_gpt_flux_dn_dir = Array<TF,3>({ncols, nlevs, sws->get_n_gpt()});
         mu0_subset = Array<TF,1>({ncols});
         sfc_alb_dir_subset = Array<TF,2>({sws->get_n_bnd(), ncols});
@@ -512,6 +464,38 @@ void radiation_block_work_arrays<TF>::allocate_sw_data(
         sw_cloud_optical_props_subset = std::make_unique<Optical_props_2str<TF>>(ncols, nlays, *(sws->cloud_optics));
     }
     reset_sw_shmem();
+}
+
+template<typename TF>
+void radiation_block_work_arrays<TF>::set_lw_shmem()
+{
+    lw_optical_props_subset->get_tau().move_data_in(std::move(shared_tau));
+    sources_subset->get_lev_source_inc().move_data_in(std::move(shared_ssa_lay_src_inc));
+    sources_subset->get_lev_source_dec().move_data_in(std::move(shared_g_lay_src_dec));
+}
+
+template<typename TF>
+void radiation_block_work_arrays<TF>::reset_lw_shmem()
+{
+    shared_tau = lw_optical_props_subset->get_tau().move_data_out();
+    shared_ssa_lay_src_inc = sources_subset->get_lev_source_inc().move_data_out();
+    shared_g_lay_src_dec = sources_subset->get_lev_source_dec().move_data_out();
+}
+
+template<typename TF>
+void radiation_block_work_arrays<TF>::set_sw_shmem()
+{
+    sw_optical_props_subset->get_tau().move_data_in(std::move(shared_tau));
+    sw_optical_props_subset->get_ssa().move_data_in(std::move(shared_ssa_lay_src_inc));
+    sw_optical_props_subset->get_g().move_data_in(std::move(shared_g_lay_src_dec));
+}
+
+template<typename TF>
+void radiation_block_work_arrays<TF>::reset_sw_shmem()
+{
+    shared_tau = sw_optical_props_subset->get_tau().move_data_out();
+    shared_ssa_lay_src_inc = sw_optical_props_subset->get_ssa().move_data_out();
+    shared_g_lay_src_dec = sw_optical_props_subset->get_g().move_data_out();
 }
 
 template<typename TF>
@@ -677,16 +661,32 @@ void Radiation_solver_longwave<TF>::solve(
 
         constexpr int n_ang = 1;
 
+        Array<TF,3> gpt_flux_up, gpt_flux_dn;
+        if(work->lw_gas_optics_work != nullptr)
+        {
+            gpt_flux_up = Array<TF,3>(work->lw_gas_optics_work->tau_work_arrays->tau.move_data_out(), {n_col_in, n_lev, n_gpt});
+            gpt_flux_dn = Array<TF,3>(work->lw_gas_optics_work->tau_work_arrays->tau_rayleigh.move_data_out(), {n_col_in, n_lev, n_gpt});
+            if(work->rte_lw_work != nullptr)
+            {
+                work->rte_lw_work->gpt_flux_up_jac.move_data_in(work->lw_gas_optics_work->source_work_arrays->lay_source_t.move_data_out());
+            }
+        }
+        else
+        {
+            gpt_flux_up = Array<TF,3>({n_col_in, n_lev, n_gpt});
+            gpt_flux_dn = Array<TF,3>({n_col_in, n_lev, n_gpt});
+        }
+
         Rte_lw<TF>::rte_lw(
                 work->lw_optical_props_subset,
                 top_at_1,
                 *(work->sources_subset),
                 work->emis_sfc_subset,
                 Array<TF,2>(), // Add an empty array, no inc_flux.
-                work->lw_gpt_flux_up, work->lw_gpt_flux_dn,
+                gpt_flux_up, gpt_flux_dn,
                 n_ang, work->rte_lw_work.get());
 
-        work->fluxes_subset->reduce(work->lw_gpt_flux_up, work->lw_gpt_flux_dn, work->lw_optical_props_subset, top_at_1);
+        work->fluxes_subset->reduce(gpt_flux_up, gpt_flux_dn, work->lw_optical_props_subset, top_at_1);
 
         // Copy the data to the output.
         for (int ilev=1; ilev<=n_lev; ++ilev)
@@ -699,7 +699,7 @@ void Radiation_solver_longwave<TF>::solve(
             }
         if (switch_output_bnd_fluxes)
         {
-            work->lw_bnd_fluxes_subset->reduce(work->lw_gpt_flux_up, work->lw_gpt_flux_dn, work->lw_optical_props_subset, top_at_1);
+            work->lw_bnd_fluxes_subset->reduce(gpt_flux_up, gpt_flux_dn, work->lw_optical_props_subset, top_at_1);
 
             for (int ibnd=1; ibnd<=n_bnd; ++ibnd)
                 for (int ilev=1; ilev<=n_lev; ++ilev)
@@ -709,6 +709,16 @@ void Radiation_solver_longwave<TF>::solve(
                         lw_bnd_flux_dn ({icol+col_s_in-1, ilev, ibnd}) = work->lw_bnd_fluxes_subset->get_bnd_flux_dn ()({icol, ilev, ibnd});
                         lw_bnd_flux_net({icol+col_s_in-1, ilev, ibnd}) = work->lw_bnd_fluxes_subset->get_bnd_flux_net()({icol, ilev, ibnd});
                     }
+        }
+                
+        if(work->lw_gas_optics_work != nullptr)
+        {
+            work->lw_gas_optics_work->tau_work_arrays->tau.move_data_in(gpt_flux_up.move_data_out());
+            work->lw_gas_optics_work->tau_work_arrays->tau_rayleigh.move_data_in(gpt_flux_dn.move_data_out());
+            if(work->rte_lw_work != nullptr)
+            {
+                work->lw_gas_optics_work->source_work_arrays->lay_source_t.move_data_in(work->rte_lw_work->gpt_flux_up_jac.move_data_out());
+            }
         }
     };
 
@@ -897,6 +907,18 @@ void Radiation_solver_shortwave<TF>::solve(
         sfc_alb_dir.subset_copy(work->sfc_alb_dir_subset, {1, col_s_in});
         sfc_alb_dif.subset_copy(work->sfc_alb_dif_subset, {1, col_s_in});
 
+        Array<TF,3> gpt_flux_up, gpt_flux_dn;
+        if(work->sw_gas_optics_work != nullptr)
+        {
+            gpt_flux_up = Array<TF,3>(work->sw_gas_optics_work->tau_work_arrays->tau.move_data_out(), {n_col_in, n_lev, n_gpt});
+            gpt_flux_dn = Array<TF,3>(work->sw_gas_optics_work->tau_work_arrays->tau_rayleigh.move_data_out(), {n_col_in, n_lev, n_gpt});
+        }
+        else
+        {
+            gpt_flux_up = Array<TF,3>({n_col_in, n_lev, n_gpt});
+            gpt_flux_dn = Array<TF,3>({n_col_in, n_lev, n_gpt});
+        }
+
         Rte_sw<TF>::rte_sw(
                 work->sw_optical_props_subset,
                 top_at_1,
@@ -905,13 +927,14 @@ void Radiation_solver_shortwave<TF>::solve(
                 work->sfc_alb_dir_subset,
                 work->sfc_alb_dif_subset,
                 Array<TF,2>(), // Add an empty array, no inc_flux.
-                work->sw_gpt_flux_up,
-                work->sw_gpt_flux_dn,
+                gpt_flux_up,
+                gpt_flux_dn,
                 work->sw_gpt_flux_dn_dir,
                 work->rte_sw_work.get());
 
-        work->fluxes_subset->reduce(work->sw_gpt_flux_up, 
-                work->sw_gpt_flux_dn, 
+        work->fluxes_subset->reduce(
+                gpt_flux_up, 
+                gpt_flux_dn, 
                 work->sw_gpt_flux_dn_dir, 
                 work->sw_optical_props_subset, 
                 top_at_1);
@@ -928,7 +951,7 @@ void Radiation_solver_shortwave<TF>::solve(
 
         if (switch_output_bnd_fluxes)
         {
-            work->sw_bnd_fluxes_subset->reduce(work->sw_gpt_flux_up, work->sw_gpt_flux_dn, work->sw_gpt_flux_dn_dir, work->sw_optical_props_subset, top_at_1);
+            work->sw_bnd_fluxes_subset->reduce(gpt_flux_up, gpt_flux_dn, work->sw_gpt_flux_dn_dir, work->sw_optical_props_subset, top_at_1);
 
             for (int ibnd=1; ibnd<=n_bnd; ++ibnd)
                 for (int ilev=1; ilev<=n_lev; ++ilev)
@@ -939,6 +962,12 @@ void Radiation_solver_shortwave<TF>::solve(
                         sw_bnd_flux_dn_dir ({icol+col_s_in-1, ilev, ibnd}) = work->sw_bnd_fluxes_subset->get_bnd_flux_dn_dir ()({icol, ilev, ibnd});
                         sw_bnd_flux_net    ({icol+col_s_in-1, ilev, ibnd}) = work->sw_bnd_fluxes_subset->get_bnd_flux_net    ()({icol, ilev, ibnd});
                     }
+        }
+                        
+        if(work->sw_gas_optics_work != nullptr)
+        {
+            work->sw_gas_optics_work->tau_work_arrays->tau.move_data_in(gpt_flux_up.move_data_out());
+            work->sw_gas_optics_work->tau_work_arrays->tau_rayleigh.move_data_in(gpt_flux_dn.move_data_out());
         }
     };
 

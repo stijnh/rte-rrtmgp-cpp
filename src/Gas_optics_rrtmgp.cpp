@@ -782,11 +782,13 @@ void gas_taus_work_arrays<TF>::resize(
 {
     if(tau.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
     {
-        tau = Array<TF,3>({n_gpts, n_lays, n_cols});
+        std::vector<TF> mem_chunk(n_gpts * (n_lays + 1) * n_cols);
+        tau = Array<TF,3>(std::move(mem_chunk), {n_gpts, n_lays, n_cols});
     }
     if(tau_rayleigh.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
     {
-        tau_rayleigh = Array<TF,3>({n_gpts, n_lays, n_cols});
+        std::vector<TF> mem_chunk(n_gpts * (n_lays + 1) * n_cols);
+        tau_rayleigh = Array<TF,3>(std::move(mem_chunk), {n_gpts, n_lays, n_cols});
     }
     if(vmr.get_dims() != std::array<int,3>({n_cols, n_lays, n_gas}))
     {
@@ -816,7 +818,8 @@ void gas_source_work_arrays<TF>::resize(
 {
     if(lay_source_t.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
     {
-        lay_source_t = Array<TF,3>({n_gpts, n_lays, n_cols});
+        std::vector<TF> mem_chunk(n_gpts * (n_lays + 1) * n_cols);
+        lay_source_t = Array<TF,3>(std::move(mem_chunk), {n_gpts, n_lays, n_cols});
     }
     if(lev_source_inc_t.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
     {

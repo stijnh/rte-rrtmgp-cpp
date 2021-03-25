@@ -440,6 +440,9 @@ void radiation_block_work_arrays<TF>::allocate_sw_data(
         sw_gpt_flux_up = Array<TF,3>({ncols, nlevs, sws->get_n_gpt()});
         sw_gpt_flux_dn = Array<TF,3>({ncols, nlevs, sws->get_n_gpt()});
         sw_gpt_flux_dn_dir = Array<TF,3>({ncols, nlevs, sws->get_n_gpt()});
+        mu0_subset = Array<TF,1>({ncols});
+        sfc_alb_dir_subset = Array<TF,2>({sws->get_n_bnd(), ncols});
+        sfc_alb_dif_subset = Array<TF,2>({sws->get_n_bnd(), ncols});
         if(recursive)
         {
             sw_gas_optics_work = sws->kdist->create_work_arrays(ncols, nlays, sws->get_n_gpt());
@@ -806,19 +809,28 @@ void Radiation_solver_shortwave<TF>::solve(
         if (!switch_fluxes)
             return;
 
+        mu0.subset_copy(work->mu0_subset, {col_s_in});
+        sfc_alb_dir.subset_copy(work->sfc_alb_dir_subset, {1, col_s_in});
+        sfc_alb_dif.subset_copy(work->sfc_alb_dif_subset, {1, col_s_in});
+
         Rte_sw<TF>::rte_sw(
                 work->sw_optical_props_subset,
                 top_at_1,
-                mu0.subset({{ {col_s_in, col_e_in} }}),
+                work->mu0_subset,
                 work->toa_src_subset,
-                sfc_alb_dir.subset({{ {1, n_bnd}, {col_s_in, col_e_in} }}),
-                sfc_alb_dif.subset({{ {1, n_bnd}, {col_s_in, col_e_in} }}),
+                work->sfc_alb_dir_subset,
+                work->sfc_alb_dif_subset,
                 Array<TF,2>(), // Add an empty array, no inc_flux.
                 work->sw_gpt_flux_up,
                 work->sw_gpt_flux_dn,
-                work->sw_gpt_flux_dn_dir);
+                work->sw_gpt_flux_dn_dir,
+                work->rte_sw_work.get());
 
-        work->fluxes_subset->reduce(work->sw_gpt_flux_up, work->sw_gpt_flux_dn, work->sw_gpt_flux_dn_dir, work->sw_optical_props_subset, top_at_1);
+        work->fluxes_subset->reduce(work->sw_gpt_flux_up, 
+                work->sw_gpt_flux_dn, 
+                work->sw_gpt_flux_dn_dir, 
+                work->sw_optical_props_subset, 
+                top_at_1);
 
         // Copy the data to the output.
         for (int ilev=1; ilev<=n_lev; ++ilev)

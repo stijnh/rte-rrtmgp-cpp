@@ -53,6 +53,9 @@ struct radiation_block_work_arrays
     Array<TF,3> sw_gpt_flux_dn_dir;
     Array<TF,2> toa_src_subset;
     Array<TF,1> tsi_scaling_subset;
+    Array<TF,1> mu0_subset;
+    Array<TF,2> sfc_alb_dir_subset;
+    Array<TF,2> sfc_alb_dif_subset;
     std::unique_ptr<Fluxes_broadband<TF>> fluxes_subset;
     std::unique_ptr<Fluxes_broadband<TF>> lw_bnd_fluxes_subset;
     std::unique_ptr<Fluxes_broadband<TF>> sw_bnd_fluxes_subset;

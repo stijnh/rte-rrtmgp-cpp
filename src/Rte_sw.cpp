@@ -93,6 +93,21 @@ namespace rrtmgp_kernel_launcher
 }
 
 template<typename TF>
+void rte_sw_work_arrays<TF>::resize(
+        const int ncols, 
+        const int ngpt)
+{
+        if(sfc_alb_dir_gpt.get_dims() != std::array<int,2>({ncols, ngpt}))
+        {
+            sfc_alb_dir_gpt = Array<TF,2>({ncols, ngpt});
+        }
+        if(sfc_alb_dif_gpt.get_dims() != std::array<int,2>({ncols, ngpt}))
+        {
+            sfc_alb_dif_gpt = Array<TF,2>({ncols, ngpt});
+        }
+}
+
+template<typename TF>
 void Rte_sw<TF>::rte_sw(
         const std::unique_ptr<Optical_props_arry<TF>>& optical_props,
         const BOOL_TYPE top_at_1,
@@ -103,17 +118,22 @@ void Rte_sw<TF>::rte_sw(
         const Array<TF,2>& inc_flux_dif,
         Array<TF,3>& gpt_flux_up,
         Array<TF,3>& gpt_flux_dn,
-        Array<TF,3>& gpt_flux_dir)
+        Array<TF,3>& gpt_flux_dir,
+        rte_sw_work_arrays<TF>* workptr)
 {
     const int ncol = optical_props->get_ncol();
     const int nlay = optical_props->get_nlay();
     const int ngpt = optical_props->get_ngpt();
 
-    Array<TF,2> sfc_alb_dir_gpt({ncol, ngpt});
-    Array<TF,2> sfc_alb_dif_gpt({ncol, ngpt});
+    auto work = workptr;
+    if(workptr == nullptr)
+    {
+        work = new rte_sw_work_arrays<TF>();
+        work->resize(ncol, ngpt);
+    }
 
-    expand_and_transpose(optical_props, sfc_alb_dir, sfc_alb_dir_gpt);
-    expand_and_transpose(optical_props, sfc_alb_dif, sfc_alb_dif_gpt);
+    expand_and_transpose(optical_props, sfc_alb_dir, work->sfc_alb_dir_gpt);
+    expand_and_transpose(optical_props, sfc_alb_dif, work->sfc_alb_dif_gpt);
     // Upper boundary condition. At this stage, flux_dn contains the diffuse radiation only.
     rrtmgp_kernel_launcher::apply_BC(ncol, nlay, ngpt, top_at_1, inc_flux_dir, mu0, gpt_flux_dir);
     if (inc_flux_dif.size() == 0)
@@ -129,11 +149,16 @@ void Rte_sw<TF>::rte_sw(
             optical_props->get_ssa(),
             optical_props->get_g  (),
             mu0,
-            sfc_alb_dir_gpt, sfc_alb_dif_gpt,
+            work->sfc_alb_dir_gpt, work->sfc_alb_dif_gpt,
             gpt_flux_up, gpt_flux_dn, gpt_flux_dir);
 
     // CvH: The original fortran code had a call to the reduce here.
     // fluxes->reduce(gpt_flux_up, gpt_flux_dn, gpt_flux_dir, optical_props, top_at_1);
+
+    if(workptr == nullptr)
+    {
+        delete work;
+    }
 
 }
 

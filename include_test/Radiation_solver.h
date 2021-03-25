@@ -27,6 +27,7 @@
 #include "Fluxes.h"
 #include "Source_functions.h"
 #include "Rte_lw.h"
+#include "Rte_sw.h"
 
 template<typename TF> class Radiation_solver_longwave;
 template<typename TF> class Radiation_solver_shortwave;
@@ -60,8 +61,10 @@ struct radiation_block_work_arrays
     std::unique_ptr<Optical_props_1scl<TF>> lw_cloud_optical_props_subset;
     std::unique_ptr<Optical_props_2str<TF>> sw_cloud_optical_props_subset;
     std::unique_ptr<Source_func_lw<TF>> sources_subset;
-    std::unique_ptr<gas_optics_work_arrays<TF>> gas_optics_work;
+    std::unique_ptr<gas_optics_work_arrays<TF>> lw_gas_optics_work;
+    std::unique_ptr<gas_optics_work_arrays<TF>> sw_gas_optics_work;
     std::unique_ptr<rte_lw_work_arrays<TF>> rte_lw_work;
+    std::unique_ptr<rte_sw_work_arrays<TF>> rte_sw_work;
 
     radiation_block_work_arrays(const int ncols, 
                                 const int nlevs, 
@@ -338,7 +341,7 @@ class Radiation_solver_shortwave
         #endif
 
     private:
-        std::unique_ptr<Gas_optics<TF>> kdist;
+        std::unique_ptr<Gas_optics_rrtmgp<TF>> kdist;
         std::unique_ptr<Cloud_optics<TF>> cloud_optics;
 
         #ifdef __CUDACC__

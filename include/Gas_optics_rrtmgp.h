@@ -219,7 +219,8 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>
                 const Gas_concs<TF>& gas_desc,
                 std::unique_ptr<Optical_props_arry<TF>>& optical_props,
                 Array<TF,2>& toa_src,
-                const Array<TF,2>& col_dry) const;
+                const Array<TF,2>& col_dry,
+                gas_optics_work_arrays<TF>* work_arrays=nullptr) const;
 
         std::unique_ptr<gas_optics_work_arrays<TF>> create_work_arrays(
                 const int ncols, 

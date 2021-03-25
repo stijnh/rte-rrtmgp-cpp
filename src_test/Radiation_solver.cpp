@@ -401,7 +401,6 @@ void radiation_block_work_arrays<TF>::allocate_lw_data(
 {
     emis_sfc_subset = Array<TF,2>({lws->get_n_bnd(), ncols});
     lw_bnd_fluxes_subset = std::make_unique<Fluxes_byband<TF>>(ncols, nlevs, lws->get_n_bnd());
-
     lw_optical_props_subset = std::make_unique<Optical_props_1scl<TF>>(ncols, nlays, *(lws->kdist));
     sources_subset = std::make_unique<Source_func_lw<TF>>(ncols, nlays, *(lws->kdist));
     if(switch_fluxes)
@@ -410,7 +409,7 @@ void radiation_block_work_arrays<TF>::allocate_lw_data(
         lw_gpt_flux_dn = Array<TF,3>({ncols, nlevs, lws->get_n_gpt()});
         if(recursive)
         {
-            gas_optics_work = lws->kdist->create_work_arrays(ncols, nlays, lws->get_n_gpt());
+            lw_gas_optics_work = lws->kdist->create_work_arrays(ncols, nlays, lws->get_n_gpt());
             rte_lw_work = std::make_unique<rte_lw_work_arrays<TF>>();
             rte_lw_work->resize(ncols, nlevs, lws->get_n_gpt());
         }
@@ -441,6 +440,12 @@ void radiation_block_work_arrays<TF>::allocate_sw_data(
         sw_gpt_flux_up = Array<TF,3>({ncols, nlevs, sws->get_n_gpt()});
         sw_gpt_flux_dn = Array<TF,3>({ncols, nlevs, sws->get_n_gpt()});
         sw_gpt_flux_dn_dir = Array<TF,3>({ncols, nlevs, sws->get_n_gpt()});
+        if(recursive)
+        {
+            sw_gas_optics_work = sws->kdist->create_work_arrays(ncols, nlays, sws->get_n_gpt());
+            rte_sw_work = std::make_unique<rte_sw_work_arrays<TF>>();
+            rte_sw_work->resize(ncols, sws->get_n_gpt());
+        }
     }
     if(switch_cloud_optics)
     {
@@ -564,7 +569,7 @@ void Radiation_solver_longwave<TF>::solve(
                 *(work->sources_subset),
                 work->col_dry_subset,
                 work->t_lev_subset,
-                work->gas_optics_work.get());
+                work->lw_gas_optics_work.get());
 
         if (switch_cloud_optics)
         {
@@ -750,7 +755,8 @@ void Radiation_solver_shortwave<TF>::solve(
                 gas_concs_subset,
                 work->sw_optical_props_subset,
                 work->toa_src_subset,
-                work->col_dry_subset);
+                work->col_dry_subset,
+                work->sw_gas_optics_work.get());
 
         auto tsi_scaling_subset = tsi_scaling.subset_copy(work->tsi_scaling_subset, {col_s_in});
 

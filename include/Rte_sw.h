@@ -36,6 +36,17 @@ template<typename> class Optical_props_arry_gpu;
 template<typename> class Fluxes_broadband;
 
 template<typename TF>
+struct rte_sw_work_arrays
+{
+    Array<TF,2> sfc_alb_dir_gpt;
+    Array<TF,2> sfc_alb_dif_gpt;
+
+    void resize(
+            const int ncols,
+            const int ngpt);
+};
+
+template<typename TF>
 class Rte_sw
 {
     public:
@@ -49,7 +60,8 @@ class Rte_sw
                 const Array<TF,2>& inc_flux_dif,
                 Array<TF,3>& gpt_flux_up,
                 Array<TF,3>& gpt_flux_dn,
-                Array<TF,3>& gpt_flux_dir);
+                Array<TF,3>& gpt_flux_dir,
+                rte_sw_work_arrays<TF>* work = nullptr);
 
         static void expand_and_transpose(
                 const std::unique_ptr<Optical_props_arry<TF>>& ops,

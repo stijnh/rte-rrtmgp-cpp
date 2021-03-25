@@ -41,6 +41,13 @@ class Source_func_lw : public Optical_props<TF>
                 const int n_lay,
                 const Optical_props<TF>& optical_props);
 
+        Source_func_lw(
+                const int n_col,
+                const int n_lay,
+                const Optical_props<TF>& optical_props,
+                std::vector<TF>&& lev_source_inc_shmem,
+                std::vector<TF>&& lev_source_dec_shmem);
+
         void set_subset(
                 const Source_func_lw<TF>& sources_sub,
                 const int col_s, const int col_e);

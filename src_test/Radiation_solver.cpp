@@ -364,6 +364,18 @@ radiation_block_work_arrays<TF>::radiation_block_work_arrays(
     
     fluxes_subset = std::make_unique<Fluxes_broadband<TF>>(ncols, nlevs);
 
+    const int ngptmax = std::max(lws == nullptr? 1 : lws->get_n_gpt(), sws == nullptr? 1 : sws->get_n_gpt());
+
+    shared_tau = std::vector<TF>(ncols * nlays * ngptmax);
+    shared_ssa_lay_src_inc = std::vector<TF>(ncols * nlays * ngptmax);
+    shared_g_lay_src_dec = std::vector<TF>(ncols * nlays * ngptmax);
+
+    if(switch_fluxes)
+    {
+        shared_gpt_flux_up = std::vector<TF>(ncols * nlevs * ngptmax);
+        shared_gpt_flux_dn = std::vector<TF>(ncols * nlevs * ngptmax);
+    }
+
     if(sws == nullptr)
     {
         if(lws != nullptr)
@@ -401,12 +413,13 @@ void radiation_block_work_arrays<TF>::allocate_lw_data(
 {
     emis_sfc_subset = Array<TF,2>({lws->get_n_bnd(), ncols});
     lw_bnd_fluxes_subset = std::make_unique<Fluxes_byband<TF>>(ncols, nlevs, lws->get_n_bnd());
-    lw_optical_props_subset = std::make_unique<Optical_props_1scl<TF>>(ncols, nlays, *(lws->kdist));
-    sources_subset = std::make_unique<Source_func_lw<TF>>(ncols, nlays, *(lws->kdist));
+    lw_optical_props_subset = std::make_unique<Optical_props_1scl<TF>>(ncols, nlays, *(lws->kdist), std::move(shared_tau));
+    sources_subset = std::make_unique<Source_func_lw<TF>>(ncols, nlays, *(lws->kdist), std::move(shared_ssa_lay_src_inc), std::move(shared_g_lay_src_dec));
     if(switch_fluxes)
     {
-        lw_gpt_flux_up = Array<TF,3>({ncols, nlevs, lws->get_n_gpt()});
-        lw_gpt_flux_dn = Array<TF,3>({ncols, nlevs, lws->get_n_gpt()});
+        lw_gpt_flux_up = Array<TF,3>(std::move(shared_gpt_flux_up), {ncols, nlevs, lws->get_n_gpt()});
+        lw_gpt_flux_dn = Array<TF,3>(std::move(shared_gpt_flux_dn), {ncols, nlevs, lws->get_n_gpt()});
+
         if(recursive)
         {
             lw_gas_optics_work = lws->kdist->create_work_arrays(ncols, nlays, lws->get_n_gpt());
@@ -418,8 +431,48 @@ void radiation_block_work_arrays<TF>::allocate_lw_data(
     {
         lw_cloud_optical_props_subset = std::make_unique<Optical_props_1scl<TF>>(ncols, nlays, *(lws->cloud_optics));
     }
+    reset_lw_shmem();
 }
 
+template<typename TF>
+void radiation_block_work_arrays<TF>::set_lw_shmem()
+{
+    lw_gpt_flux_up.move_data_in(std::move(shared_gpt_flux_up));
+    lw_gpt_flux_dn.move_data_in(std::move(shared_gpt_flux_dn));
+    lw_optical_props_subset->get_tau().move_data_in(std::move(shared_tau));
+    sources_subset->get_lev_source_inc().move_data_in(std::move(shared_ssa_lay_src_inc));
+    sources_subset->get_lev_source_dec().move_data_in(std::move(shared_g_lay_src_dec));
+}
+
+template<typename TF>
+void radiation_block_work_arrays<TF>::reset_lw_shmem()
+{
+    shared_gpt_flux_up = lw_gpt_flux_up.move_data_out();
+    shared_gpt_flux_dn = lw_gpt_flux_dn.move_data_out();
+    shared_tau = lw_optical_props_subset->get_tau().move_data_out();
+    shared_ssa_lay_src_inc = sources_subset->get_lev_source_inc().move_data_out();
+    shared_g_lay_src_dec = sources_subset->get_lev_source_dec().move_data_out();
+}
+
+template<typename TF>
+void radiation_block_work_arrays<TF>::set_sw_shmem()
+{
+    sw_gpt_flux_up.move_data_in(std::move(shared_gpt_flux_up));
+    sw_gpt_flux_dn.move_data_in(std::move(shared_gpt_flux_dn));
+    sw_optical_props_subset->get_tau().move_data_in(std::move(shared_tau));
+    sw_optical_props_subset->get_ssa().move_data_in(std::move(shared_ssa_lay_src_inc));
+    sw_optical_props_subset->get_g().move_data_in(std::move(shared_g_lay_src_dec));
+}
+
+template<typename TF>
+void radiation_block_work_arrays<TF>::reset_sw_shmem()
+{
+    shared_gpt_flux_up = sw_gpt_flux_up.move_data_out();
+    shared_gpt_flux_dn = sw_gpt_flux_dn.move_data_out();
+    shared_tau = sw_optical_props_subset->get_tau().move_data_out();
+    shared_ssa_lay_src_inc = sw_optical_props_subset->get_ssa().move_data_out();
+    shared_g_lay_src_dec = sw_optical_props_subset->get_g().move_data_out();
+}
 
 template<typename TF>
 void radiation_block_work_arrays<TF>::allocate_sw_data(
@@ -431,18 +484,22 @@ void radiation_block_work_arrays<TF>::allocate_sw_data(
         const Radiation_solver_shortwave<TF>* sws,
         const bool recursive)
 {
-    sw_optical_props_subset = std::make_unique<Optical_props_2str<TF>>(ncols, nlays, *(sws->kdist));
+    sw_optical_props_subset = std::make_unique<Optical_props_2str<TF>>(ncols, nlays, *(sws->kdist), 
+            std::move(shared_tau), 
+            std::move(shared_ssa_lay_src_inc), 
+            std::move(shared_g_lay_src_dec));
     sw_bnd_fluxes_subset = std::make_unique<Fluxes_byband<TF>>(ncols, nlevs, sws->get_n_bnd());
     toa_src_subset = Array<TF,2>({ncols, sws->get_n_gpt()});
     tsi_scaling_subset = Array<TF,1>({ncols});
     if(switch_fluxes)
     {
-        sw_gpt_flux_up = Array<TF,3>({ncols, nlevs, sws->get_n_gpt()});
-        sw_gpt_flux_dn = Array<TF,3>({ncols, nlevs, sws->get_n_gpt()});
+        sw_gpt_flux_up = Array<TF,3>(std::move(shared_gpt_flux_up), {ncols, nlevs, sws->get_n_gpt()});
+        sw_gpt_flux_dn = Array<TF,3>(std::move(shared_gpt_flux_dn), {ncols, nlevs, sws->get_n_gpt()});
         sw_gpt_flux_dn_dir = Array<TF,3>({ncols, nlevs, sws->get_n_gpt()});
         mu0_subset = Array<TF,1>({ncols});
         sfc_alb_dir_subset = Array<TF,2>({sws->get_n_bnd(), ncols});
         sfc_alb_dif_subset = Array<TF,2>({sws->get_n_bnd(), ncols});
+
         if(recursive)
         {
             sw_gas_optics_work = sws->kdist->create_work_arrays(ncols, nlays, sws->get_n_gpt());
@@ -454,6 +511,7 @@ void radiation_block_work_arrays<TF>::allocate_sw_data(
     {
         sw_cloud_optical_props_subset = std::make_unique<Optical_props_2str<TF>>(ncols, nlays, *(sws->cloud_optics));
     }
+    reset_sw_shmem();
 }
 
 template<typename TF>
@@ -544,6 +602,7 @@ void Radiation_solver_longwave<TF>::solve(
         {
             allocated_work_arrays = std::make_unique<radiation_block_work_arrays<TF>>(
                     n_col_in, n_lev, n_lay, switch_fluxes, switch_cloud_optics, this, nullptr, false);
+            allocated_work_arrays->set_lw_shmem();
             work = allocated_work_arrays.get();
         }
 
@@ -653,6 +712,18 @@ void Radiation_solver_longwave<TF>::solve(
         }
     };
 
+    if(work_arrays != nullptr)
+    {
+        if(work_arrays->blocks_work_arrays != nullptr)
+        {
+            work_arrays->blocks_work_arrays->set_lw_shmem();
+        }
+        if(work_arrays->residual_work_arrays != nullptr)
+        {
+            work_arrays->residual_work_arrays->set_lw_shmem();
+        }
+    }
+
     // Read the sources and create containers for the substeps.
     int n_blocks = n_col / n_col_block;
     
@@ -672,6 +743,18 @@ void Radiation_solver_longwave<TF>::solve(
         const int col_e = n_col;
 
         call_kernels(col_s, col_e, work_arrays == nullptr? nullptr : work_arrays->residual_work_arrays.get());
+    }
+
+    if(work_arrays != nullptr)
+    {
+        if(work_arrays->blocks_work_arrays != nullptr)
+        {
+            work_arrays->blocks_work_arrays->reset_lw_shmem();
+        }
+        if(work_arrays->residual_work_arrays != nullptr)
+        {
+            work_arrays->residual_work_arrays->reset_lw_shmem();
+        }
     }
 }
 
@@ -737,6 +820,7 @@ void Radiation_solver_shortwave<TF>::solve(
         {
             allocated_work_arrays = std::make_unique<radiation_block_work_arrays<TF>>(
                     n_col_in, n_lev, n_lay, switch_fluxes, switch_cloud_optics, nullptr, this, false);
+            allocated_work_arrays->set_sw_shmem();
             work = allocated_work_arrays.get();
         }
 
@@ -858,6 +942,18 @@ void Radiation_solver_shortwave<TF>::solve(
         }
     };
 
+    if(work_arrays != nullptr)
+    {
+        if(work_arrays->blocks_work_arrays != nullptr)
+        {
+            work_arrays->blocks_work_arrays->set_sw_shmem();
+        }
+        if(work_arrays->residual_work_arrays != nullptr)
+        {
+            work_arrays->residual_work_arrays->set_sw_shmem();
+        }
+    }
+
     // Read the sources and create containers for the substeps.
     int n_blocks = n_col / n_col_block;
     
@@ -877,6 +973,18 @@ void Radiation_solver_shortwave<TF>::solve(
         const int col_e = n_col;
 
         call_kernels(col_s, col_e, work_arrays == nullptr? nullptr : work_arrays->residual_work_arrays.get());
+    }
+
+    if(work_arrays != nullptr)
+    {
+        if(work_arrays->blocks_work_arrays != nullptr)
+        {
+            work_arrays->blocks_work_arrays->reset_sw_shmem();
+        }
+        if(work_arrays->residual_work_arrays != nullptr)
+        {
+            work_arrays->residual_work_arrays->reset_sw_shmem();
+        }
     }
 }
 

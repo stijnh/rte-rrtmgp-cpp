@@ -100,6 +100,12 @@ class Optical_props_1scl : public Optical_props_arry<TF>
                 const int nlay,
                 const Optical_props<TF>& optical_props);
 
+        Optical_props_1scl(
+                const int ncol,
+                const int nlay,
+                const Optical_props<TF>& optical_props,
+                std::vector<TF>&& tau_shmem);
+
         void set_subset(
                 const std::unique_ptr<Optical_props_arry<TF>>& optical_props_sub,
                 const int col_s, const int col_e);
@@ -133,6 +139,14 @@ class Optical_props_2str : public Optical_props_arry<TF>
                 const int ncol,
                 const int nlay,
                 const Optical_props<TF>& optical_props);
+
+        Optical_props_2str(
+                const int ncol,
+                const int nlay,
+                const Optical_props<TF>& optical_props,
+                std::vector<TF>&& tau_shmem,
+                std::vector<TF>&& ssa_shmem,
+                std::vector<TF>&& g_shmem);
 
         void set_subset(
                 const std::unique_ptr<Optical_props_arry<TF>>& optical_props_sub,

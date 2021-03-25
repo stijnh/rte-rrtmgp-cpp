@@ -69,6 +69,12 @@ struct radiation_block_work_arrays
     std::unique_ptr<rte_lw_work_arrays<TF>> rte_lw_work;
     std::unique_ptr<rte_sw_work_arrays<TF>> rte_sw_work;
 
+    std::vector<TF> shared_gpt_flux_up;
+    std::vector<TF> shared_gpt_flux_dn;
+    std::vector<TF> shared_tau;
+    std::vector<TF> shared_ssa_lay_src_inc;
+    std::vector<TF> shared_g_lay_src_dec;
+
     radiation_block_work_arrays(const int ncols, 
                                 const int nlevs, 
                                 const int nlays,
@@ -95,6 +101,11 @@ struct radiation_block_work_arrays
         const bool switch_cloud_optics,
         const Radiation_solver_shortwave<TF>* sws,
         const bool recursive);
+
+    void set_lw_shmem();
+    void set_sw_shmem();
+    void reset_lw_shmem();
+    void reset_sw_shmem();
 };
 
 template<typename TF>

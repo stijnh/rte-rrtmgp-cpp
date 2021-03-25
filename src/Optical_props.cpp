@@ -81,6 +81,16 @@ Optical_props_1scl<TF>::Optical_props_1scl(
 {}
 
 template<typename TF>
+Optical_props_1scl<TF>::Optical_props_1scl(
+        const int ncol,
+        const int nlay,
+        const Optical_props<TF>& optical_props,
+        std::vector<TF>&& tau_shmem) :
+    Optical_props_arry<TF>(optical_props),
+    tau(tau_shmem, {ncol, nlay, this->get_ngpt()})
+{}
+
+template<typename TF>
 void Optical_props_1scl<TF>::set_subset(
         const std::unique_ptr<Optical_props_arry<TF>>& optical_props_sub,
         const int col_s, const int col_e)
@@ -111,6 +121,20 @@ Optical_props_2str<TF>::Optical_props_2str(
     tau({ncol, nlay, this->get_ngpt()}),
     ssa({ncol, nlay, this->get_ngpt()}),
     g  ({ncol, nlay, this->get_ngpt()})
+{}
+
+template<typename TF>
+Optical_props_2str<TF>::Optical_props_2str(
+        const int ncol,
+        const int nlay,
+        const Optical_props<TF>& optical_props,
+        std::vector<TF>&& tau_shmem,
+        std::vector<TF>&& ssa_shmem,
+        std::vector<TF>&& g_shmem) :
+    Optical_props_arry<TF>(optical_props),
+    tau(tau_shmem, {ncol, nlay, this->get_ngpt()}),
+    ssa(ssa_shmem, {ncol, nlay, this->get_ngpt()}),
+    g  (g_shmem, {ncol, nlay, this->get_ngpt()})
 {}
 
 template<typename TF>

@@ -369,6 +369,7 @@ radiation_block_work_arrays<TF>::radiation_block_work_arrays(
     shared_tau = std::vector<TF>(ncols * nlays * ngptmax);
     shared_ssa_lay_src_inc = std::vector<TF>(ncols * nlays * ngptmax);
     shared_g_lay_src_dec = std::vector<TF>(ncols * nlays * ngptmax);
+    shared_flux_dn_dir = std::vector<TF>(ncols * nlevs * ngptmax);
 
     if(recursive and switch_fluxes)
     {
@@ -381,7 +382,6 @@ radiation_block_work_arrays<TF>::radiation_block_work_arrays(
         shared_col_gas = std::vector<TF>(ncols * nlays * (ngasmax + 1));
         shared_col_mix = std::vector<TF>(2 * nflavmax * ncols * nlays);
         shared_fminor = std::vector<TF>(4 * nflavmax * ncols * nlays);
-        shared_flux_dn_dir = std::vector<TF>(ncols * nlevs * ngptmax);
     }
 
     if(sws == nullptr)
@@ -422,7 +422,10 @@ void radiation_block_work_arrays<TF>::allocate_lw_data(
     emis_sfc_subset = Array<TF,2>({lws->get_n_bnd(), ncols});
     lw_bnd_fluxes_subset = std::make_unique<Fluxes_byband<TF>>(ncols, nlevs, lws->get_n_bnd());
     lw_optical_props_subset = std::make_unique<Optical_props_1scl<TF>>(ncols, nlays, *(lws->kdist), std::move(shared_tau));
-    sources_subset = std::make_unique<Source_func_lw<TF>>(ncols, nlays, *(lws->kdist), std::move(shared_ssa_lay_src_inc), std::move(shared_g_lay_src_dec));
+    sources_subset = std::make_unique<Source_func_lw<TF>>(ncols, nlays, *(lws->kdist), 
+                            std::move(shared_flux_dn_dir),
+                            std::move(shared_ssa_lay_src_inc), 
+                            std::move(shared_g_lay_src_dec));
     if(switch_fluxes)
     {
         if(recursive)
@@ -478,7 +481,7 @@ void radiation_block_work_arrays<TF>::allocate_sw_data(
     tsi_scaling_subset = Array<TF,1>({ncols});
     if(switch_fluxes)
     {
-        sw_gpt_flux_dn_dir = Array<TF,3>({ncols, nlevs, sws->get_n_gpt()});
+        sw_gpt_flux_dn_dir = Array<TF,3>(std::move(shared_flux_dn_dir), {ncols, nlevs, sws->get_n_gpt()});
         mu0_subset = Array<TF,1>({ncols});
         sfc_alb_dir_subset = Array<TF,2>({sws->get_n_bnd(), ncols});
         sfc_alb_dif_subset = Array<TF,2>({sws->get_n_bnd(), ncols});
@@ -518,6 +521,7 @@ void radiation_block_work_arrays<TF>::set_lw_shmem()
     lw_optical_props_subset->get_tau().move_data_in(std::move(shared_tau));
     sources_subset->get_lev_source_inc().move_data_in(std::move(shared_ssa_lay_src_inc));
     sources_subset->get_lev_source_dec().move_data_in(std::move(shared_g_lay_src_dec));
+    sources_subset->get_lay_source().move_data_in(std::move(shared_flux_dn_dir));
     if(lw_gas_optics_work != nullptr)
     {
         lw_gas_optics_work->tau_work_arrays->tau.move_data_in(std::move(shared_tau_work));
@@ -535,6 +539,7 @@ void radiation_block_work_arrays<TF>::reset_lw_shmem()
     shared_tau = lw_optical_props_subset->get_tau().move_data_out();
     shared_ssa_lay_src_inc = sources_subset->get_lev_source_inc().move_data_out();
     shared_g_lay_src_dec = sources_subset->get_lev_source_dec().move_data_out();
+    shared_flux_dn_dir = sources_subset->get_lay_source().move_data_out();
     if(lw_gas_optics_work != nullptr)
     {
         shared_tau_work = lw_gas_optics_work->tau_work_arrays->tau.move_data_out();
@@ -552,6 +557,10 @@ void radiation_block_work_arrays<TF>::set_sw_shmem()
     sw_optical_props_subset->get_tau().move_data_in(std::move(shared_tau));
     sw_optical_props_subset->get_ssa().move_data_in(std::move(shared_ssa_lay_src_inc));
     sw_optical_props_subset->get_g().move_data_in(std::move(shared_g_lay_src_dec));
+    if(sw_gpt_flux_dn_dir.size() > 0)
+    {
+        sw_gpt_flux_dn_dir.move_data_in(std::move(shared_flux_dn_dir));
+    }
     if(sw_gas_optics_work != nullptr)
     {
         sw_gas_optics_work->tau_work_arrays->tau.move_data_in(std::move(shared_tau_work));
@@ -569,6 +578,10 @@ void radiation_block_work_arrays<TF>::reset_sw_shmem()
     shared_tau = sw_optical_props_subset->get_tau().move_data_out();
     shared_ssa_lay_src_inc = sw_optical_props_subset->get_ssa().move_data_out();
     shared_g_lay_src_dec = sw_optical_props_subset->get_g().move_data_out();
+    if(sw_gpt_flux_dn_dir.size() > 0)
+    {
+        shared_flux_dn_dir = sw_gpt_flux_dn_dir.move_data_out();
+    }
     if(sw_gas_optics_work != nullptr)
     {
         shared_tau_work = sw_gas_optics_work->tau_work_arrays->tau.move_data_out();

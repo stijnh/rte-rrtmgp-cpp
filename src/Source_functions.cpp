@@ -45,12 +45,13 @@ Source_func_lw<TF>::Source_func_lw(
         const int n_col,
         const int n_lay,
         const Optical_props<TF>& optical_props,
+        std::vector<TF>&& lay_source_shmem,
         std::vector<TF>&& lev_source_inc_shmem,
         std::vector<TF>&& lev_source_dec_shmem) :
     Optical_props<TF>(optical_props),
     sfc_source({n_col, optical_props.get_ngpt()}),
     sfc_source_jac({n_col, optical_props.get_ngpt()}),
-    lay_source({n_col, n_lay, optical_props.get_ngpt()}),
+    lay_source(lay_source_shmem, {n_col, n_lay, optical_props.get_ngpt()}),
     lev_source_inc(lev_source_inc_shmem, {n_col, n_lay, optical_props.get_ngpt()}),
     lev_source_dec(lev_source_dec_shmem, {n_col, n_lay, optical_props.get_ngpt()})
 {}

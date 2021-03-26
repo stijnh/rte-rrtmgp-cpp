@@ -45,6 +45,7 @@ class Source_func_lw : public Optical_props<TF>
                 const int n_col,
                 const int n_lay,
                 const Optical_props<TF>& optical_props,
+                std::vector<TF>&& lay_source_shmem,
                 std::vector<TF>&& lev_source_inc_shmem,
                 std::vector<TF>&& lev_source_dec_shmem);
 

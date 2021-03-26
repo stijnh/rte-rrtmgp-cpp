@@ -68,6 +68,14 @@ struct radiation_block_work_arrays
     std::vector<TF> shared_tau;
     std::vector<TF> shared_ssa_lay_src_inc;
     std::vector<TF> shared_g_lay_src_dec;
+    std::vector<TF> shared_fmajor;
+    std::vector<TF> shared_tau_work;
+    std::vector<TF> shared_tau_rayleigh;
+    std::vector<TF> shared_vmr;
+    std::vector<TF> shared_col_gas;
+    std::vector<TF> shared_col_mix;
+    std::vector<TF> shared_fminor;
+    std::vector<TF> shared_flux_dn_dir;
 
     radiation_block_work_arrays(const int ncols, 
                                 const int nlevs, 

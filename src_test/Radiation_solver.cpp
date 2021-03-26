@@ -370,6 +370,20 @@ radiation_block_work_arrays<TF>::radiation_block_work_arrays(
     shared_ssa_lay_src_inc = std::vector<TF>(ncols * nlays * ngptmax);
     shared_g_lay_src_dec = std::vector<TF>(ncols * nlays * ngptmax);
 
+    if(recursive and switch_fluxes)
+    {
+        const int nflavmax = std::max(lws == nullptr? 1 : lws->kdist->get_nflav(), sws == nullptr? 1 : sws->kdist->get_nflav());
+        const int ngasmax = std::max(lws == nullptr? 1 : lws->kdist->get_ngas(), sws == nullptr? 1 : sws->kdist->get_ngas());
+        
+        shared_tau_work = std::vector<TF>(ncols * nlevs * ngptmax);
+        shared_tau_rayleigh = std::vector<TF>(ncols * nlevs * ngptmax);
+        shared_vmr = std::vector<TF>(ncols * nlays * ngasmax);
+        shared_col_gas = std::vector<TF>(ncols * nlays * (ngasmax + 1));
+        shared_col_mix = std::vector<TF>(2 * nflavmax * ncols * nlays);
+        shared_fminor = std::vector<TF>(4 * nflavmax * ncols * nlays);
+        shared_flux_dn_dir = std::vector<TF>(ncols * nlevs * ngptmax);
+    }
+
     if(sws == nullptr)
     {
         if(lws != nullptr)
@@ -413,7 +427,24 @@ void radiation_block_work_arrays<TF>::allocate_lw_data(
     {
         if(recursive)
         {
-            lw_gas_optics_work = lws->kdist->create_work_arrays(ncols, nlays, lws->get_n_gpt());
+            lw_gas_optics_work = std::make_unique<gas_optics_work_arrays<TF>>();
+            lw_gas_optics_work->resize(ncols, nlays, lws->kdist->get_nflav());
+            lw_gas_optics_work->tau_work_arrays = std::make_unique<gas_taus_work_arrays<TF>>();
+            lw_gas_optics_work->source_work_arrays = std::make_unique<gas_source_work_arrays<TF>>();
+            lw_gas_optics_work->source_work_arrays->resize(ncols, nlays, lws->get_n_gpt());
+            lw_gas_optics_work->tau_work_arrays->tau = Array<TF,3>( std::move(shared_tau_work), 
+                                                                    {lws->get_n_gpt(), nlays, ncols});
+            lw_gas_optics_work->tau_work_arrays->tau_rayleigh = Array<TF,3>(std::move(shared_tau_rayleigh), 
+                                                                            {lws->get_n_gpt(), nlays, ncols});
+            lw_gas_optics_work->tau_work_arrays->vmr = Array<TF,3>( std::move(shared_vmr), 
+                                                                    {ncols, nlays, lws->kdist->get_ngas()});
+            lw_gas_optics_work->tau_work_arrays->col_gas = Array<TF,3>( std::move(shared_col_gas), 
+                                                                    {ncols, nlays, lws->kdist->get_ngas() + 1});
+            lw_gas_optics_work->tau_work_arrays->col_gas.set_offsets({0, 0, -1});
+            lw_gas_optics_work->tau_work_arrays->col_mix = Array<TF,4>( std::move(shared_col_mix), 
+                                                                    {2, lws->kdist->get_nflav(), ncols, nlays});
+            lw_gas_optics_work->tau_work_arrays->fminor = Array<TF,5>( std::move(shared_fminor), 
+                                                                    {2, 2, lws->kdist->get_nflav(), ncols, nlays});
             rte_lw_work = std::make_unique<rte_lw_work_arrays<TF>>();
             rte_lw_work->sfc_emis_gpt = Array<TF,2>({ncols, lws->get_n_gpt()});
             rte_lw_work->sfc_src_jac = Array<TF,2>({ncols, lws->get_n_gpt()});
@@ -454,7 +485,22 @@ void radiation_block_work_arrays<TF>::allocate_sw_data(
 
         if(recursive)
         {
-            sw_gas_optics_work = sws->kdist->create_work_arrays(ncols, nlays, sws->get_n_gpt());
+            sw_gas_optics_work = std::make_unique<gas_optics_work_arrays<TF>>();
+            sw_gas_optics_work->tau_work_arrays = std::make_unique<gas_taus_work_arrays<TF>>();
+            sw_gas_optics_work->resize(ncols, nlays, sws->kdist->get_nflav());
+            sw_gas_optics_work->tau_work_arrays->tau = Array<TF,3>( std::move(shared_tau_work), 
+                                                                    {sws->get_n_gpt(), nlays, ncols});
+            sw_gas_optics_work->tau_work_arrays->tau_rayleigh = Array<TF,3>(std::move(shared_tau_rayleigh), 
+                                                                    {sws->get_n_gpt(), nlays, ncols});
+            sw_gas_optics_work->tau_work_arrays->vmr = Array<TF,3>( std::move(shared_vmr), 
+                                                                    {ncols, nlays, sws->kdist->get_ngas()});
+            sw_gas_optics_work->tau_work_arrays->col_gas = Array<TF,3>( std::move(shared_col_gas), 
+                                                                    {ncols, nlays, sws->kdist->get_ngas() + 1});
+            sw_gas_optics_work->tau_work_arrays->col_gas.set_offsets({0, 0, -1});
+            sw_gas_optics_work->tau_work_arrays->col_mix = Array<TF,4>( std::move(shared_col_mix), 
+                                                                    {2, sws->kdist->get_nflav(), ncols, nlays});
+            sw_gas_optics_work->tau_work_arrays->fminor = Array<TF,5>( std::move(shared_fminor), 
+                                                                    {2, 2, sws->kdist->get_nflav(), ncols, nlays});
             rte_sw_work = std::make_unique<rte_sw_work_arrays<TF>>();
             rte_sw_work->resize(ncols, sws->get_n_gpt());
         }
@@ -472,6 +518,15 @@ void radiation_block_work_arrays<TF>::set_lw_shmem()
     lw_optical_props_subset->get_tau().move_data_in(std::move(shared_tau));
     sources_subset->get_lev_source_inc().move_data_in(std::move(shared_ssa_lay_src_inc));
     sources_subset->get_lev_source_dec().move_data_in(std::move(shared_g_lay_src_dec));
+    if(lw_gas_optics_work != nullptr)
+    {
+        lw_gas_optics_work->tau_work_arrays->tau.move_data_in(std::move(shared_tau_work));
+        lw_gas_optics_work->tau_work_arrays->tau_rayleigh.move_data_in(std::move(shared_tau_rayleigh));
+        lw_gas_optics_work->tau_work_arrays->vmr.move_data_in(std::move(shared_vmr));
+        lw_gas_optics_work->tau_work_arrays->col_gas.move_data_in(std::move(shared_col_gas));
+        lw_gas_optics_work->tau_work_arrays->col_mix.move_data_in(std::move(shared_col_mix));
+        lw_gas_optics_work->tau_work_arrays->fminor.move_data_in(std::move(shared_fminor));
+    }
 }
 
 template<typename TF>
@@ -480,6 +535,15 @@ void radiation_block_work_arrays<TF>::reset_lw_shmem()
     shared_tau = lw_optical_props_subset->get_tau().move_data_out();
     shared_ssa_lay_src_inc = sources_subset->get_lev_source_inc().move_data_out();
     shared_g_lay_src_dec = sources_subset->get_lev_source_dec().move_data_out();
+    if(lw_gas_optics_work != nullptr)
+    {
+        shared_tau_work = lw_gas_optics_work->tau_work_arrays->tau.move_data_out();
+        shared_tau_rayleigh = lw_gas_optics_work->tau_work_arrays->tau_rayleigh.move_data_out();
+        shared_vmr = lw_gas_optics_work->tau_work_arrays->vmr.move_data_out();
+        shared_col_gas = lw_gas_optics_work->tau_work_arrays->col_gas.move_data_out();
+        shared_col_mix = lw_gas_optics_work->tau_work_arrays->col_mix.move_data_out();
+        shared_fminor = lw_gas_optics_work->tau_work_arrays->fminor.move_data_out();
+    }
 }
 
 template<typename TF>
@@ -488,6 +552,15 @@ void radiation_block_work_arrays<TF>::set_sw_shmem()
     sw_optical_props_subset->get_tau().move_data_in(std::move(shared_tau));
     sw_optical_props_subset->get_ssa().move_data_in(std::move(shared_ssa_lay_src_inc));
     sw_optical_props_subset->get_g().move_data_in(std::move(shared_g_lay_src_dec));
+    if(sw_gas_optics_work != nullptr)
+    {
+        sw_gas_optics_work->tau_work_arrays->tau.move_data_in(std::move(shared_tau_work));
+        sw_gas_optics_work->tau_work_arrays->tau_rayleigh.move_data_in(std::move(shared_tau_rayleigh));
+        sw_gas_optics_work->tau_work_arrays->vmr.move_data_in(std::move(shared_vmr));
+        sw_gas_optics_work->tau_work_arrays->col_gas.move_data_in(std::move(shared_col_gas));
+        sw_gas_optics_work->tau_work_arrays->col_mix.move_data_in(std::move(shared_col_mix));
+        sw_gas_optics_work->tau_work_arrays->fminor.move_data_in(std::move(shared_fminor));
+    }
 }
 
 template<typename TF>
@@ -496,6 +569,15 @@ void radiation_block_work_arrays<TF>::reset_sw_shmem()
     shared_tau = sw_optical_props_subset->get_tau().move_data_out();
     shared_ssa_lay_src_inc = sw_optical_props_subset->get_ssa().move_data_out();
     shared_g_lay_src_dec = sw_optical_props_subset->get_g().move_data_out();
+    if(sw_gas_optics_work != nullptr)
+    {
+        shared_tau_work = sw_gas_optics_work->tau_work_arrays->tau.move_data_out();
+        shared_tau_rayleigh = sw_gas_optics_work->tau_work_arrays->tau_rayleigh.move_data_out();
+        shared_vmr = sw_gas_optics_work->tau_work_arrays->vmr.move_data_out();
+        shared_col_gas = sw_gas_optics_work->tau_work_arrays->col_gas.move_data_out();
+        shared_col_mix = sw_gas_optics_work->tau_work_arrays->col_mix.move_data_out();
+        shared_fminor = sw_gas_optics_work->tau_work_arrays->fminor.move_data_out();
+    }
 }
 
 template<typename TF>

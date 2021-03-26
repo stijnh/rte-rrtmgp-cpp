@@ -195,6 +195,7 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>
         int get_npres() const { return kmajor.dim(3)-1; }
         int get_ntemp() const { return kmajor.dim(4); }
         int get_nPlanckTemp() const { return totplnk.dim(1); }
+        int get_ngas() const { return this->gas_names.dim(1); }
 
         TF get_tsi() const;
 
@@ -280,8 +281,6 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>
 
         Array<TF,4> krayl;
         Array_gpu<TF,4> krayl_test;
-
-        int get_ngas() const { return this->gas_names.dim(1); }
 
         void init_abs_coeffs(
                 const Gas_concs<TF>& available_gases,

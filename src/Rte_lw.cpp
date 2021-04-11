@@ -29,6 +29,7 @@
 #include "Fluxes.h"
 #include <iomanip>
 #include <chrono>
+#include <vector>
 
 #include "rrtmgp_kernels.h"
 // CUDA TEST
@@ -88,25 +89,19 @@ namespace rrtmgp_kernel_launcher
 }
 
 template<typename TF>
-void rte_lw_work_arrays<TF>::resize(
+rte_lw_work_arrays<TF>::rte_lw_work_arrays(
         const int ncols, 
         const int nlevs, 
-        const int ngpt)
+        const int ngpt,
+        Pool_base<std::vector<TF>>* pool):Pool_client_group<std::vector<TF>>(pool),
+            sfc_emis_gpt({ncols, ngpt}, pool),
+            sfc_src_jac({ncols, ngpt}, pool),
+            gpt_flux_up_jac({ncols, nlevs, ngpt}, pool)
 {
-        if(sfc_emis_gpt.get_dims() != std::array<int,2>({ncols, ngpt}))
-        {
-            sfc_emis_gpt = Array<TF,2>({ncols, ngpt});
-        }
-        if(sfc_src_jac.get_dims() != std::array<int,2>({ncols, ngpt}))
-        {
-            sfc_src_jac = Array<TF,2>({ncols, ngpt});
-        }
-        if(gpt_flux_up_jac.get_dims() != std::array<int,3>({ncols, nlevs, ngpt}))
-        {
-            gpt_flux_up_jac = Array<TF,3>({ncols, nlevs, ngpt});
-        }
+    this->add_client(sfc_emis_gpt);
+    this->add_client(sfc_src_jac);
+    this->add_client(gpt_flux_up_jac);
 }
-
 
 template<typename TF>
 void Rte_lw<TF>::rte_lw(
@@ -127,8 +122,7 @@ void Rte_lw<TF>::rte_lw(
     auto work = workptr;
     if(workptr == nullptr)
     {
-        work = new rte_lw_work_arrays<TF>();
-        work->resize(ncol, gpt_flux_up.get_dims()[1], ngpt);
+        work = new rte_lw_work_arrays<TF>(ncol, gpt_flux_up.get_dims()[1], ngpt);
     }
 
     const int max_gauss_pts = 4;

@@ -12,8 +12,8 @@
  *
  * This C++ interface can be downloaded from https://github.com/earth-system-radiation/rte-rrtmgp-cpp
  *
- * Contact: Chiel van Heerwaarden
  * email: chiel.vanheerwaarden@wur.nl
+ * Contact: Chiel van Heerwaarden
  *
  * Copyright 2020, Wageningen University & Research.
  *
@@ -31,30 +31,21 @@ template<typename TF>
 Source_func_lw<TF>::Source_func_lw(
         const int n_col,
         const int n_lay,
-        const Optical_props<TF>& optical_props) :
-    Optical_props<TF>(optical_props),
-    sfc_source({n_col, optical_props.get_ngpt()}),
-    sfc_source_jac({n_col, optical_props.get_ngpt()}),
-    lay_source({n_col, n_lay, optical_props.get_ngpt()}),
-    lev_source_inc({n_col, n_lay, optical_props.get_ngpt()}),
-    lev_source_dec({n_col, n_lay, optical_props.get_ngpt()})
-{}
-
-template<typename TF>
-Source_func_lw<TF>::Source_func_lw(
-        const int n_col,
-        const int n_lay,
         const Optical_props<TF>& optical_props,
-        std::vector<TF>&& lay_source_shmem,
-        std::vector<TF>&& lev_source_inc_shmem,
-        std::vector<TF>&& lev_source_dec_shmem) :
-    Optical_props<TF>(optical_props),
-    sfc_source({n_col, optical_props.get_ngpt()}),
-    sfc_source_jac({n_col, optical_props.get_ngpt()}),
-    lay_source(lay_source_shmem, {n_col, n_lay, optical_props.get_ngpt()}),
-    lev_source_inc(lev_source_inc_shmem, {n_col, n_lay, optical_props.get_ngpt()}),
-    lev_source_dec(lev_source_dec_shmem, {n_col, n_lay, optical_props.get_ngpt()})
-{}
+        Pool_base<std::vector<TF>>* pool) :
+    Optical_props<TF>(optical_props), Pool_client_group<std::vector<TF>>(pool),
+    sfc_source({n_col, optical_props.get_ngpt()}, pool),
+    sfc_source_jac({n_col, optical_props.get_ngpt()}, pool),
+    lay_source({n_col, n_lay, optical_props.get_ngpt()}, pool),
+    lev_source_inc({n_col, n_lay, optical_props.get_ngpt()}, pool),
+    lev_source_dec({n_col, n_lay, optical_props.get_ngpt()}, pool)
+{
+    this->add_client(sfc_source);
+    this->add_client(sfc_source_jac);
+    this->add_client(lay_source);
+    this->add_client(lev_source_inc);
+    this->add_client(lev_source_dec);
+}
 
 template<typename TF>
 void Source_func_lw<TF>::set_subset(

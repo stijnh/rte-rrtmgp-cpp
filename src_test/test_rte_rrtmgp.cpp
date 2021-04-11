@@ -267,13 +267,13 @@ void solve_radiation(int argc, char** argv)
         rad_sw = std::make_unique<Radiation_solver_shortwave<TF>>(gas_concs, "coefficients_sw.nc", "cloud_coefficients_sw.nc");
     }
     auto work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>(
-            n_col, n_lev, n_lay, switch_fluxes, switch_cloud_optics, rad_lw.get(), rad_sw.get());
+            n_col, n_lev, n_lay, switch_fluxes, switch_output_bnd_fluxes, switch_cloud_optics, rad_lw.get(), rad_sw.get());
 //    auto work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>(
-//            n_col, n_lev, n_lay, switch_fluxes, switch_cloud_optics, rad_lw.get(), nullptr);
+//            n_col, n_lev, n_lay, switch_fluxes, switch_output_bnd_fluxes, switch_cloud_optics, rad_lw.get(), nullptr);
 //    auto work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>(
-//            n_col, n_lev, n_lay, switch_fluxes, switch_cloud_optics, nullptr, rad_sw.get());
+//            n_col, n_lev, n_lay, switch_fluxes, switch_output_bnd_fluxes, switch_cloud_optics, nullptr, rad_sw.get());
 //    auto work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>(
-//            n_col, n_lev, n_lay, switch_fluxes, switch_cloud_optics, nullptr, nullptr);
+//            n_col, n_lev, n_lay, switch_fluxes, switch_output_bnd_fluxes, switch_cloud_optics, nullptr, nullptr);
 
     radiation_solver_work_arrays<TF>* lw_work_arrays = work_arrays.get();
     radiation_solver_work_arrays<TF>* sw_work_arrays = work_arrays.get();
@@ -559,7 +559,7 @@ void solve_radiation(int argc, char** argv)
             }
         }
     }
-
+//    static_cast<Block_vector_pool<TF>*>(work_arrays->blocks_work_arrays->memory_pool.get())->print_stats(std::cout);
     Status::print_message("###### Finished RTE+RRTMGP solver ######");
 }
 

@@ -26,9 +26,13 @@
 #define RTE_SW_H
 
 #include <memory>
+#include <vector>
 #include "define_bool.h"
 
 // Forward declarations.
+template<typename> class Pool_base;
+template<typename> class Pool_client;
+template<typename> class Pool_client_group;
 template<typename, int> class Array;
 template<typename, int> class Array_gpu;
 template<typename> class Optical_props_arry;
@@ -36,14 +40,15 @@ template<typename> class Optical_props_arry_gpu;
 template<typename> class Fluxes_broadband;
 
 template<typename TF>
-struct rte_sw_work_arrays
+struct rte_sw_work_arrays: public Pool_client_group<std::vector<TF>>
 {
     Array<TF,2> sfc_alb_dir_gpt;
     Array<TF,2> sfc_alb_dif_gpt;
 
-    void resize(
+    rte_sw_work_arrays(
             const int ncols,
-            const int ngpt);
+            const int ngpt,
+            Pool_base<std::vector<TF>>* pool=nullptr);
 };
 
 template<typename TF>

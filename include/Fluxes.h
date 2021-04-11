@@ -27,9 +27,10 @@
 
 #include <memory>
 #include <stdexcept>
+#include <vector>
 
 #include "define_bool.h"
-
+#include "Pool_base.h"
 // Forward declarations.
 template<typename TF, int> class Array;
 template<typename TF> class Optical_props_arry;
@@ -55,10 +56,10 @@ class Fluxes
 };
 
 template<typename TF>
-class Fluxes_broadband : public Fluxes<TF>
+class Fluxes_broadband : public Fluxes<TF>, public Pool_client_group<std::vector<TF>>
 {
     public:
-        Fluxes_broadband(const int ncol, const int nlev);
+        Fluxes_broadband(const int ncol, const int nlev, Pool_base<std::vector<TF>>* pool=nullptr);
         virtual ~Fluxes_broadband() {};
 
         virtual void reduce(
@@ -95,7 +96,7 @@ template<typename TF>
 class Fluxes_byband : public Fluxes_broadband<TF>
 {
     public:
-        Fluxes_byband(const int ncol, const int nlev, const int nbnd);
+        Fluxes_byband(const int ncol, const int nlev, const int nbnd, Pool_base<std::vector<TF>>* pool=nullptr);
         virtual ~Fluxes_byband() {};
 
         virtual void reduce(

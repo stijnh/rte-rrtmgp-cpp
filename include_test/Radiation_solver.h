@@ -35,6 +35,7 @@ template<typename TF> class Radiation_solver_shortwave;
 template<typename TF>
 struct radiation_block_work_arrays
 {
+    std::unique_ptr<Pool_base<std::vector<TF>>> memory_pool;
     Array<TF,2> col_dry_subset;
     Array<TF,2> p_lev_subset;
     Array<TF,2> p_lay_subset;
@@ -46,12 +47,18 @@ struct radiation_block_work_arrays
     Array<TF,2> iwp_lay_subset;
     Array<TF,2> rel_lay_subset;
     Array<TF,2> rei_lay_subset;
-    Array<TF,3> sw_gpt_flux_dn_dir;
-    Array<TF,2> toa_src_subset;
     Array<TF,1> tsi_scaling_subset;
     Array<TF,1> mu0_subset;
     Array<TF,2> sfc_alb_dir_subset;
     Array<TF,2> sfc_alb_dif_subset;
+
+    std::unique_ptr<Array<TF,2>> toa_src_subset;
+    std::unique_ptr<Array<TF,3>> lw_gpt_flux_up;
+    std::unique_ptr<Array<TF,3>> lw_gpt_flux_dn;
+    std::unique_ptr<Array<TF,3>> sw_gpt_flux_up;
+    std::unique_ptr<Array<TF,3>> sw_gpt_flux_dn;
+    std::unique_ptr<Array<TF,3>> sw_gpt_flux_dn_dir;
+
     std::unique_ptr<Fluxes_broadband<TF>> fluxes_subset;
     std::unique_ptr<Fluxes_broadband<TF>> lw_bnd_fluxes_subset;
     std::unique_ptr<Fluxes_broadband<TF>> sw_bnd_fluxes_subset;
@@ -65,22 +72,11 @@ struct radiation_block_work_arrays
     std::unique_ptr<rte_lw_work_arrays<TF>> rte_lw_work;
     std::unique_ptr<rte_sw_work_arrays<TF>> rte_sw_work;
 
-    std::vector<TF> shared_tau;
-    std::vector<TF> shared_ssa_lay_src_inc;
-    std::vector<TF> shared_g_lay_src_dec;
-    std::vector<TF> shared_fmajor;
-    std::vector<TF> shared_tau_work;
-    std::vector<TF> shared_tau_rayleigh;
-    std::vector<TF> shared_vmr;
-    std::vector<TF> shared_col_gas;
-    std::vector<TF> shared_col_mix;
-    std::vector<TF> shared_fminor;
-    std::vector<TF> shared_flux_dn_dir;
-
     radiation_block_work_arrays(const int ncols, 
                                 const int nlevs, 
                                 const int nlays,
                                 const bool switch_fluxes,
+                                const bool switch_bnd_fluxes,
                                 const bool switch_cloud_optics,
                                 const Radiation_solver_longwave<TF>* lws=nullptr,
                                 const Radiation_solver_shortwave<TF>* sws=nullptr,
@@ -91,6 +87,7 @@ struct radiation_block_work_arrays
         const int nlevs,
         const int nlays,
         const bool switch_fluxes,
+        const bool switch_bnd_fluxes,
         const bool switch_cloud_optics,
         const Radiation_solver_longwave<TF>* lws,
         const bool recursive);
@@ -100,14 +97,19 @@ struct radiation_block_work_arrays
         const int nlevs,
         const int nlays,
         const bool switch_fluxes,
+        const bool switch_bnd_fluxes,
         const bool switch_cloud_optics,
         const Radiation_solver_shortwave<TF>* sws,
         const bool recursive);
 
-    void set_lw_shmem();
-    void set_sw_shmem();
-    void reset_lw_shmem();
-    void reset_sw_shmem();
+    std::unique_ptr<Pool_base<std::vector<TF>>> create_pool(
+        const int ncols, 
+        const int nlevs,
+        const int nlays,
+        const bool switch_fluxes,
+        const bool switch_cloud_optics,
+        const Radiation_solver_longwave<TF>* lws,
+        const Radiation_solver_shortwave<TF>* sws);
 };
 
 template<typename TF>
@@ -122,6 +124,7 @@ struct radiation_solver_work_arrays
                                 const int nlevs,
                                 const int nlays,
                                 const bool switch_fluxes,
+                                const bool switch_bnd_fluxes,
                                 const bool switch_cloud_optics,
                                 const Radiation_solver_longwave<TF>* lws=nullptr,
                                 const Radiation_solver_shortwave<TF>* sws=nullptr);

@@ -93,18 +93,15 @@ namespace rrtmgp_kernel_launcher
 }
 
 template<typename TF>
-void rte_sw_work_arrays<TF>::resize(
-        const int ncols, 
-        const int ngpt)
+rte_sw_work_arrays<TF>::rte_sw_work_arrays(
+        const int ncols,
+        const int ngpt,
+        Pool_base<std::vector<TF>>* pool):Pool_client_group<std::vector<TF>>(pool),
+        sfc_alb_dir_gpt({ncols, ngpt}, pool),
+        sfc_alb_dif_gpt({ncols, ngpt}, pool)
 {
-        if(sfc_alb_dir_gpt.get_dims() != std::array<int,2>({ncols, ngpt}))
-        {
-            sfc_alb_dir_gpt = Array<TF,2>({ncols, ngpt});
-        }
-        if(sfc_alb_dif_gpt.get_dims() != std::array<int,2>({ncols, ngpt}))
-        {
-            sfc_alb_dif_gpt = Array<TF,2>({ncols, ngpt});
-        }
+    this->add_client(sfc_alb_dir_gpt);
+    this->add_client(sfc_alb_dif_gpt);
 }
 
 template<typename TF>
@@ -128,8 +125,7 @@ void Rte_sw<TF>::rte_sw(
     auto work = workptr;
     if(workptr == nullptr)
     {
-        work = new rte_sw_work_arrays<TF>();
-        work->resize(ncol, ngpt);
+        work = new rte_sw_work_arrays<TF>(ncol, ngpt);
     }
 
     expand_and_transpose(optical_props, sfc_alb_dir, work->sfc_alb_dir_gpt);

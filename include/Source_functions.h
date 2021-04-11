@@ -25,6 +25,11 @@
 #ifndef SOURCE_FUNCTIONS_H
 #define SOURCE_FUNCTIONS_H
 
+#include <vector>
+
+template<typename> class Pool_base;
+template<typename> class Pool_client;
+template<typename> class Pool_client_group;
 template<typename, int> class Array;
 template<typename> class Optical_props;
 template<typename> class Source_func_lw;
@@ -33,21 +38,15 @@ template<typename> class Optical_props_gpu;
 template<typename> class Source_func_lw_gpu;
 
 template<typename TF>
-class Source_func_lw : public Optical_props<TF>
+class Source_func_lw : public Optical_props<TF>, public Pool_client_group<std::vector<TF>>
 {
     public:
-        Source_func_lw(
-                const int n_col,
-                const int n_lay,
-                const Optical_props<TF>& optical_props);
 
         Source_func_lw(
                 const int n_col,
                 const int n_lay,
                 const Optical_props<TF>& optical_props,
-                std::vector<TF>&& lay_source_shmem,
-                std::vector<TF>&& lev_source_inc_shmem,
-                std::vector<TF>&& lev_source_dec_shmem);
+                Pool_base<std::vector<TF>>* pool=nullptr);
 
         void set_subset(
                 const Source_func_lw<TF>& sources_sub,

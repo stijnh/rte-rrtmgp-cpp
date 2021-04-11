@@ -30,7 +30,7 @@
 #include <algorithm>
 #include <iostream>
 #include <fstream>
-
+#include "Pool_base.h"
 #ifdef __CUDACC__
 #include "tools_gpu.h"
 template<typename T, int N> class Array_gpu;
@@ -91,7 +91,7 @@ inline int product(const std::array<int, N>& array)
 }
 
 template<typename T, int N>
-class Array
+class Array: public Pool_client<std::vector<T>>
 {
     public:
         // Create an empty array, without dimensions.
@@ -108,6 +108,17 @@ class Array
             strides(calc_strides<N>(dims)),
             offsets({})
         {}
+
+        // Create an array of zeros with given dimensions.
+        Array(const std::array<int, N>& dims, Pool_base<std::vector<T>>* pool) : 
+            Pool_client<std::vector<T>>(pool),
+            dims(dims),
+            ncells(product<N>(dims)),
+            strides(calc_strides<N>(dims)),
+            offsets({})
+        {
+            this->acquire_memory();
+        }
 
         // Create an array from copying the contents of an std::vector.
         Array(const std::vector<T>& data, const std::array<int, N>& dims) :
@@ -151,6 +162,11 @@ class Array
             cuda_safe_call(cudaMemcpy(data.data(), array_gpu.ptr(), ncells*sizeof(T), cudaMemcpyDeviceToHost));
         }
         #endif
+
+        ~Array()
+        {
+            this->release_memory();
+        }
 
         inline void set_offsets(const std::array<int, N>& offsets)
         {
@@ -270,19 +286,24 @@ class Array
             }
         }
 
-        inline std::vector<T>&& move_data_out()
+        std::vector<T>& get_memory()
         {
-            return std::move(data);
+            return data;
         }
 
-        inline void move_data_in(std::vector<T>&& other_data)
+        int get_num_elements() const
         {
-            data = std::move(other_data);
+            return ncells;
         }
 
-        inline int data_size() const
+        void allocate_memory(std::vector<T>& v, int n) const
         {
-            return data.size();
+            v.resize(n);
+        }
+
+        void deallocate_memory(std::vector<T>& v, int n) const
+        {
+            v.clear();
         }
 
     private:

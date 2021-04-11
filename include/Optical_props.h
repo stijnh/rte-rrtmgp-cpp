@@ -58,11 +58,12 @@ class Optical_props
 
 // Base class for 1scl and 2str solvers fully implemented in header.
 template<typename TF>
-class Optical_props_arry : public Optical_props<TF>
+class Optical_props_arry : public Optical_props<TF>, public Pool_client_group<std::vector<TF>>
 {
     public:
-        Optical_props_arry(const Optical_props<TF>& optical_props) :
-            Optical_props<TF>(optical_props)
+
+        Optical_props_arry(const Optical_props<TF>& optical_props, Pool_base<std::vector<TF>>* pool=nullptr) :
+            Optical_props<TF>(optical_props), Pool_client_group<std::vector<TF>>(pool)
         {}
 
         virtual ~Optical_props_arry() {};
@@ -94,17 +95,13 @@ template<typename TF>
 class Optical_props_1scl : public Optical_props_arry<TF>
 {
     public:
+
         // Initializer constructor.
         Optical_props_1scl(
                 const int ncol,
                 const int nlay,
-                const Optical_props<TF>& optical_props);
-
-        Optical_props_1scl(
-                const int ncol,
-                const int nlay,
                 const Optical_props<TF>& optical_props,
-                std::vector<TF>&& tau_shmem);
+                Pool_base<std::vector<TF>>* pool=nullptr);
 
         void set_subset(
                 const std::unique_ptr<Optical_props_arry<TF>>& optical_props_sub,
@@ -135,18 +132,12 @@ template<typename TF>
 class Optical_props_2str : public Optical_props_arry<TF>
 {
     public:
-        Optical_props_2str(
-                const int ncol,
-                const int nlay,
-                const Optical_props<TF>& optical_props);
 
         Optical_props_2str(
                 const int ncol,
                 const int nlay,
                 const Optical_props<TF>& optical_props,
-                std::vector<TF>&& tau_shmem,
-                std::vector<TF>&& ssa_shmem,
-                std::vector<TF>&& g_shmem);
+                Pool_base<std::vector<TF>>* pool=nullptr);
 
         void set_subset(
                 const std::unique_ptr<Optical_props_arry<TF>>& optical_props_sub,

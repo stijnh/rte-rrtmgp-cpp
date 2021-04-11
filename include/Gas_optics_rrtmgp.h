@@ -47,7 +47,7 @@ template<typename TF> class Source_func_lw_gpu;
 
 
 template<typename TF>
-struct gas_taus_work_arrays
+struct gas_taus_work_arrays: public Pool_client_group<std::vector<TF>>
 {
     Array<TF,3> tau;
     Array<TF,3> tau_rayleigh;
@@ -56,16 +56,17 @@ struct gas_taus_work_arrays
     Array<TF,4> col_mix;
     Array<TF,5> fminor;
 
-    void resize(
+    gas_taus_work_arrays(
         const int ncols,
         const int nlays,
         const int ngpts,
         const int ngas,
-        const int nflavs);
+        const int nflavs,
+        Pool_base<std::vector<TF>>* pool=nullptr);
 };
 
 template<typename TF>
-struct gas_source_work_arrays
+struct gas_source_work_arrays: public Pool_client_group<std::vector<TF>>
 {
     Array<TF,3> lay_source_t;
     Array<TF,3> lev_source_inc_t;
@@ -73,28 +74,30 @@ struct gas_source_work_arrays
     Array<TF,2> sfc_source_t;
     Array<TF,2> sfc_source_jac;
 
-    void resize(
+    gas_source_work_arrays(
         const int ncols,
         const int nlays,
-        const int ngpts);
+        const int ngpts,
+        Pool_base<std::vector<TF>>* pool_base=nullptr);
 };
 
 template<typename TF>
-struct gas_optics_work_arrays
+struct gas_optics_work_arrays: public Pool_client_group<std::vector<TF>>
 {
-        Array<int,2> jtemp;
-        Array<int,2> jpress;
-        Array<BOOL_TYPE,2> tropo;
-        Array<TF,6> fmajor;
-        Array<int,4> jeta;
-        
-        std::unique_ptr<gas_taus_work_arrays<TF>> tau_work_arrays;
-        std::unique_ptr<gas_source_work_arrays<TF>> source_work_arrays;
+    Array<int,2> jtemp;
+    Array<int,2> jpress;
+    Array<BOOL_TYPE,2> tropo;
+    Array<TF,6> fmajor;
+    Array<int,4> jeta;
+    
+    std::unique_ptr<gas_taus_work_arrays<TF>> tau_work_arrays;
+    std::unique_ptr<gas_source_work_arrays<TF>> source_work_arrays;
 
-        void resize(
-                const int ncols,
-                const int nlays,
-                const int nflavs);
+    gas_optics_work_arrays(
+        const int ncols,
+        const int nlays,
+        const int nflavs,
+        Pool_base<std::vector<TF>>* pool_base=nullptr);
 };
 
 template<typename TF>

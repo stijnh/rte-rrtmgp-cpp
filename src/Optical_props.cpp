@@ -2,8 +2,8 @@
  * This file is part of a C++ interface to the Radiative Transfer for Energetics (RTE)
  * and Rapid Radiative Transfer Model for GCM applications Parallel (RRTMGP).
  *
- * The original code is found at https://github.com/earth-system-radiation/rte-rrtmgp.
  *
+ * The original code is found at https://github.com/earth-system-radiation/rte-rrtmgp.
  * Contacts: Robert Pincus and Eli Mlawer
  * email: rrtmgp@aer.com
  *
@@ -75,20 +75,12 @@ template<typename TF>
 Optical_props_1scl<TF>::Optical_props_1scl(
         const int ncol,
         const int nlay,
-        const Optical_props<TF>& optical_props) :
-    Optical_props_arry<TF>(optical_props),
-    tau({ncol, nlay, this->get_ngpt()})
-{}
-
-template<typename TF>
-Optical_props_1scl<TF>::Optical_props_1scl(
-        const int ncol,
-        const int nlay,
         const Optical_props<TF>& optical_props,
-        std::vector<TF>&& tau_shmem) :
-    Optical_props_arry<TF>(optical_props),
-    tau(tau_shmem, {ncol, nlay, this->get_ngpt()})
-{}
+        Pool_base<std::vector<TF>>* pool) : Optical_props_arry<TF>(optical_props, pool),
+        tau({ncol, nlay, this->get_ngpt()}, pool)
+{    
+    this->add_client(tau);
+}
 
 template<typename TF>
 void Optical_props_1scl<TF>::set_subset(
@@ -116,26 +108,16 @@ template<typename TF>
 Optical_props_2str<TF>::Optical_props_2str(
         const int ncol,
         const int nlay,
-        const Optical_props<TF>& optical_props) :
-    Optical_props_arry<TF>(optical_props),
-    tau({ncol, nlay, this->get_ngpt()}),
-    ssa({ncol, nlay, this->get_ngpt()}),
-    g  ({ncol, nlay, this->get_ngpt()})
-{}
-
-template<typename TF>
-Optical_props_2str<TF>::Optical_props_2str(
-        const int ncol,
-        const int nlay,
         const Optical_props<TF>& optical_props,
-        std::vector<TF>&& tau_shmem,
-        std::vector<TF>&& ssa_shmem,
-        std::vector<TF>&& g_shmem) :
-    Optical_props_arry<TF>(optical_props),
-    tau(tau_shmem, {ncol, nlay, this->get_ngpt()}),
-    ssa(ssa_shmem, {ncol, nlay, this->get_ngpt()}),
-    g  (g_shmem, {ncol, nlay, this->get_ngpt()})
-{}
+        Pool_base<std::vector<TF>>* pool) : Optical_props_arry<TF>(optical_props, pool),
+        tau({ncol, nlay, this->get_ngpt()}, pool),
+        ssa({ncol, nlay, this->get_ngpt()}, pool),
+        g({ncol, nlay, this->get_ngpt()}, pool)
+{
+    this->add_client(tau);
+    this->add_client(ssa);
+    this->add_client(g);
+}
 
 template<typename TF>
 void Optical_props_2str<TF>::set_subset(

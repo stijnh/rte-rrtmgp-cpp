@@ -385,116 +385,71 @@ namespace
 
 
 template<typename TF>
-void gas_taus_work_arrays_gpu<TF>::resize(
+gas_taus_work_arrays_gpu<TF>::gas_taus_work_arrays_gpu(
         const int n_cols,
         const int n_lays,
         const int n_gpts,
         const int n_gas,
-        const int n_flavs)
+        const int n_flavs,
+        Pool_base<TF*>* pool): Pool_client_group<TF*>(pool),
+        tau({n_gpts, n_lays, n_cols}, pool),
+        tau_major({n_gpts, n_lays, n_cols}, pool),
+        tau_minor({n_gpts, n_lays, n_cols}, pool),
+        tau_rayleigh({n_gpts, n_lays, n_cols}, pool),
+        vmr({n_cols, n_lays, n_gas}, pool),
+        col_gas({n_cols, n_lays, n_gas + 1}, pool),
+        col_mix({2, n_flavs, n_cols, n_lays}, pool),
+        fminor({2, 2, n_flavs, n_cols, n_lays}, pool)
 {
-    if(tau.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
-    {
-        tau = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
-    }
-    if(tau_major.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
-    {
-        tau_major = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
-    }
-    if(tau_minor.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
-    {
-        tau_minor = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
-    }
-    if(tau_rayleigh.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
-    {
-        tau_rayleigh = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
-    }
-    if(k_rayleigh.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
-    {
-        k_rayleigh = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
-    }
-    if(vmr.get_dims() != std::array<int,3>({n_cols, n_lays, n_gas}))
-    {
-        vmr = Array_gpu<TF,3>({n_cols, n_lays, n_gas});
-    }
-    if(col_gas.get_dims() != std::array<int,3>({n_cols, n_lays, n_gas + 1}))
-    {
-        col_gas = Array_gpu<TF,3>({n_cols, n_lays, n_gas + 1});
-        col_gas.set_offsets({0, 0, -1});
-    }
-    if(col_mix.get_dims() != std::array<int,4>({2, n_flavs, n_cols, n_lays}))
-    {
-        col_mix = Array_gpu<TF,4>({2, n_flavs, n_cols, n_lays});
-    }
-    if(fminor.get_dims() != std::array<int,5>({2, 2, n_flavs, n_cols, n_lays}))
-    {
-        fminor = Array_gpu<TF,5>({2, 2, n_flavs, n_cols, n_lays});
-    }
+    col_gas.set_offsets({0, 0, -1});
+    this->add_client(tau);
+    this->add_client(tau_major);
+    this->add_client(tau_minor);
+    this->add_client(tau_rayleigh);
+    this->add_client(vmr);
+    this->add_client(col_gas);
+    this->add_client(col_mix);
+    this->add_client(fminor);
 }
 
-
 template<typename TF>
-void gas_source_work_arrays_gpu<TF>::resize(
+gas_source_work_arrays_gpu<TF>::gas_source_work_arrays_gpu(
         const int n_cols,
         const int n_lays,
-        const int n_gpts)
+        const int n_gpts,
+        Pool_base<TF*>* pool): Pool_client_group<TF*>(pool),
+        lay_source_t({n_gpts, n_lays, n_cols}, pool),
+        lev_source_inc_t({n_gpts, n_lays, n_cols}, pool),
+        lev_source_dec_t({n_gpts, n_lays, n_cols}, pool),
+        sfc_source_t({n_gpts, n_cols}, pool),
+        sfc_source_jac({n_gpts, n_cols}, pool),
+        p_frac({n_gpts, n_lays, n_cols}, pool)
 {
-    if(lay_source_t.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
-    {
-        lay_source_t = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
-    }
-    if(lev_source_inc_t.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
-    {
-        lev_source_inc_t = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
-    }
-    if(lev_source_dec_t.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
-    {
-        lev_source_dec_t = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
-    }
-    if(sfc_source_t.get_dims() != std::array<int,2>({n_gpts, n_cols}))
-    {
-        sfc_source_t = Array_gpu<TF,2>({n_gpts, n_cols});
-    }
-    if(sfc_source_jac.get_dims() != std::array<int,2>({n_gpts, n_cols}))
-    {
-        sfc_source_jac = Array_gpu<TF,2>({n_gpts, n_cols});
-    }
-    if(p_frac.get_dims() != std::array<int,3>({n_gpts, n_lays, n_cols}))
-    {
-        p_frac = Array_gpu<TF,3>({n_gpts, n_lays, n_cols});
-    }
     std::vector<TF> ones_cpu = {(TF)1, (TF)1};
     ones = Array_gpu<TF,1>(Array<TF,1>(ones_cpu, std::array<int,1>({2})));
+    this->add_client(lay_source_t);
+    this->add_client(lev_source_inc_t);
+    this->add_client(lev_source_dec_t);
+    this->add_client(sfc_source_t);
+    this->add_client(sfc_source_jac);
+    this->add_client(p_frac);
 }
 
 
 template<typename TF>
-void gas_optics_work_arrays_gpu<TF>::resize(
+gas_optics_work_arrays_gpu<TF>::gas_optics_work_arrays_gpu(
         const int n_cols,
         const int n_lays,
-        const int n_flav)
+        const int n_flav,
+        Pool_base<TF*>* pool): Pool_client_group<TF*>(pool),
+        jtemp({n_cols, n_lays}),
+        jpress({n_cols, n_lays}),
+        tropo({n_cols, n_lays}),
+        fmajor({2, 2, 2, n_flav, n_cols, n_lays}, pool),
+        jeta({2, n_flav, n_cols, n_lays})
 {
-    if(jtemp.get_dims() != std::array<int,2>({n_cols, n_lays}))
-    {
-        jtemp = Array_gpu<int,2>({n_cols, n_lays});
-    }
-    if(jpress.get_dims() != std::array<int,2>({n_cols, n_lays}))
-    {
-        jpress = Array_gpu<int,2>({n_cols, n_lays});
-    }
-    if(tropo.get_dims() != std::array<int,2>({n_cols, n_lays}))
-    {
-        tropo = Array_gpu<BOOL_TYPE,2>({n_cols, n_lays});
-    }
-    if(fmajor.get_dims() != std::array<int,6>({2, 2, 2, n_flav, n_cols, n_lays}))
-    {
-        fmajor = Array_gpu<TF,6>({2, 2, 2, n_flav, n_cols, n_lays});
-    }
-    if(jeta.get_dims() != std::array<int,4>({2, n_flav, n_cols, n_lays}))
-    {
-        jeta = Array_gpu<int,4>({2, n_flav, n_cols, n_lays});
-    }
+    this->add_client(fmajor);
 }
-
 
 // Constructor of longwave variant.
 template<typename TF>
@@ -1023,8 +978,12 @@ void Gas_optics_rrtmgp_gpu<TF>::gas_optics(
     
     if(work_arrays == nullptr)
     {
-        wrk = new gas_optics_work_arrays_gpu<TF>();
-        wrk->resize(ncol, nlay, this->get_nflav());
+        wrk = new gas_optics_work_arrays_gpu<TF>(ncol, nlay, this->get_nflav());
+    }
+
+    if(wrk->tau_work_arrays)
+    {
+        wrk->tau_work_arrays->acquire_memory();
     }
 
     // Gas optics.
@@ -1040,6 +999,15 @@ void Gas_optics_rrtmgp_gpu<TF>::gas_optics(
         col_dry,
         wrk->tau_work_arrays.get());
 
+    if(wrk->tau_work_arrays)
+    {
+        wrk->tau_work_arrays->release_memory();
+    }
+    if(wrk->source_work_arrays)
+    {
+        wrk->source_work_arrays->acquire_memory();
+    }
+
     // External sources.
     source(
         ncol, nlay, nband, ngpt,
@@ -1052,6 +1020,11 @@ void Gas_optics_rrtmgp_gpu<TF>::gas_optics(
         sources, tlev,
         wrk->source_work_arrays.get());
         
+    if(wrk->source_work_arrays)
+    {
+        wrk->source_work_arrays->release_memory();
+    }
+
     if(work_arrays == nullptr)
     {
         delete wrk;
@@ -1068,26 +1041,38 @@ void Gas_optics_rrtmgp_gpu<TF>::gas_optics(
         const Gas_concs_gpu<TF>& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu<TF>>& optical_props,
         Array_gpu<TF,2>& toa_src,
-        const Array_gpu<TF,2>& col_dry) const
+        const Array_gpu<TF,2>& col_dry,
+        gas_optics_work_arrays_gpu<TF>* work_arrays) const
 {
     const int ncol = play.dim(1);
     const int nlay = play.dim(2);
     const int ngpt = this->get_ngpt();
     const int nband = this->get_nband();
 
-    Array_gpu<int,2> jtemp({play.dim(1), play.dim(2)});
-    Array_gpu<int,2> jpress({play.dim(1), play.dim(2)});
-    Array_gpu<BOOL_TYPE,2> tropo({play.dim(1), play.dim(2)});
-    Array_gpu<TF,6> fmajor({2, 2, 2, this->get_nflav(), play.dim(1), play.dim(2)});
-    Array_gpu<int,4> jeta({2, this->get_nflav(), play.dim(1), play.dim(2)});
+    auto wrk = work_arrays;
+    
+    if(work_arrays == nullptr)
+    {
+        wrk = new gas_optics_work_arrays_gpu<TF>(ncol, nlay, this->get_nflav());
+    }
+
+    if(wrk->tau_work_arrays)
+    {
+        wrk->tau_work_arrays->acquire_memory();
+    }
 
     // Gas optics.
     compute_gas_taus(
-            ncol, nlay, ngpt, nband,
-            play, plev, tlay, gas_desc,
-            optical_props,
-            jtemp, jpress, jeta, tropo, fmajor,
-            col_dry);
+        ncol, nlay, ngpt, nband,
+        play, plev, tlay, gas_desc,
+        optical_props,
+        wrk->jtemp, 
+        wrk->jpress, 
+        wrk->jeta, 
+        wrk->tropo, 
+        wrk->fmajor,
+        col_dry,
+        wrk->tau_work_arrays.get());
 
     // External source function is constant.
     spread_col(ncol, ngpt, toa_src, this->solar_source_gpu);
@@ -1112,8 +1097,7 @@ void Gas_optics_rrtmgp_gpu<TF>::compute_gas_taus(
     auto wrk = work_arrays;
     if(work_arrays == nullptr)
     {
-        wrk = new gas_taus_work_arrays_gpu<TF>();
-        wrk->resize(ncol, nlay, ngpt, this->get_ngas(), this->get_nflav());
+        wrk = new gas_taus_work_arrays_gpu<TF>(ncol, nlay, ngpt, this->get_ngas(), this->get_nflav());
     }
 
     // CvH add all the checking...
@@ -1219,7 +1203,7 @@ void Gas_optics_rrtmgp_gpu<TF>::compute_gas_taus(
                 krayl_gpu,
                 idx_h2o, col_dry, wrk->col_gas,
                 wrk->fminor, jeta, tropo, jtemp,
-                wrk->tau_rayleigh, wrk->k_rayleigh);
+                wrk->tau_rayleigh, wrk->tau_minor);
     }
 
     combine_and_reorder(wrk->tau, wrk->tau_rayleigh, has_rayleigh, optical_props);
@@ -1281,8 +1265,7 @@ void Gas_optics_rrtmgp_gpu<TF>::source(
     auto wrk = work_arrays;
     if(work_arrays == nullptr)
     {
-        wrk = new gas_source_work_arrays_gpu<TF>();
-        wrk->resize(ncol, nlay, ngpt);
+        wrk = new gas_source_work_arrays_gpu<TF>(ncol, nlay, ngpt);
     }
 
     int sfc_lay = play({1, 1}) > play({1, nlay}) ? 1 : nlay;
@@ -1332,22 +1315,6 @@ void Gas_optics_rrtmgp_gpu<TF>::set_solar_variability(
                 + (sb_index - b_offset) * this->solar_source_sunspot({igpt});
     }
     this->solar_source_gpu = this->solar_source;
-}
-
-
-template<typename TF>
-std::unique_ptr<gas_optics_work_arrays_gpu<TF>> Gas_optics_rrtmgp_gpu<TF>::create_work_arrays(
-    const int ncols, 
-    const int nlays,
-    const int ngpts) const
-{
-    auto result = std::make_unique<gas_optics_work_arrays_gpu<TF>>();
-    result->resize(ncols, nlays, this->get_nflav());
-    result->tau_work_arrays = std::make_unique<gas_taus_work_arrays_gpu<TF>>();
-    result->tau_work_arrays->resize(ncols, nlays, ngpts, this->get_ngas(), this->get_nflav());
-    result->source_work_arrays = std::make_unique<gas_source_work_arrays_gpu<TF>>();
-    result->source_work_arrays->resize(ncols, nlays, ngpts);
-    return result;
 }
 
 

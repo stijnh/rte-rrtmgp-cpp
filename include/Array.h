@@ -473,7 +473,7 @@ class Array_gpu: public Pool_client<T*>
             strides(calc_strides<N>(dims)),
             offsets({})
         {
-            this->acquire_memory(ncells);
+            this->acquire_memory();
         }
         #endif
 

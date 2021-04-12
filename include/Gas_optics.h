@@ -129,7 +129,8 @@ class Gas_optics_gpu : public Optical_props_gpu<TF>
                 const Gas_concs_gpu<TF>& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu<TF>>& optical_props,
                 Array_gpu<TF,2>& toa_src,
-                const Array_gpu<TF,2>& col_dry) const = 0;
+                const Array_gpu<TF,2>& col_dry,
+                gas_optics_work_arrays_gpu<TF>* work_arrays=nullptr) const = 0;
 
        virtual TF get_tsi() const = 0;
 };

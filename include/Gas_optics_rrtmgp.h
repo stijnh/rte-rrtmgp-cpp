@@ -226,11 +226,6 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>
                 const Array<TF,2>& col_dry,
                 gas_optics_work_arrays<TF>* work_arrays=nullptr) const;
 
-        std::unique_ptr<gas_optics_work_arrays<TF>> create_work_arrays(
-                const int ncols, 
-                const int nlays,
-                const int ngpts) const;
-
     private:
         Array<TF,2> totplnk;
         Array<TF,4> planck_frac;
@@ -354,29 +349,30 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>
 };
 
 #ifdef USECUDA
+
 template<typename TF>
-struct gas_taus_work_arrays_gpu
+struct gas_taus_work_arrays_gpu: public Pool_client_group<TF*>
 {
     Array_gpu<TF,3> tau;
     Array_gpu<TF,3> tau_major;
     Array_gpu<TF,3> tau_minor;
     Array_gpu<TF,3> tau_rayleigh;
-    Array_gpu<TF,3> k_rayleigh;
     Array_gpu<TF,3> vmr;
     Array_gpu<TF,3> col_gas;
     Array_gpu<TF,4> col_mix;
     Array_gpu<TF,5> fminor;
 
-    void resize(
+    gas_taus_work_arrays_gpu(
         const int ncols,
         const int nlays,
         const int ngpts,
         const int ngas,
-        const int nflavs);
+        const int nflavs,
+        Pool_base<TF*>* pool=nullptr);
 };
 
 template<typename TF>
-struct gas_source_work_arrays_gpu
+struct gas_source_work_arrays_gpu: public Pool_client_group<TF*>
 {
     Array_gpu<TF,3> lay_source_t;
     Array_gpu<TF,3> lev_source_inc_t;
@@ -386,30 +382,30 @@ struct gas_source_work_arrays_gpu
     Array_gpu<TF,3> p_frac;
     Array_gpu<TF,1> ones;
 
-    void resize(
+    gas_source_work_arrays_gpu(
         const int ncols,
         const int nlays,
-        const int ngpts);
+        const int ngpts,
+        Pool_base<TF*>* pool=nullptr);
 
 };
 
 template<typename TF>
-struct gas_optics_work_arrays_gpu
+struct gas_optics_work_arrays_gpu: public Pool_client_group<TF*>
 {
-        int n_cols;
-        int n_lays;
-        Array_gpu<int,2> jtemp;
-        Array_gpu<int,2> jpress;
-        Array_gpu<BOOL_TYPE,2> tropo;
-        Array_gpu<TF,6> fmajor;
-        Array_gpu<int,4> jeta;
-        std::unique_ptr<gas_taus_work_arrays_gpu<TF>> tau_work_arrays;
-        std::unique_ptr<gas_source_work_arrays_gpu<TF>> source_work_arrays;
+    Array_gpu<int,2> jtemp;
+    Array_gpu<int,2> jpress;
+    Array_gpu<BOOL_TYPE,2> tropo;
+    Array_gpu<TF,6> fmajor;
+    Array_gpu<int,4> jeta;
+    std::unique_ptr<gas_taus_work_arrays_gpu<TF>> tau_work_arrays;
+    std::unique_ptr<gas_source_work_arrays_gpu<TF>> source_work_arrays;
 
-        void resize(
-                const int ncols,
-                const int nlays,
-                const int ngpts);
+    gas_optics_work_arrays_gpu(
+            const int ncols,
+            const int nlays,
+            const int ngpts,
+            Pool_base<TF*>* pool=nullptr);
 };
 
 template<typename TF>
@@ -509,6 +505,7 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>
         int get_npres() const { return kmajor.dim(3)-1; }
         int get_ntemp() const { return kmajor.dim(4); }
         int get_nPlanckTemp() const { return totplnk.dim(1); }
+        int get_ngas() const { return this->gas_names.dim(1); }
 
         TF get_tsi() const;
 
@@ -533,12 +530,8 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>
                 const Gas_concs_gpu<TF>& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu<TF>>& optical_props,
                 Array_gpu<TF,2>& toa_src,
-                const Array_gpu<TF,2>& col_dry) const;
-
-        std::unique_ptr<gas_optics_work_arrays_gpu<TF>> create_work_arrays(
-                const int ncols, 
-                const int nlays,
-                const int ngpts) const;
+                const Array_gpu<TF,2>& col_dry,
+                gas_optics_work_arrays_gpu<TF>* work_arrays=nullptr) const;
 
     private:
         Array<TF,2> totplnk;
@@ -619,10 +612,6 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>
         Array_gpu<TF,1> solar_source_gpu;
         Array_gpu<TF,4> krayl_gpu;
         #endif
-
-
-
-        int get_ngas() const { return this->gas_names.dim(1); }
 
         void init_abs_coeffs(
                 const Gas_concs_gpu<TF>& available_gases,

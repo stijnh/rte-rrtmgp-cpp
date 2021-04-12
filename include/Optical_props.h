@@ -207,11 +207,13 @@ class Optical_props_gpu
 
 // Base class for 1scl and 2str solvers fully implemented in header.
 template<typename TF>
-class Optical_props_arry_gpu : public Optical_props_gpu<TF>
+class Optical_props_arry_gpu : public Optical_props_gpu<TF>, public Pool_client_group<TF*>
 {
     public:
-        Optical_props_arry_gpu(const Optical_props_gpu<TF>& optical_props_gpu) :
-            Optical_props_gpu<TF>(optical_props_gpu)
+        Optical_props_arry_gpu(
+                const Optical_props_gpu<TF>& optical_props_gpu, 
+                Pool_base<TF*>* pool=nullptr) :
+            Optical_props_gpu<TF>(optical_props_gpu), Pool_client_group<TF*>(pool)
         {}
 
         virtual ~Optical_props_arry_gpu() {};
@@ -239,7 +241,8 @@ class Optical_props_1scl_gpu : public Optical_props_arry_gpu<TF>
         Optical_props_1scl_gpu(
                 const int ncol,
                 const int nlay,
-                const Optical_props_gpu<TF>& optical_props_gpu);
+                const Optical_props_gpu<TF>& optical_props_gpu,
+                Pool_base<TF*>* pool=nullptr);
 
         int get_ncol() const { return tau.dim(1); }
         int get_nlay() const { return tau.dim(2); }
@@ -265,7 +268,8 @@ class Optical_props_2str_gpu : public Optical_props_arry_gpu<TF>
         Optical_props_2str_gpu(
                 const int ncol,
                 const int nlay,
-                const Optical_props_gpu<TF>& optical_props_gpu);
+                const Optical_props_gpu<TF>& optical_props_gpu,
+                Pool_base<TF*>* pool=nullptr);
 
         int get_ncol() const { return tau.dim(1); }
         int get_nlay() const { return tau.dim(2); }

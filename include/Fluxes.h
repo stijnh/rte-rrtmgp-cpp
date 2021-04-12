@@ -144,10 +144,10 @@ class Fluxes_gpu
 };
 
 template<typename TF>
-class Fluxes_broadband_gpu : public Fluxes_gpu<TF>
+class Fluxes_broadband_gpu : public Fluxes_gpu<TF>, public Pool_client_group<TF*>
 {
     public:
-        Fluxes_broadband_gpu(const int ncol, const int nlev);
+        Fluxes_broadband_gpu(const int ncol, const int nlev, Pool_base<TF*>* pool=nullptr);
         virtual ~Fluxes_broadband_gpu() {};
 
         virtual void reduce(
@@ -184,7 +184,7 @@ template<typename TF>
 class Fluxes_byband_gpu : public Fluxes_broadband_gpu<TF>
 {
     public:
-        Fluxes_byband_gpu(const int ncol, const int nlev, const int nbnd);
+        Fluxes_byband_gpu(const int ncol, const int nlev, const int nbnd, Pool_base<TF*>* pool=nullptr);
         virtual ~Fluxes_byband_gpu() {};
 
         virtual void reduce(

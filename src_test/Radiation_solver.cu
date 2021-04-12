@@ -485,7 +485,11 @@ std::unique_ptr<radiation_solver_work_arrays_gpu<TF>> Radiation_solver_longwave<
     auto result = std::make_unique<radiation_solver_work_arrays_gpu<TF>>();
 
     result->blocks_work_arrays = create_block_work_arrays_gpu(n_col_block, n_lev, n_lay, switch_cloud_optics);
-    result->blocks_work_arrays->gas_optics_work = kdist_gpu->create_work_arrays(n_col_block, n_lay, n_gpt);
+    result->blocks_work_arrays->gas_optics_work = std::make_unique<gas_optics_work_arrays_gpu<TF>>(n_col_block, n_lay, n_gpt);
+    result->blocks_work_arrays->gas_optics_work->tau_work_arrays = 
+        std::make_unique<gas_taus_work_arrays_gpu<TF>>(n_col_block, n_lay, n_gpt, this->kdist_gpu->get_ngas(), this->kdist_gpu->get_nflav());
+    result->blocks_work_arrays->gas_optics_work->source_work_arrays = 
+        std::make_unique<gas_source_work_arrays_gpu<TF>>(n_col_block, n_lay, n_gpt);
     result->blocks_work_arrays->rte_lw_work = std::make_unique<rte_lw_work_arrays_gpu<TF>>();
     result->blocks_work_arrays->rte_lw_work->resize(n_col_block, n_lev, n_lay, n_gpt);
 
@@ -493,8 +497,12 @@ std::unique_ptr<radiation_solver_work_arrays_gpu<TF>> Radiation_solver_longwave<
     if(n_col_block_residual > 0)
     {
         result->residual_work_arrays = create_block_work_arrays_gpu(n_col_block_residual, n_lev, n_lay, switch_cloud_optics);
-        result->residual_work_arrays->gas_optics_work = kdist_gpu->create_work_arrays(n_col_block_residual, n_lay, n_gpt);
-        result->residual_work_arrays->rte_lw_work = std::make_unique<rte_lw_work_arrays_gpu<TF>>();
+        result->blocks_work_arrays->gas_optics_work = std::make_unique<gas_optics_work_arrays_gpu<TF>>(n_col_block_residual, n_lay, n_gpt);
+        result->blocks_work_arrays->gas_optics_work->tau_work_arrays = 
+            std::make_unique<gas_taus_work_arrays_gpu<TF>>(n_col_block_residual, n_lay, n_gpt, this->kdist_gpu->get_ngas(), this->kdist_gpu->get_nflav());
+        result->blocks_work_arrays->gas_optics_work->source_work_arrays = 
+            std::make_unique<gas_source_work_arrays_gpu<TF>>(n_col_block_residual, n_lay, n_gpt);
+            result->residual_work_arrays->rte_lw_work = std::make_unique<rte_lw_work_arrays_gpu<TF>>();
         result->residual_work_arrays->rte_lw_work->resize(n_col_block_residual, n_lev, n_lay, n_gpt);
     }
 

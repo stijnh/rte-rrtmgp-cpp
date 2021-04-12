@@ -170,11 +170,11 @@ namespace
 //    }
 
 template<typename TF>
-Fluxes_broadband_gpu<TF>::Fluxes_broadband_gpu(const int ncol, const int nlev) :
-    flux_up    ({ncol, nlev}),
-    flux_dn    ({ncol, nlev}),
-    flux_dn_dir({ncol, nlev}),
-    flux_net   ({ncol, nlev})
+Fluxes_broadband_gpu<TF>::Fluxes_broadband_gpu(const int ncol, const int nlev, Pool_base<TF*>* pool) :
+    flux_up    ({ncol, nlev}, pool),
+    flux_dn    ({ncol, nlev}, pool),
+    flux_dn_dir({ncol, nlev}, pool),
+    flux_net   ({ncol, nlev}, pool)
 {}
 
 template<typename TF>
@@ -233,12 +233,12 @@ void Fluxes_broadband_gpu<TF>::reduce(
 }
 
 template<typename TF>
-Fluxes_byband_gpu<TF>::Fluxes_byband_gpu(const int ncol, const int nlev, const int nbnd) :
-    Fluxes_broadband_gpu<TF>(ncol, nlev),
-    bnd_flux_up    ({ncol, nlev, nbnd}),
-    bnd_flux_dn    ({ncol, nlev, nbnd}),
-    bnd_flux_dn_dir({ncol, nlev, nbnd}),
-    bnd_flux_net   ({ncol, nlev, nbnd})
+Fluxes_byband_gpu<TF>::Fluxes_byband_gpu(const int ncol, const int nlev, const int nbnd, Pool_base<TF*>* pool) :
+    Fluxes_broadband_gpu<TF>(ncol, nlev, pool),
+    bnd_flux_up    ({ncol, nlev, nbnd}, pool),
+    bnd_flux_dn    ({ncol, nlev, nbnd}, pool),
+    bnd_flux_dn_dir({ncol, nlev, nbnd}, pool),
+    bnd_flux_net   ({ncol, nlev, nbnd}, pool)
 {}
 
 template<typename TF>

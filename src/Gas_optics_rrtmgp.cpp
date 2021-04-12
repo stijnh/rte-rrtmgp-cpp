@@ -828,9 +828,9 @@ gas_optics_work_arrays<TF>::gas_optics_work_arrays(
         tropo({n_cols, n_lays}),
         fmajor({2, 2, 2, n_flav, n_cols, n_lays}, pool),
         jeta({2, n_flav, n_cols, n_lays})
-    {
-        this->add_client(fmajor);
-    }
+{
+    this->add_client(fmajor);
+}
 
 
 // Gas optics solver longwave variant.
@@ -1426,17 +1426,6 @@ void Gas_optics_rrtmgp<TF>::source(
     }
 }
 
-template<typename TF>
-std::unique_ptr<gas_optics_work_arrays<TF>> Gas_optics_rrtmgp<TF>::create_work_arrays(
-    const int ncols, 
-    const int nlays,
-    const int ngpts) const
-{
-    auto result = std::make_unique<gas_optics_work_arrays<TF>>(ncols, nlays, this->get_nflav());
-    result->tau_work_arrays = std::make_unique<gas_taus_work_arrays<TF>>(ncols, nlays, ngpts, this->get_ngas(), this->get_nflav());
-    result->source_work_arrays = std::make_unique<gas_source_work_arrays<TF>>(ncols, nlays, ngpts);
-    return result;
-}
 
 template<typename TF>
 TF Gas_optics_rrtmgp<TF>::get_tsi() const

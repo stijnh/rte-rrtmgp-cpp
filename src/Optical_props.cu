@@ -191,10 +191,13 @@ template<typename TF>
 Optical_props_1scl_gpu<TF>::Optical_props_1scl_gpu(
         const int ncol,
         const int nlay,
-        const Optical_props_gpu<TF>& optical_props_gpu) :
-    Optical_props_arry_gpu<TF>(optical_props_gpu),
-    tau({ncol, nlay, this->get_ngpt()})
-{}
+        const Optical_props_gpu<TF>& optical_props_gpu,
+        Pool_base<TF*>* pool) :
+    Optical_props_arry_gpu<TF>(optical_props_gpu, pool),
+    tau({ncol, nlay, this->get_ngpt()}, pool)
+{
+    this->add_client(tau);
+}
 
 //template<typename TF>
 //void Optical_props_1scl_gpu<TF>::set_subset(
@@ -222,12 +225,17 @@ template<typename TF>
 Optical_props_2str_gpu<TF>::Optical_props_2str_gpu(
         const int ncol,
         const int nlay,
-        const Optical_props_gpu<TF>& optical_props_gpu) :
-    Optical_props_arry_gpu<TF>(optical_props_gpu),
-    tau({ncol, nlay, this->get_ngpt()}),
-    ssa({ncol, nlay, this->get_ngpt()}),
-    g  ({ncol, nlay, this->get_ngpt()})
-{}
+        const Optical_props_gpu<TF>& optical_props_gpu,
+        Pool_base<TF*>* pool) :
+    Optical_props_arry_gpu<TF>(optical_props_gpu, pool),
+    tau({ncol, nlay, this->get_ngpt()}, pool),
+    ssa({ncol, nlay, this->get_ngpt()}, pool),
+    g  ({ncol, nlay, this->get_ngpt()}, pool)
+{
+    this->add_client(tau);
+    this->add_client(ssa);
+    this->add_client(g);
+}
 
 //template<typename TF>
 //void Optical_props_2str_gpu<TF>::set_subset(

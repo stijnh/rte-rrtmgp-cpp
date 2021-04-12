@@ -376,7 +376,7 @@ void subset_kernel(
 
 
 template<typename T, int N>
-class Array_gpu
+class Array_gpu: public Pool_client<T*>
 {
     public:
         // Create an empty array, without dimensions.
@@ -387,7 +387,10 @@ class Array_gpu
         {}
 
         #ifdef __CUDACC__
-        ~Array_gpu() { cuda_safe_call(cudaFree(data_ptr)); }
+        ~Array_gpu() 
+        { 
+            this->release_memory();
+        }
         #endif
 
         #ifdef __CUDACC__
@@ -460,6 +463,19 @@ class Array_gpu
         }
         #endif
 
+        #ifdef __CUDACC__
+        // Create an array of zeros with given dimensions.
+        Array_gpu(const std::array<int, N>& dims, Pool_base<T*>* pool) : 
+            Pool_client<T*>(pool),
+            dims(dims),
+            ncells(product<N>(dims)),
+            data_ptr(nullptr),
+            strides(calc_strides<N>(dims)),
+            offsets({})
+        {
+            this->acquire_memory(ncells);
+        }
+        #endif
 
         #ifdef __CUDACC__
         Array_gpu(const Array<T, N>& array) :
@@ -543,6 +559,31 @@ class Array_gpu
 
         inline int dim(const int i) const { return dims[i-1]; }
         // inline bool is_empty() const { return ncells == 0; }
+
+        T*& get_memory()
+        {
+            return data_ptr;
+        }
+
+        int get_num_elements() const
+        {
+            return ncells;
+        }
+
+        void allocate_memory(T*& v, int n) const
+        {
+        #ifdef __CUDACC__
+            cuda_safe_call(cudaMalloc(&v, n * sizeof(T)));
+        #endif
+        }
+
+        void deallocate_memory(T*& v, int n) const
+        {
+        #ifdef __CUDACC__
+            cuda_safe_call(cudaFree(v));
+        #endif
+        }
+
 
         #ifdef __CUDACC__
         inline Array_gpu<T, N> subset(

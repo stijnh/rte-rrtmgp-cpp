@@ -70,11 +70,23 @@ class Rte_sw
 
         static void expand_and_transpose(
                 const std::unique_ptr<Optical_props_arry<TF>>& ops,
-                const Array<TF,2> arr_in,
+                const Array<TF,2>& arr_in,
                 Array<TF,2>& arr_out);
 };
 
 #ifdef USECUDA
+template<typename TF>
+struct rte_sw_work_arrays_gpu: public Pool_client_group<TF*>
+{
+    Array_gpu<TF,2> sfc_alb_dir_gpt;
+    Array_gpu<TF,2> sfc_alb_dif_gpt;
+
+    rte_sw_work_arrays_gpu(
+            const int ncols,
+            const int ngpt,
+            Pool_base<TF*>* pool=nullptr);
+};
+
 template<typename TF>
 class Rte_sw_gpu
 {
@@ -89,11 +101,12 @@ class Rte_sw_gpu
                 const Array_gpu<TF,2>& inc_flux_dif,
                 Array_gpu<TF,3>& gpt_flux_up,
                 Array_gpu<TF,3>& gpt_flux_dn,
-                Array_gpu<TF,3>& gpt_flux_dir);
+                Array_gpu<TF,3>& gpt_flux_dir,
+                rte_sw_work_arrays_gpu<TF>* = nullptr);
 
         static void expand_and_transpose(
                 const std::unique_ptr<Optical_props_arry_gpu<TF>>& ops,
-                const Array_gpu<TF,2> arr_in,
+                const Array_gpu<TF,2>& arr_in,
                 Array_gpu<TF,2>& arr_out);
 };
 

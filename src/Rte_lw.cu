@@ -80,64 +80,39 @@ namespace
 //    }
 
 template<typename TF>
-void rte_lw_work_arrays_gpu<TF>::resize(
+rte_lw_work_arrays_gpu<TF>::rte_lw_work_arrays_gpu(
         const int ncols, 
         const int nlevs, 
         const int nlays,
-        const int ngpts)
+        const int ngpts,
+        Pool_base<TF*>* pool): Pool_client_group<TF*>(pool),
+        gpt_flux_up_jac({ncols, nlevs, ngpts}, pool),
+        tau_loc({ngpts, nlays, ncols}, pool),
+        trans({ngpts, nlays, ncols}, pool),
+        source_up({ngpts, nlays, ncols}, pool),
+        source_dn({ngpts, nlays, ncols}, pool),
+        radn_up({ncols, nlevs, ngpts}, pool),
+        radn_up_jac({ncols, nlevs, ngpts}, pool),
+        radn_dn({ncols, nlevs, ngpts}, pool),
+        sfc_emis_gpt({ncols, ngpts}, pool),
+        sfc_src_jac({ncols, ngpts}, pool),
+        source_sfc({ncols, ngpts}, pool),
+        source_sfc_jac({ncols, ngpts}, pool),
+        sfc_albedo({ncols, ngpts}, pool)
 {
-        if(sfc_emis_gpt.get_dims() != std::array<int,2>({ncols, ngpts}))
-        {
-            sfc_emis_gpt = Array_gpu<TF,2>({ncols, ngpts});
-        }
-        if(sfc_src_jac.get_dims() != std::array<int,2>({ncols, ngpts}))
-        {
-            sfc_src_jac = Array_gpu<TF,2>({ncols, ngpts});
-        }
-        if(gpt_flux_up_jac.get_dims() != std::array<int,3>({ncols, nlevs, ngpts}))
-        {
-            gpt_flux_up_jac = Array_gpu<TF,3>({ncols, nlevs, ngpts});
-        }
-        if(tau_loc.get_dims() != std::array<int,3>({ngpts, nlays, ncols}))
-        {
-            tau_loc = Array_gpu<TF,3>({ngpts, nlays, ncols});
-        }
-        if(trans.get_dims() != std::array<int,3>({ngpts, nlays, ncols}))
-        {
-            trans = Array_gpu<TF,3>({ngpts, nlays, ncols});
-        }
-        if(source_up.get_dims() != std::array<int,3>({ngpts, nlays, ncols}))
-        {
-            source_up = Array_gpu<TF,3>({ngpts, nlays, ncols});
-        }
-        if(source_dn.get_dims() != std::array<int,3>({ngpts, nlays, ncols}))
-        {
-            source_dn = Array_gpu<TF,3>({ngpts, nlays, ncols});
-        }
-        if(radn_up.get_dims() != std::array<int,3>({ncols, nlevs, ngpts}))
-        {
-            radn_up = Array_gpu<TF,3>({ncols, nlevs, ngpts});
-        }
-        if(radn_up_jac.get_dims() != std::array<int,3>({ncols, nlevs, ngpts}))
-        {
-            radn_up_jac = Array_gpu<TF,3>({ncols, nlevs, ngpts});
-        }
-        if(radn_dn.get_dims() != std::array<int,3>({ncols, nlevs, ngpts}))
-        {
-            radn_dn = Array_gpu<TF,3>({ncols, nlevs, ngpts});
-        }
-        if(source_sfc.get_dims() != std::array<int,2>({ncols, ngpts}))
-        {
-            source_sfc = Array_gpu<TF,2>({ncols, ngpts});
-        }
-        if(source_sfc_jac.get_dims() != std::array<int,2>({ncols, ngpts}))
-        {
-            source_sfc_jac = Array_gpu<TF,2>({ncols, ngpts});
-        }
-        if(sfc_albedo.get_dims() != std::array<int,2>({ncols, ngpts}))
-        {
-            sfc_albedo = Array_gpu<TF,2>({ncols, ngpts});
-        }
+    this->add_client(gpt_flux_up_jac);
+    this->add_client(tau_loc);
+    this->add_client(trans);
+    this->add_client(source_up);
+    this->add_client(source_dn);
+    this->add_client(radn_up);
+    this->add_client(radn_up_jac);
+    this->add_client(radn_dn);
+    this->add_client(sfc_emis_gpt);
+    this->add_client(sfc_src_jac);
+    this->add_client(source_sfc);
+    this->add_client(source_sfc_jac);
+    this->add_client(sfc_albedo);
 }
 
 template<typename TF>
@@ -159,8 +134,7 @@ void Rte_lw_gpu<TF>::rte_lw(
     auto work = workptr;
     if(workptr == nullptr)
     {
-        work = new rte_lw_work_arrays_gpu<TF>();
-        work->resize(ncol, gpt_flux_up.get_dims()[1], nlay, ngpts);
+        work = new rte_lw_work_arrays_gpu<TF>(ncol, gpt_flux_up.get_dims()[1], nlay, ngpts);
     }
 
     const int max_gauss_pts = 4;

@@ -78,13 +78,14 @@ class Source_func_lw : public Optical_props<TF>, public Pool_client_group<std::v
 
 #ifdef USECUDA
 template<typename TF>
-class Source_func_lw_gpu : public Optical_props_gpu<TF>
+class Source_func_lw_gpu : public Optical_props_gpu<TF>, public Pool_client_group<TF*>
 {
     public:
         Source_func_lw_gpu(
                 const int n_col,
                 const int n_lay,
-                const Optical_props_gpu<TF>& optical_props);
+                const Optical_props_gpu<TF>& optical_props,
+                Pool_base<TF*>* pool=nullptr);
 
 //        void set_subset(
 //                const Source_func_lw<TF>& sources_sub,

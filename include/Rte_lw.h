@@ -79,10 +79,8 @@ class Rte_lw
 
 #ifdef USECUDA
 template<typename TF>
-struct rte_lw_work_arrays_gpu
+struct rte_lw_work_arrays_gpu:  public Pool_client_group<TF*>
 {
-    Array_gpu<TF,2> sfc_emis_gpt;
-    Array_gpu<TF,2> sfc_src_jac;
     Array_gpu<TF,3> gpt_flux_up_jac;
     Array_gpu<TF,3> tau_loc;
     Array_gpu<TF,3> radn_up;
@@ -91,15 +89,18 @@ struct rte_lw_work_arrays_gpu
     Array_gpu<TF,3> trans;
     Array_gpu<TF,3> source_dn;
     Array_gpu<TF,3> source_up;
+    Array_gpu<TF,2> sfc_emis_gpt;
+    Array_gpu<TF,2> sfc_src_jac;
     Array_gpu<TF,2> source_sfc;
     Array_gpu<TF,2> source_sfc_jac;
     Array_gpu<TF,2> sfc_albedo;
 
-    void resize(
+    rte_lw_work_arrays_gpu(
             const int ncols,
             const int nlevs,
             const int nlays,
-            const int ngpt);
+            const int ngpt,
+            Pool_base<TF*>* pool=nullptr);
 };
 
 template<typename TF>

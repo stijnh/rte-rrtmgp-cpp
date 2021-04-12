@@ -116,6 +116,18 @@ namespace
 //    }
 
 template<typename TF>
+rte_sw_work_arrays_gpu<TF>::rte_sw_work_arrays_gpu(
+        const int ncols,
+        const int ngpt,
+        Pool_base<TF*>* pool):Pool_client_group<TF*>(pool),
+        sfc_alb_dir_gpt({ncols, ngpt}, pool),
+        sfc_alb_dif_gpt({ncols, ngpt}, pool)
+{
+    this->add_client(sfc_alb_dir_gpt);
+    this->add_client(sfc_alb_dif_gpt);
+}
+
+template<typename TF>
 void Rte_sw_gpu<TF>::rte_sw(
         const std::unique_ptr<Optical_props_arry_gpu<TF>>& optical_props,
         const BOOL_TYPE top_at_1,
@@ -126,17 +138,23 @@ void Rte_sw_gpu<TF>::rte_sw(
         const Array_gpu<TF,2>& inc_flux_dif,
         Array_gpu<TF,3>& gpt_flux_up,
         Array_gpu<TF,3>& gpt_flux_dn,
-        Array_gpu<TF,3>& gpt_flux_dir)
+        Array_gpu<TF,3>& gpt_flux_dir,
+        rte_sw_work_arrays_gpu<TF>* workptr)
 {
     const int ncol = optical_props->get_ncol();
     const int nlay = optical_props->get_nlay();
     const int ngpt = optical_props->get_ngpt();
 
-    Array_gpu<TF,2> sfc_alb_dir_gpt({ncol, ngpt});
-    Array_gpu<TF,2> sfc_alb_dif_gpt({ncol, ngpt});
+//    Array_gpu<TF,2> sfc_alb_dir_gpt({ncol, ngpt});
+//    Array_gpu<TF,2> sfc_alb_dif_gpt({ncol, ngpt});
+    auto work = workptr;
+    if(workptr == nullptr)
+    {
+        work = new rte_sw_work_arrays_gpu<TF>(ncol, ngpt);
+    }
 
-    expand_and_transpose(optical_props, sfc_alb_dir, sfc_alb_dir_gpt);
-    expand_and_transpose(optical_props, sfc_alb_dif, sfc_alb_dif_gpt);
+    expand_and_transpose(optical_props, sfc_alb_dir, work->sfc_alb_dir_gpt);
+    expand_and_transpose(optical_props, sfc_alb_dif, work->sfc_alb_dif_gpt);
 
     // Upper boundary condition. At this stage, flux_dn contains the diffuse radiation only.
     rte_kernel_launcher_cuda::apply_BC(ncol, nlay, ngpt, top_at_1, inc_flux_dir, mu0, gpt_flux_dir);
@@ -153,17 +171,21 @@ void Rte_sw_gpu<TF>::rte_sw(
             optical_props->get_ssa(),
             optical_props->get_g  (),
             mu0,
-            sfc_alb_dir_gpt, sfc_alb_dif_gpt,
+            work->sfc_alb_dir_gpt, work->sfc_alb_dif_gpt,
             gpt_flux_up, gpt_flux_dn, gpt_flux_dir);
 
     // CvH: The original fortran code had a call to the reduce here.
     // fluxes->reduce(gpt_flux_up, gpt_flux_dn, gpt_flux_dir, optical_props, top_at_1);
+    if(workptr == nullptr)
+    {
+        delete work;
+    }
 }
 
 template<typename TF>
 void Rte_sw_gpu<TF>::expand_and_transpose(
         const std::unique_ptr<Optical_props_arry_gpu<TF>>& ops,
-        const Array_gpu<TF,2> arr_in,
+        const Array_gpu<TF,2>& arr_in,
         Array_gpu<TF,2>& arr_out)
 {
     const int ncol = arr_in.dim(2);

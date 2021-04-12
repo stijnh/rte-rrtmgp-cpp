@@ -134,9 +134,8 @@ struct radiation_solver_work_arrays
 template<typename TF>
 struct radiation_block_work_arrays_gpu
 {
+    std::unique_ptr<Pool_base<TF*>> memory_pool;
     Array_gpu<TF,2> col_dry_subset;
-    Array_gpu<TF,3> gpt_flux_up;
-    Array_gpu<TF,3> gpt_flux_dn;
     Array_gpu<TF,2> p_lev_subset;
     Array_gpu<TF,2> p_lay_subset;
     Array_gpu<TF,2> t_lev_subset;
@@ -147,27 +146,90 @@ struct radiation_block_work_arrays_gpu
     Array_gpu<TF,2> iwp_lay_subset;
     Array_gpu<TF,2> rel_lay_subset;
     Array_gpu<TF,2> rei_lay_subset;
-    std::unique_ptr<Fluxes_broadband_gpu<TF>> fluxes_subset;
-    std::unique_ptr<Fluxes_broadband_gpu<TF>> bnd_fluxes_subset;
-    std::unique_ptr<Optical_props_arry_gpu<TF>> optical_props_subset;
-    std::unique_ptr<Optical_props_1scl_gpu<TF>> cloud_optical_props_subset;
-    std::unique_ptr<Source_func_lw_gpu<TF>> sources_subset;
-    std::unique_ptr<gas_optics_work_arrays_gpu<TF>> gas_optics_work;
-    std::unique_ptr<rte_lw_work_arrays_gpu<TF>> rte_lw_work;
+    Array_gpu<TF,1> tsi_scaling_subset;
+    Array_gpu<TF,1> mu0_subset;
+    Array_gpu<TF,2> sfc_alb_dir_subset;
+    Array_gpu<TF,2> sfc_alb_dif_subset;
 
-    void resize(const int ncols, 
-                const int nlevs, 
-                const int nlays, 
-                const int ngpts,
-                const int nbnd,
-                const bool switch_cloud_optics);
+    std::unique_ptr<Array_gpu<TF,2>> toa_src_subset;
+    std::unique_ptr<Array_gpu<TF,3>> lw_gpt_flux_up;
+    std::unique_ptr<Array_gpu<TF,3>> lw_gpt_flux_dn;
+    std::unique_ptr<Array_gpu<TF,3>> sw_gpt_flux_up;
+    std::unique_ptr<Array_gpu<TF,3>> sw_gpt_flux_dn;
+    std::unique_ptr<Array_gpu<TF,3>> sw_gpt_flux_dn_dir;
+
+    std::unique_ptr<Fluxes_broadband_gpu<TF>> fluxes_subset;
+    std::unique_ptr<Fluxes_broadband_gpu<TF>> lw_bnd_fluxes_subset;
+    std::unique_ptr<Fluxes_broadband_gpu<TF>> sw_bnd_fluxes_subset;
+    std::unique_ptr<Optical_props_arry_gpu<TF>> lw_optical_props_subset;
+    std::unique_ptr<Optical_props_arry_gpu<TF>> sw_optical_props_subset;
+    std::unique_ptr<Optical_props_1scl_gpu<TF>> lw_cloud_optical_props_subset;
+    std::unique_ptr<Optical_props_2str_gpu<TF>> sw_cloud_optical_props_subset;
+    std::unique_ptr<Source_func_lw_gpu<TF>> sources_subset;
+    std::unique_ptr<gas_optics_work_arrays_gpu<TF>> lw_gas_optics_work;
+    std::unique_ptr<gas_optics_work_arrays_gpu<TF>> sw_gas_optics_work;
+    std::unique_ptr<rte_lw_work_arrays_gpu<TF>> rte_lw_work;
+    std::unique_ptr<rte_sw_work_arrays_gpu<TF>> rte_sw_work;
+
+    radiation_block_work_arrays_gpu(
+        const int ncols, 
+        const int nlevs, 
+        const int nlays,
+        const bool switch_fluxes,
+        const bool switch_bnd_fluxes,
+        const bool switch_cloud_optics,
+        const Radiation_solver_longwave<TF>* lws=nullptr,
+        const Radiation_solver_shortwave<TF>* sws=nullptr,
+        const bool recursive=true);
+
+    void allocate_lw_data(
+        const int ncols, 
+        const int nlevs,
+        const int nlays,
+        const bool switch_fluxes,
+        const bool switch_bnd_fluxes,
+        const bool switch_cloud_optics,
+        const Radiation_solver_longwave<TF>* lws,
+        const bool recursive);
+
+    void allocate_sw_data(
+        const int ncols, 
+        const int nlevs,
+        const int nlays,
+        const bool switch_fluxes,
+        const bool switch_bnd_fluxes,
+        const bool switch_cloud_optics,
+        const Radiation_solver_shortwave<TF>* sws,
+        const bool recursive);
+
+    std::unique_ptr<Pool_base<TF*>> create_pool(
+        const int ncols, 
+        const int nlevs,
+        const int nlays,
+        const bool switch_fluxes,
+        const bool switch_cloud_optics,
+        const Radiation_solver_longwave<TF>* lws,
+        const Radiation_solver_shortwave<TF>* sws);
 };
+
+
 
 template<typename TF>
 struct radiation_solver_work_arrays_gpu
 {
     std::unique_ptr<radiation_block_work_arrays_gpu<TF>> blocks_work_arrays;
     std::unique_ptr<radiation_block_work_arrays_gpu<TF>> residual_work_arrays;
+
+    radiation_solver_work_arrays_gpu();
+
+    radiation_solver_work_arrays_gpu(const int ncols,
+                                const int nlevs,
+                                const int nlays,
+                                const bool switch_fluxes,
+                                const bool switch_bnd_fluxes,
+                                const bool switch_cloud_optics,
+                                const Radiation_solver_longwave<TF>* lws=nullptr,
+                                const Radiation_solver_shortwave<TF>* sws=nullptr);
 };
 #endif
 
@@ -175,7 +237,9 @@ template<typename TF>
 class Radiation_solver_longwave
 {
         friend class radiation_block_work_arrays<TF>;
-
+#ifdef __CUDACC__
+        friend class radiation_block_work_arrays_gpu<TF>;
+#endif
     public:
         static const int n_col_block = 16;
 
@@ -224,12 +288,6 @@ class Radiation_solver_longwave
 
         #ifdef __CUDACC__
 
-        std::unique_ptr<radiation_solver_work_arrays_gpu<TF>> create_work_arrays_gpu(
-                const int n_col,
-                const int n_lev,
-                const int n_lay,
-                const bool switch_cloud_optics) const;
-
         void solve_gpu(
                 const bool switch_fluxes,
                 const bool switch_cloud_optics,
@@ -268,12 +326,6 @@ class Radiation_solver_longwave
         std::unique_ptr<Gas_optics_rrtmgp_gpu<TF>> kdist_gpu;
         std::unique_ptr<Cloud_optics_gpu<TF>> cloud_optics_gpu;
 
-        std::unique_ptr<radiation_block_work_arrays_gpu<TF>> create_block_work_arrays_gpu(
-                const int n_col,
-                const int n_lev,
-                const int n_lay,
-                const bool switch_cloud_optics) const;
-
         #endif
 };
 
@@ -281,6 +333,9 @@ template<typename TF>
 class Radiation_solver_shortwave
 {
         friend class radiation_block_work_arrays<TF>;
+#ifdef __CUDACC__
+        friend class radiation_block_work_arrays_gpu<TF>;
+#endif
 
     public:
         static const int n_col_block = 16;
@@ -345,7 +400,8 @@ class Radiation_solver_shortwave
                 Array_gpu<TF,2>& sw_flux_up, Array_gpu<TF,2>& sw_flux_dn,
                 Array_gpu<TF,2>& sw_flux_dn_dir, Array_gpu<TF,2>& sw_flux_net,
                 Array_gpu<TF,3>& sw_bnd_flux_up, Array_gpu<TF,3>& sw_bnd_flux_dn,
-                Array_gpu<TF,3>& sw_bnd_flux_dn_dir, Array_gpu<TF,3>& sw_bnd_flux_net) const;
+                Array_gpu<TF,3>& sw_bnd_flux_dn_dir, Array_gpu<TF,3>& sw_bnd_flux_net,
+                radiation_solver_work_arrays_gpu<TF>* work_arrays=nullptr) const;
 
         int get_n_gpt_gpu() const { return this->kdist_gpu->get_ngpt(); };
         int get_n_bnd_gpu() const { return this->kdist_gpu->get_nband(); };
@@ -364,7 +420,7 @@ class Radiation_solver_shortwave
         std::unique_ptr<Cloud_optics<TF>> cloud_optics;
 
         #ifdef __CUDACC__
-        std::unique_ptr<Gas_optics_gpu<TF>> kdist_gpu;
+        std::unique_ptr<Gas_optics_rrtmgp_gpu<TF>> kdist_gpu;
         std::unique_ptr<Cloud_optics_gpu<TF>> cloud_optics_gpu;
         #endif
 };

@@ -687,11 +687,11 @@ void Radiation_solver_longwave<TF>::solve(
             rel.subset_copy(work->rel_lay_subset, {col_s_in, 1});
             rei.subset_copy(work->rei_lay_subset, {col_s_in, 1});
             cloud_optics->cloud_optics(
-                    work->lwp_lay_subset,
-                    work->iwp_lay_subset,
-                    work->rel_lay_subset,
-                    work->rei_lay_subset,
-                    *(work->lw_cloud_optical_props_subset));
+                work->lwp_lay_subset,
+                work->iwp_lay_subset,
+                work->rel_lay_subset,
+                work->rei_lay_subset,
+                *(work->lw_cloud_optical_props_subset));
 
             // cloud->delta_scale();
 
@@ -761,6 +761,7 @@ void Radiation_solver_longwave<TF>::solve(
         if (switch_output_bnd_fluxes)
         {
             work->lw_bnd_fluxes_subset->acquire_memory();
+
             work->lw_bnd_fluxes_subset->reduce(*(work->lw_gpt_flux_up), *(work->lw_gpt_flux_dn), work->lw_optical_props_subset, top_at_1);
 
             for (int ibnd=1; ibnd<=n_bnd; ++ibnd)
@@ -771,6 +772,7 @@ void Radiation_solver_longwave<TF>::solve(
                         lw_bnd_flux_dn ({icol+col_s_in-1, ilev, ibnd}) = work->lw_bnd_fluxes_subset->get_bnd_flux_dn ()({icol, ilev, ibnd});
                         lw_bnd_flux_net({icol+col_s_in-1, ilev, ibnd}) = work->lw_bnd_fluxes_subset->get_bnd_flux_net()({icol, ilev, ibnd});
                     }
+
             work->lw_bnd_fluxes_subset->release_memory();
         }
 
@@ -873,7 +875,10 @@ void Radiation_solver_shortwave<TF>::solve(
         t_lay.subset_copy(work->t_lay_subset, {col_s_in, 1});
 
         if (col_dry.size() == 0)
-            Gas_optics_rrtmgp<TF>::get_col_dry(work->col_dry_subset, gas_concs_subset.get_vmr("h2o"), work->p_lev_subset);
+            Gas_optics_rrtmgp<TF>::get_col_dry(
+                work->col_dry_subset, 
+                gas_concs_subset.get_vmr("h2o"), 
+                work->p_lev_subset);
         else
             col_dry.subset_copy(work->col_dry_subset, {col_s_in, 1});
         

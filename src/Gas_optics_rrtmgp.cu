@@ -920,12 +920,12 @@ void compute_col_dry(
 // Calculate the molecules of dry air.
 template<typename TF>
 void Gas_optics_rrtmgp_gpu<TF>::get_col_dry(
-        Array_gpu<TF,2>& col_dry, const Array_gpu<TF,2>& vmr_h2o,
+        Array_gpu<TF,2>& col_dry, 
+        Array_gpu<TF,2>& delta_plev, 
+        Array_gpu<TF,2>& m_air, 
+        const Array_gpu<TF,2>& vmr_h2o,
         const Array_gpu<TF,2>& plev)
 {
-    Array_gpu<TF,2> delta_plev({col_dry.dim(1), col_dry.dim(2)});
-    Array_gpu<TF,2> m_air     ({col_dry.dim(1), col_dry.dim(2)});
-
     const int block_lay = 16;
     const int block_col = 16;
 
@@ -1259,8 +1259,6 @@ void Gas_optics_rrtmgp_gpu<TF>::source(
     const int npres = this->get_npres();
     const int ntemp = this->get_ntemp();
     const int nPlanckTemp = this->get_nPlanckTemp();
-    auto gpoint_bands = this->get_gpoint_bands_gpu();
-    auto band_lims_gpoint = this->get_band_lims_gpoint_gpu();
 
     auto wrk = work_arrays;
     if(work_arrays == nullptr)
@@ -1274,7 +1272,8 @@ void Gas_optics_rrtmgp_gpu<TF>::source(
             nflav, neta, npres, ntemp, nPlanckTemp,
             tlay, tlev, tsfc, sfc_lay,
             fmajor, jeta, tropo, jtemp, jpress,
-            gpoint_bands, band_lims_gpoint, this->planck_frac_gpu, this->temp_ref_min,
+            this->get_gpoint_bands_gpu(), this->get_band_lims_gpoint_gpu(), 
+            this->planck_frac_gpu, this->temp_ref_min,
             this->totplnk_delta, this->totplnk_gpu, this->gpoint_flavor_gpu,
             wrk->sfc_source_t, wrk->lay_source_t, wrk->lev_source_inc_t, wrk->lev_source_dec_t,
             wrk->sfc_source_jac, wrk->p_frac, wrk->ones);

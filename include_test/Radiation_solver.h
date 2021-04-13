@@ -37,6 +37,8 @@ struct radiation_block_work_arrays
 {
     std::unique_ptr<Pool_base<std::vector<TF>>> memory_pool;
     Array<TF,2> col_dry_subset;
+    Array<TF,2> delta_plev_subset;
+    Array<TF,2> m_air_subset;
     Array<TF,2> p_lev_subset;
     Array<TF,2> p_lay_subset;
     Array<TF,2> t_lev_subset;
@@ -136,6 +138,8 @@ struct radiation_block_work_arrays_gpu
 {
     std::unique_ptr<Pool_base<TF*>> memory_pool;
     Array_gpu<TF,2> col_dry_subset;
+    Array_gpu<TF,2> delta_plev_subset;
+    Array_gpu<TF,2> m_air_subset;
     Array_gpu<TF,2> p_lev_subset;
     Array_gpu<TF,2> p_lay_subset;
     Array_gpu<TF,2> t_lev_subset;

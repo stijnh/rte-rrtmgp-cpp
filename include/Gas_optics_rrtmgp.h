@@ -181,6 +181,8 @@ class Gas_optics_rrtmgp : public Gas_optics<TF>
 
         static void get_col_dry(
                 Array<TF,2>& col_dry,
+                Array<TF,2>& delta_plev,
+                Array<TF,2>& m_air,
                 const Array<TF,2>& vmr_h2o,
                 const Array<TF,2>& plev);
 
@@ -488,6 +490,8 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu<TF>
 
         static void get_col_dry(
                 Array_gpu<TF,2>& col_dry,
+                Array_gpu<TF,2>& delta_plev,
+                Array_gpu<TF,2>& m_air,
                 const Array_gpu<TF,2>& vmr_h2o,
                 const Array_gpu<TF,2>& plev);
 

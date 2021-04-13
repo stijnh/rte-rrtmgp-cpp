@@ -377,6 +377,8 @@ radiation_block_work_arrays<TF>::radiation_block_work_arrays(
         const bool recursive):
         memory_pool(create_pool(ncols, nlevs, nlays, switch_fluxes, switch_cloud_optics, lws, sws)),
         col_dry_subset({ncols, nlays}),
+        delta_plev_subset({ncols, nlays}),
+        m_air_subset({ncols, nlays}),
         p_lev_subset({ncols, nlevs}),
         p_lay_subset({ncols, nlays}),
         t_lev_subset({ncols, nlevs}),
@@ -652,7 +654,12 @@ void Radiation_solver_longwave<TF>::solve(
 
 
         if (col_dry.size() == 0)
-            Gas_optics_rrtmgp<TF>::get_col_dry(work->col_dry_subset, gas_concs_subset.get_vmr("h2o"), work->p_lev_subset);
+            Gas_optics_rrtmgp<TF>::get_col_dry(
+                work->col_dry_subset,
+                work->delta_plev_subset,
+                work->m_air_subset, 
+                gas_concs_subset.get_vmr("h2o"), 
+                work->p_lev_subset);
         else
             col_dry.subset_copy(work->col_dry_subset, {col_s_in, 1});
         
@@ -876,7 +883,9 @@ void Radiation_solver_shortwave<TF>::solve(
 
         if (col_dry.size() == 0)
             Gas_optics_rrtmgp<TF>::get_col_dry(
-                work->col_dry_subset, 
+                work->col_dry_subset,
+                work->delta_plev_subset,
+                work->m_air_subset,
                 gas_concs_subset.get_vmr("h2o"), 
                 work->p_lev_subset);
         else

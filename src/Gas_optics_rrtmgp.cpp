@@ -742,7 +742,10 @@ void Gas_optics_rrtmgp<TF>::set_solar_variability(
 // Calculate the molecules of dry air.
 template<typename TF>
 void Gas_optics_rrtmgp<TF>::get_col_dry(
-        Array<TF,2>& col_dry, const Array<TF,2>& vmr_h2o,
+        Array<TF,2>& col_dry, 
+        Array<TF,2>& delta_plev, 
+        Array<TF,2>& m_air, 
+        const Array<TF,2>& vmr_h2o,
         const Array<TF,2>& plev)
 {
     // CvH: RRTMGP uses more accurate method based on latitude.
@@ -751,9 +754,6 @@ void Gas_optics_rrtmgp<TF>::get_col_dry(
     constexpr TF avogad = 6.02214076e23;
     constexpr TF m_dry = 0.028964;
     constexpr TF m_h2o = 0.018016;
-
-    Array<TF,2> delta_plev({col_dry.dim(1), col_dry.dim(2)});
-    Array<TF,2> m_air     ({col_dry.dim(1), col_dry.dim(2)});
 
     for (int ilay=1; ilay<=col_dry.dim(2); ++ilay)
         for (int icol=1; icol<=col_dry.dim(1); ++icol)

@@ -269,7 +269,7 @@ void solve_radiation(int argc, char** argv)
         rad_sw = std::make_unique<Radiation_solver_shortwave<TF>>(gas_concs_gpu, "coefficients_sw.nc", "cloud_coefficients_sw.nc");
     }
     auto work_arrays = std::make_unique<radiation_solver_work_arrays_gpu<TF>>(
-            n_col, n_lev, n_lay, switch_fluxes, switch_output_bnd_fluxes, switch_cloud_optics, rad_lw.get(), rad_sw.get());
+            n_col, n_lev, n_lay, switch_fluxes, switch_output_bnd_fluxes, switch_cloud_optics, gas_concs_gpu, rad_lw.get(), rad_sw.get());
 //    auto work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>(
 //            n_col, n_lev, n_lay, switch_fluxes, switch_output_bnd_fluxes, switch_cloud_optics, rad_lw.get(), nullptr);
 //    auto work_arrays = std::make_unique<radiation_solver_work_arrays<TF>>(

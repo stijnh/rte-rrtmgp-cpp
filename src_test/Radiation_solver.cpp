@@ -372,6 +372,7 @@ radiation_block_work_arrays<TF>::radiation_block_work_arrays(
         const bool switch_fluxes,
         const bool switch_bnd_fluxes,
         const bool switch_cloud_optics,
+        const Gas_concs<TF>& gas_concs,
         const Radiation_solver_longwave<TF>* lws,
         const Radiation_solver_shortwave<TF>* sws,
         const bool recursive):
@@ -383,7 +384,8 @@ radiation_block_work_arrays<TF>::radiation_block_work_arrays(
         p_lay_subset({ncols, nlays}),
         t_lev_subset({ncols, nlevs}),
         t_lay_subset({ncols, nlays}),
-        t_sfc_subset({ncols})
+        t_sfc_subset({ncols}),
+        gas_concs_subset(std::make_unique<Gas_concs<TF>>(gas_concs, 1, ncols))
 {
     if(switch_cloud_optics)
     {
@@ -563,20 +565,21 @@ radiation_solver_work_arrays<TF>::radiation_solver_work_arrays(
         const bool switch_fluxes,
         const bool switch_bnd_fluxes,
         const bool switch_cloud_optics,
+        const Gas_concs<TF>& gas_concs,
         const Radiation_solver_longwave<TF>* lws,
         const Radiation_solver_shortwave<TF>* sws)
 {
     blocks_work_arrays = std::make_unique<radiation_block_work_arrays<TF>>(
         Radiation_solver_longwave<TF>::n_col_block, nlevs, nlays,
         switch_fluxes, switch_bnd_fluxes, switch_cloud_optics,
-        lws, sws);
+        gas_concs, lws, sws);
     int n_col_block_residual = ncols % Radiation_solver_longwave<TF>::n_col_block;
     if(n_col_block_residual > 0)
     {    
         residual_work_arrays = std::make_unique<radiation_block_work_arrays<TF>>(
         n_col_block_residual, nlevs, nlays,
         switch_fluxes, switch_bnd_fluxes, switch_cloud_optics,
-        lws, sws);
+        gas_concs, lws, sws);
     }
 }
 
@@ -639,11 +642,12 @@ void Radiation_solver_longwave<TF>::solve(
         if(work_block == nullptr)
         {
             allocated_work_arrays = std::make_unique<radiation_block_work_arrays<TF>>(
-                    n_col_in, n_lev, n_lay, switch_fluxes, switch_output_bnd_fluxes, switch_cloud_optics, this, nullptr, false);
+                    n_col_in, n_lev, n_lay, switch_fluxes, switch_output_bnd_fluxes, switch_cloud_optics, 
+                    gas_concs, this, nullptr, false);
             work = allocated_work_arrays.get();
         }
 
-        Gas_concs<TF> gas_concs_subset(gas_concs, col_s_in, n_col_in);
+        work->gas_concs_subset->subset_copy(gas_concs, col_s_in);
 
         p_lev.subset_copy(work->p_lev_subset, {col_s_in, 1});
         p_lay.subset_copy(work->p_lay_subset, {col_s_in, 1});
@@ -658,7 +662,7 @@ void Radiation_solver_longwave<TF>::solve(
                 work->col_dry_subset,
                 work->delta_plev_subset,
                 work->m_air_subset, 
-                gas_concs_subset.get_vmr("h2o"), 
+                work->gas_concs_subset->get_vmr("h2o"), 
                 work->p_lev_subset);
         else
             col_dry.subset_copy(work->col_dry_subset, {col_s_in, 1});
@@ -675,7 +679,7 @@ void Radiation_solver_longwave<TF>::solve(
                 work->p_lev_subset,
                 work->t_lay_subset,
                 work->t_sfc_subset,
-                gas_concs_subset,
+                *(work->gas_concs_subset),
                 work->lw_optical_props_subset,
                 *(work->sources_subset),
                 work->col_dry_subset,
@@ -871,11 +875,13 @@ void Radiation_solver_shortwave<TF>::solve(
         if(work_block == nullptr)
         {
             allocated_work_arrays = std::make_unique<radiation_block_work_arrays<TF>>(
-                    n_col_in, n_lev, n_lay, switch_fluxes, switch_output_bnd_fluxes, switch_cloud_optics, nullptr, this, false);
+                    n_col_in, n_lev, n_lay, switch_fluxes, switch_output_bnd_fluxes, switch_cloud_optics, 
+                    gas_concs, nullptr, this, false);
             work = allocated_work_arrays.get();
         }
 
-        Gas_concs<TF> gas_concs_subset(gas_concs, col_s_in, n_col_in);
+        //Gas_concs<TF> gas_concs_subset(gas_concs, col_s_in, n_col_in);
+        work->gas_concs_subset->subset_copy(gas_concs, col_s_in);
 
         p_lev.subset_copy(work->p_lev_subset, {col_s_in, 1});
         p_lay.subset_copy(work->p_lay_subset, {col_s_in, 1});
@@ -886,7 +892,7 @@ void Radiation_solver_shortwave<TF>::solve(
                 work->col_dry_subset,
                 work->delta_plev_subset,
                 work->m_air_subset,
-                gas_concs_subset.get_vmr("h2o"), 
+                work->gas_concs_subset->get_vmr("h2o"), 
                 work->p_lev_subset);
         else
             col_dry.subset_copy(work->col_dry_subset, {col_s_in, 1});
@@ -902,7 +908,7 @@ void Radiation_solver_shortwave<TF>::solve(
                 work->p_lay_subset,
                 work->p_lev_subset,
                 work->t_lay_subset,
-                gas_concs_subset,
+                *(work->gas_concs_subset),
                 work->sw_optical_props_subset,
                 *(work->toa_src_subset),
                 work->col_dry_subset,

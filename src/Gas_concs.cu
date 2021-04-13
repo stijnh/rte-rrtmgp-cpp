@@ -49,6 +49,17 @@ Gas_concs_gpu<TF>::Gas_concs_gpu(const Gas_concs_gpu& gas_concs_ref, const int s
     }
 }
 
+template<typename TF>
+Gas_concs_gpu<TF>& Gas_concs_gpu<TF>::subset_copy(const Gas_concs_gpu<TF>& gas_concs_ref, const int start)
+{
+    for (auto& g : gas_concs_ref.gas_concs_map)
+    {
+        if (g.second.dim(1) != 1)
+            g.second.subset_copy(this->gas_concs_map.at(g.first), {start, 1});
+    }
+    return *this;
+}
+
 // Get gas from map.
 template<typename TF>
 const Array_gpu<TF,2>& Gas_concs_gpu<TF>::get_vmr(const std::string& name) const

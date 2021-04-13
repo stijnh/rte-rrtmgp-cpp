@@ -41,7 +41,9 @@ class Gas_concs
 {
     public:
         Gas_concs() {}
-        Gas_concs(const Gas_concs& gas_concs_ref, const int start, const int size);
+        Gas_concs(const Gas_concs<TF>& gas_concs_ref, const int start, const int size);
+
+        Gas_concs<TF>& subset_copy(const Gas_concs<TF>& gas_concs_ref, const int start);
 
         // Insert new gas into the map.
         void set_vmr(const std::string& name, const TF data);
@@ -71,7 +73,9 @@ class Gas_concs_gpu
 {
     public:
         Gas_concs_gpu(const Gas_concs<TF>& gas_concs_ref);
-        Gas_concs_gpu(const Gas_concs_gpu& gas_concs_ref, const int start, const int size);
+        Gas_concs_gpu(const Gas_concs_gpu<TF>& gas_concs_ref, const int start, const int size);
+
+        Gas_concs_gpu<TF>& subset_copy(const Gas_concs_gpu<TF>& gas_concs_ref, const int start);
 
         // Insert new gas into the map.
         // void set_vmr(const std::string& name, const TF data);

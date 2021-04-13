@@ -61,6 +61,7 @@ struct radiation_block_work_arrays
     std::unique_ptr<Array<TF,3>> sw_gpt_flux_dn;
     std::unique_ptr<Array<TF,3>> sw_gpt_flux_dn_dir;
 
+    std::unique_ptr<Gas_concs<TF>> gas_concs_subset;
     std::unique_ptr<Fluxes_broadband<TF>> fluxes_subset;
     std::unique_ptr<Fluxes_broadband<TF>> lw_bnd_fluxes_subset;
     std::unique_ptr<Fluxes_broadband<TF>> sw_bnd_fluxes_subset;
@@ -80,6 +81,7 @@ struct radiation_block_work_arrays
                                 const bool switch_fluxes,
                                 const bool switch_bnd_fluxes,
                                 const bool switch_cloud_optics,
+                                const Gas_concs<TF>& gas_concs,
                                 const Radiation_solver_longwave<TF>* lws=nullptr,
                                 const Radiation_solver_shortwave<TF>* sws=nullptr,
                                 const bool recursive=true);
@@ -128,6 +130,7 @@ struct radiation_solver_work_arrays
                                 const bool switch_fluxes,
                                 const bool switch_bnd_fluxes,
                                 const bool switch_cloud_optics,
+                                const Gas_concs<TF>& gas_concs,
                                 const Radiation_solver_longwave<TF>* lws=nullptr,
                                 const Radiation_solver_shortwave<TF>* sws=nullptr);
 };
@@ -162,6 +165,7 @@ struct radiation_block_work_arrays_gpu
     std::unique_ptr<Array_gpu<TF,3>> sw_gpt_flux_dn;
     std::unique_ptr<Array_gpu<TF,3>> sw_gpt_flux_dn_dir;
 
+    std::unique_ptr<Gas_concs_gpu<TF>> gas_concs_subset;
     std::unique_ptr<Fluxes_broadband_gpu<TF>> fluxes_subset;
     std::unique_ptr<Fluxes_broadband_gpu<TF>> lw_bnd_fluxes_subset;
     std::unique_ptr<Fluxes_broadband_gpu<TF>> sw_bnd_fluxes_subset;
@@ -182,6 +186,7 @@ struct radiation_block_work_arrays_gpu
         const bool switch_fluxes,
         const bool switch_bnd_fluxes,
         const bool switch_cloud_optics,
+        const Gas_concs_gpu<TF>& gas_concs,
         const Radiation_solver_longwave<TF>* lws=nullptr,
         const Radiation_solver_shortwave<TF>* sws=nullptr,
         const bool recursive=true);
@@ -232,6 +237,7 @@ struct radiation_solver_work_arrays_gpu
                                 const bool switch_fluxes,
                                 const bool switch_bnd_fluxes,
                                 const bool switch_cloud_optics,
+                                const Gas_concs_gpu<TF>& gas_concs,
                                 const Radiation_solver_longwave<TF>* lws=nullptr,
                                 const Radiation_solver_shortwave<TF>* sws=nullptr);
 };

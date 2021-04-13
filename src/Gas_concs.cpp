@@ -26,7 +26,7 @@
 #include "Array.h"
 
 template<typename TF>
-Gas_concs<TF>::Gas_concs(const Gas_concs& gas_concs_ref, const int start, const int size)
+Gas_concs<TF>::Gas_concs(const Gas_concs<TF>& gas_concs_ref, const int start, const int size)
 {
     const int end = start + size - 1;
     for (auto& g : gas_concs_ref.gas_concs_map)
@@ -39,6 +39,17 @@ Gas_concs<TF>::Gas_concs(const Gas_concs& gas_concs_ref, const int start, const 
             this->gas_concs_map.emplace(g.first, gas_conc_subset);
         }
     }
+}
+
+template<typename TF>
+Gas_concs<TF>& Gas_concs<TF>::subset_copy(const Gas_concs<TF>& gas_concs_ref, const int start)
+{
+    for (auto& g : gas_concs_ref.gas_concs_map)
+    {
+        if (g.second.dim(1) != 1)
+            g.second.subset_copy(this->gas_concs_map.at(g.first), {start, 1});
+    }
+    return *this;
 }
 
 // Insert new gas into the map or update the value.

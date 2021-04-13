@@ -1441,6 +1441,12 @@ TF Gas_optics_rrtmgp<TF>::get_tsi() const
 
 #ifdef FLOAT_SINGLE_RRTMGP
 template class Gas_optics_rrtmgp<float>;
+template class gas_taus_work_arrays<float>;
+template class gas_source_work_arrays<float>;
+template class gas_optics_work_arrays<float>;
 #else
 template class Gas_optics_rrtmgp<double>;
+template class gas_taus_work_arrays<double>;
+template class gas_source_work_arrays<double>;
+template class gas_optics_work_arrays<double>;
 #endif

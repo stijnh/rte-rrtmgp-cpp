@@ -192,6 +192,8 @@ void Rte_lw<TF>::expand_and_transpose(
 
 #ifdef FLOAT_SINGLE_RRTMGP
 template class Rte_lw<float>;
+template class rte_lw_work_arrays<float>;
 #else
 template class Rte_lw<double>;
+template class rte_lw_work_arrays<double>;
 #endif

@@ -215,6 +215,8 @@ void Rte_lw_gpu<TF>::expand_and_transpose(
 
 #ifdef FLOAT_SINGLE_RRTMGP
 template class Rte_lw_gpu<float>;
+template class rte_lw_work_arrays_gpu<float>;
 #else
 template class Rte_lw_gpu<double>;
+template class rte_lw_work_arrays_gpu<double>;
 #endif

@@ -208,6 +208,8 @@ void Rte_sw_gpu<TF>::expand_and_transpose(
 
 #ifdef FLOAT_SINGLE_RRTMGP
 template class Rte_sw_gpu<float>;
+template class rte_sw_work_arrays_gpu<float>;
 #else
 template class Rte_sw_gpu<double>;
+template class rte_sw_work_arrays_gpu<double>;
 #endif

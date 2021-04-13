@@ -1060,7 +1060,11 @@ void Radiation_solver_shortwave<TF>::solve_gpu(
 #ifdef FLOAT_SINGLE_RRTMGP
 template class Radiation_solver_longwave<float>;
 template class Radiation_solver_shortwave<float>;
+template class radiation_block_work_arrays_gpu<float>;
+template class radiation_solver_work_arrays_gpu<float>;
 #else
 template class Radiation_solver_longwave<double>;
 template class Radiation_solver_shortwave<double>;
+template class radiation_block_work_arrays_gpu<double>;
+template class radiation_solver_work_arrays_gpu<double>;
 #endif

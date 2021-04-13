@@ -42,9 +42,9 @@ class Block_vector_pool: public Pool_base<std::vector<TF>>
 
         Block_vector_pool(const std::vector<int>& block_sizes_);
 
-        void acquire_memory(std::vector<TF>& block_, int size_);
+        void acquire_memory(std::vector<TF>* block_, int size_);
 
-        void release_memory(std::vector<TF>& block_, int size_);
+        void release_memory(std::vector<TF>* block_, int size_);
 
         void print_stats(std::ostream& os) const;
 

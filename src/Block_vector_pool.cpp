@@ -58,9 +58,9 @@ std::tuple<typename Block_vector_pool<TF>::memory_storage_type::iterator, int> B
 
 
 template<typename TF>
-void Block_vector_pool<TF>::acquire_memory(std::vector<TF>& block_, int size_)
+void Block_vector_pool<TF>::acquire_memory(std::vector<TF>* block_, int size_)
 {
-    if(block_.size() >= size_) return;
+    if(block_->size() >= size_) return;
 
     auto lookup = lookup_block_list(size_);
     
@@ -95,14 +95,14 @@ void Block_vector_pool<TF>::acquire_memory(std::vector<TF>& block_, int size_)
         {
             throw std::bad_alloc();
         }
-        block_.resize(block_size);
+        block_->resize(block_size);
         alloc_counter += 1;
         alloc_bytes += (block_size * sizeof(TF));
     }
     else
     {
 //        std::cerr<<"re-use "<<size_<<"<=>"<<block_size<<std::endl;
-        block_ = std::move(block_it->back());
+        *block_ = std::move(block_it->back());
         block_it->pop_back();
         reuse_counter += 1;
         reuse_bytes += (block_size * sizeof(TF));
@@ -110,11 +110,11 @@ void Block_vector_pool<TF>::acquire_memory(std::vector<TF>& block_, int size_)
 }
 
 template<typename TF>
-void Block_vector_pool<TF>::release_memory(std::vector<TF>& block_, int size_)
+void Block_vector_pool<TF>::release_memory(std::vector<TF>* block_, int size_)
 {
-    if(block_.empty()) return;
+    if(block_->empty()) return;
 
-    auto lookup = lookup_block_list(block_.size());
+    auto lookup = lookup_block_list(block_->size());
 
     if(std::get<0>(lookup) == blocks.end())
     {
@@ -124,7 +124,7 @@ void Block_vector_pool<TF>::release_memory(std::vector<TF>& block_, int size_)
     std::list<std::vector<TF>>& block_list = *(std::get<0>(lookup));
 
     block_list.push_back(std::vector<TF>());
-    block_list.back() = std::move(block_);
+    block_list.back() = std::move(*block_);
 }
 
 template<typename TF>

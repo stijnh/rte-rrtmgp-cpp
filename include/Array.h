@@ -286,9 +286,9 @@ class Array: public Pool_client<std::vector<T>>
             }
         }
 
-        std::vector<T>& get_memory()
+        std::vector<T>* get_memory()
         {
-            return data;
+            return &data;
         }
 
         int get_num_elements() const
@@ -296,14 +296,14 @@ class Array: public Pool_client<std::vector<T>>
             return ncells;
         }
 
-        void allocate_memory(std::vector<T>& v, int n) const
+        void allocate_memory(std::vector<T>* v, int n) const
         {
-            v.resize(n);
+            v->resize(n);
         }
 
-        void deallocate_memory(std::vector<T>& v, int n) const
+        void deallocate_memory(std::vector<T>* v, int n) const
         {
-            v.clear();
+            v->clear();
         }
 
     private:
@@ -560,9 +560,9 @@ class Array_gpu: public Pool_client<T*>
         inline int dim(const int i) const { return dims[i-1]; }
         // inline bool is_empty() const { return ncells == 0; }
 
-        T*& get_memory()
+        T** get_memory()
         {
-            return data_ptr;
+            return &data_ptr;
         }
 
         int get_num_elements() const
@@ -570,18 +570,19 @@ class Array_gpu: public Pool_client<T*>
             return ncells;
         }
 
-        void allocate_memory(T*& v, int n) const
+        void allocate_memory(T** v, int n) const
         {
         #ifdef __CUDACC__
-            cuda_safe_call(cudaMalloc(&v, n * sizeof(T)));
+            cuda_safe_call(cudaMalloc((void**)v, n * sizeof(T)));
         #endif
         }
 
-        void deallocate_memory(T*& v, int n) const
+        void deallocate_memory(T** v, int n) const
         {
         #ifdef __CUDACC__
-            cuda_safe_call(cudaFree(v));
+            cuda_safe_call(cudaFree(*v));
         #endif
+            *v = nullptr;
         }
 
 

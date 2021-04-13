@@ -43,9 +43,9 @@ class Array_pool_gpu: public Pool_base<TF*>
 
         ~Array_pool_gpu();
 
-        void acquire_memory(TF*& block_, int size_);
+        void acquire_memory(TF** block_, int size_);
 
-        void release_memory(TF*& block_, int size_);
+        void release_memory(TF** block_, int size_);
 
         void print_stats(std::ostream& os) const;
 

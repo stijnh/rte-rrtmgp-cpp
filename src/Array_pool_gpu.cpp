@@ -74,7 +74,7 @@ std::tuple<typename Array_pool_gpu<TF>::memory_storage_type::iterator, int> Arra
 
 
 template<typename TF>
-void Array_pool_gpu<TF>::acquire_memory(TF*& block_, int size_)
+void Array_pool_gpu<TF>::acquire_memory(TF** block_, int size_)
 {
     auto lookup = lookup_block_list(size_);
     
@@ -114,7 +114,7 @@ void Array_pool_gpu<TF>::acquire_memory(TF*& block_, int size_)
         }
         
 #ifdef __CUDACC__
-        cuda_safe_call(cudaMalloc((void **) &block_, block_size*sizeof(TF)));
+        cuda_safe_call(cudaMalloc((void **) block_, block_size*sizeof(TF)));
 #endif
         alloc_counter += 1;
         alloc_bytes += (block_size * sizeof(TF));
@@ -122,7 +122,7 @@ void Array_pool_gpu<TF>::acquire_memory(TF*& block_, int size_)
     else
     {
 //        std::cerr<<"re-use "<<size_<<"<=>"<<block_size<<std::endl;
-        block_ = block_it->back();
+        *block_ = block_it->back();
         block_it->pop_back();
         reuse_counter += 1;
         reuse_bytes += (block_size * sizeof(TF));
@@ -130,7 +130,7 @@ void Array_pool_gpu<TF>::acquire_memory(TF*& block_, int size_)
 }
 
 template<typename TF>
-void Array_pool_gpu<TF>::release_memory(TF*& block_, int size_)
+void Array_pool_gpu<TF>::release_memory(TF** block_, int size_)
 {
     auto lookup = lookup_block_list(size_);
 
@@ -141,8 +141,8 @@ void Array_pool_gpu<TF>::release_memory(TF*& block_, int size_)
     
     auto it = std::get<0>(lookup);
 
-    it->push_back(block_);
-    block_ = nullptr;
+    it->push_back(*block_);
+    *block_ = nullptr;
 }
 
 template<typename TF>

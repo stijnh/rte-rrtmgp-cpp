@@ -32,9 +32,9 @@ class Pool_base
 {
     public:
 
-        virtual void acquire_memory(T& storage, int num_elems)=0;
+        virtual void acquire_memory(T* storage, int num_elems)=0;
 
-        virtual void release_memory(T& block, int num_elems)=0;
+        virtual void release_memory(T* block, int num_elems)=0;
 
         virtual ~Pool_base(){}
 };
@@ -85,13 +85,13 @@ class Pool_client
 
     protected:
 
-        virtual T& get_memory()=0;
+        virtual T* get_memory()=0;
 
         virtual int get_num_elements() const=0;
 
-        virtual void allocate_memory(T& memory, int num_elems) const=0;
+        virtual void allocate_memory(T* memory, int num_elems) const=0;
 
-        virtual void deallocate_memory(T& memory, int num_elems) const=0;
+        virtual void deallocate_memory(T* memory, int num_elems) const=0;
 
     private:
 

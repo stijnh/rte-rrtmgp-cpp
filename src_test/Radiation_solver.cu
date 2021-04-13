@@ -377,9 +377,12 @@ std::unique_ptr<Pool_base<TF*>> radiation_block_work_arrays_gpu<TF>::create_pool
         const Radiation_solver_longwave<TF>* lws,
         const Radiation_solver_shortwave<TF>* sws)
 {
-    const int ngptmax = std::max(lws == nullptr? 1 : lws->get_n_gpt(), sws == nullptr? 1 : sws->get_n_gpt());
-    const int nflavmax = std::max(lws == nullptr? 1 : lws->kdist_gpu->get_nflav(), sws == nullptr? 1 : sws->kdist_gpu->get_nflav());
-    const int ngasmax = std::max(lws == nullptr? 1 : lws->kdist_gpu->get_ngas(), sws == nullptr? 1 : sws->kdist_gpu->get_ngas());
+    const int ngptmax = std::max(   lws == nullptr? 1 : lws->kdist_gpu->get_ngpt(), 
+                                    sws == nullptr? 1 : sws->kdist_gpu->get_ngpt());
+    const int nflavmax = std::max(  lws == nullptr? 1 : lws->kdist_gpu->get_nflav(), 
+                                    sws == nullptr? 1 : sws->kdist_gpu->get_nflav());
+    const int ngasmax = std::max(   lws == nullptr? 1 : lws->kdist_gpu->get_ngas(), 
+                                    sws == nullptr? 1 : sws->kdist_gpu->get_ngas());
 
     const int nlevmax = std::max(nlevs, nlays);
     return std::unique_ptr<Pool_base<TF*>>(new Array_pool_gpu<TF>({
@@ -461,8 +464,8 @@ void radiation_block_work_arrays_gpu<TF>::allocate_lw_data(
         const Radiation_solver_longwave<TF>* lws,
         const bool recursive)
 {
-    int ngpt = lws->get_n_gpt();
-    int nbnd = lws->get_n_bnd();
+    int ngpt = lws->kdist_gpu->get_ngpt();
+    int nbnd = lws->kdist_gpu->get_nband();
     int ngas = lws->kdist_gpu->get_ngas();
     int nflav = lws->kdist_gpu->get_nflav();
     auto pool = memory_pool.get();
@@ -525,8 +528,8 @@ void radiation_block_work_arrays_gpu<TF>::allocate_sw_data(
         const Radiation_solver_shortwave<TF>* sws,
         const bool recursive)
 {
-    int ngpt = sws->get_n_gpt();
-    int nbnd = sws->get_n_bnd();
+    int ngpt = sws->kdist_gpu->get_ngpt();
+    int nbnd = sws->kdist_gpu->get_nband();
     int ngas = sws->kdist_gpu->get_ngas();
     int nflav = sws->kdist_gpu->get_nflav();
     auto pool = memory_pool.get();

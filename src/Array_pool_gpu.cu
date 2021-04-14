@@ -48,12 +48,10 @@ Array_pool_gpu<TF>::~Array_pool_gpu()
 {
     for(typename memory_storage_type::iterator it = blocks.begin(); it != blocks.end(); ++it)
     {
-#ifdef __CUDACC__
         for(typename std::list<TF*>::iterator it2 = it->begin(); it2 != it->end(); ++it2)
         {
             cuda_safe_call(cudaFree(*it2));
         }
-#endif
         it->clear();
     }
     blocks.clear();
@@ -87,23 +85,23 @@ void Array_pool_gpu<TF>::acquire_memory(TF** block_, int size_)
     int block_size = std::get<1>(lookup);
 
     bool alloc = (block_it->size() == 0);
-    if(alloc)
-    {
-        auto it = block_it;
-        auto it2 = block_sizes.begin() + (block_it - blocks.begin());
+//    if(alloc)
+//    {
+//        auto it = block_it;
+//        auto it2 = block_sizes.begin() + (block_it - blocks.begin());
 //TODO: Review whether this is a responsible (and necessary) thing to do...
-        while(it != blocks.end() and it->size()==0)
-        {
-            ++it;
-            ++it2;
-        }
-        if(it != blocks.end())
-        {
-            alloc = false;
-            block_it = it;
-            block_size = *it2;
-        }
-    }
+//        while(it != blocks.end() and it->size()==0)
+//        {
+//            ++it;
+//            ++it2;
+//       }
+//        if(it != blocks.end())
+//        {
+//            alloc = false;
+//            block_it = it;
+//            block_size = *it2;
+//        }
+//    }
 
     if(alloc)
     {
@@ -112,10 +110,7 @@ void Array_pool_gpu<TF>::acquire_memory(TF** block_, int size_)
         {
             throw std::bad_alloc();
         }
-        
-#ifdef __CUDACC__
         cuda_safe_call(cudaMalloc((void **) block_, block_size*sizeof(TF)));
-#endif
         alloc_counter += 1;
         alloc_bytes += (block_size * sizeof(TF));
     }

@@ -501,7 +501,7 @@ namespace rte_kernel_launcher_cuda
                                     const Array_gpu<TF,2>& ds, 
                                     const Array_gpu<TF,2>& weights, 
                                     const Array_gpu<TF,3>& tau, 
-                                    const Array_gpu<TF,3> lay_source, 
+                                    const Array_gpu<TF,3>& lay_source, 
                                     const Array_gpu<TF,3>& lev_source_inc, 
                                     const Array_gpu<TF,3>& lev_source_dec, 
                                     const Array_gpu<TF,2>& sfc_emis,
@@ -622,7 +622,7 @@ template void rte_kernel_launcher_cuda::sw_solver_2stream<float>(
 
 template void rte_kernel_launcher_cuda::lw_solver_noscat_gaussquad<float>(
             const int ncol, const int nlay, const int ngpt, const BOOL_TYPE top_at_1, const int nmus,
-            const Array_gpu<float,2>& ds, const Array_gpu<float,2>& weights, const Array_gpu<float,3>& tau, const Array_gpu<float,3> lay_source,
+            const Array_gpu<float,2>& ds, const Array_gpu<float,2>& weights, const Array_gpu<float,3>& tau, const Array_gpu<float,3>& lay_source,
             const Array_gpu<float,3>& lev_source_inc, const Array_gpu<float,3>& lev_source_dec, const Array_gpu<float,2>& sfc_emis,
             const Array_gpu<float,2>& sfc_src, Array_gpu<float,3>& flux_dn, Array_gpu<float,3>& flux_up,
             const Array_gpu<float,2>& sfc_src_jac, Array_gpu<float,3>& flux_up_jac, Array_gpu<float,3>& tau_loc,
@@ -646,7 +646,7 @@ template void rte_kernel_launcher_cuda::sw_solver_2stream<double>(
 
 template void rte_kernel_launcher_cuda::lw_solver_noscat_gaussquad<double>(
             const int ncol, const int nlay, const int ngpt, const BOOL_TYPE top_at_1, const int nmus,
-            const Array_gpu<double,2>& ds, const Array_gpu<double,2>& weights, const Array_gpu<double,3>& tau, const Array_gpu<double,3> lay_source,
+            const Array_gpu<double,2>& ds, const Array_gpu<double,2>& weights, const Array_gpu<double,3>& tau, const Array_gpu<double,3>& lay_source,
             const Array_gpu<double,3>& lev_source_inc, const Array_gpu<double,3>& lev_source_dec, const Array_gpu<double,2>& sfc_emis,
             const Array_gpu<double,2>& sfc_src, Array_gpu<double,3>& flux_up, Array_gpu<double,3>& flux_dn,
             const Array_gpu<double,2>& sfc_src_jac,Array_gpu<double,3>& flux_up_jac, Array_gpu<double,3>& tau_loc,

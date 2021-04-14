@@ -469,14 +469,15 @@ void radiation_block_work_arrays<TF>::allocate_lw_data(
     {
         lw_gpt_flux_up = std::make_unique<Array<TF,3>>(std::array<int,3>({ncols, nlevs, ngpt}), pool);
         lw_gpt_flux_dn = std::make_unique<Array<TF,3>>(std::array<int,3>({ncols, nlevs, ngpt}), pool);
-        lw_gpt_flux_up->release_memory();
-        lw_gpt_flux_dn->release_memory();
 
         if(recursive)
         {
             rte_lw_work = std::make_unique<rte_lw_work_arrays<TF>>(ncols, nlevs, ngpt, pool);
             rte_lw_work->release_memory();
         }
+        
+        lw_gpt_flux_up->release_memory();
+        lw_gpt_flux_dn->release_memory();
     }
 
     if(switch_bnd_fluxes)
@@ -534,15 +535,16 @@ void radiation_block_work_arrays<TF>::allocate_sw_data(
         sw_gpt_flux_up = std::make_unique<Array<TF,3>>(std::array<int,3>({ncols, nlevs, ngpt}), pool);
         sw_gpt_flux_dn = std::make_unique<Array<TF,3>>(std::array<int,3>({ncols, nlevs, ngpt}), pool);
         sw_gpt_flux_dn_dir = std::make_unique<Array<TF,3>>(std::array<int,3>({ncols, nlevs, ngpt}), pool);
-        sw_gpt_flux_up->release_memory();
-        sw_gpt_flux_dn->release_memory();
-        sw_gpt_flux_dn_dir->release_memory();
 
         if(recursive)
         {
             rte_sw_work = std::make_unique<rte_sw_work_arrays<TF>>(ncols, ngpt, pool);
             rte_sw_work->release_memory();
         }
+
+        sw_gpt_flux_up->release_memory();
+        sw_gpt_flux_dn->release_memory();
+        sw_gpt_flux_dn_dir->release_memory();
     }
 
     if(switch_bnd_fluxes)

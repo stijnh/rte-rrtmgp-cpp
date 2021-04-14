@@ -118,13 +118,37 @@ namespace
 template<typename TF>
 rte_sw_work_arrays_gpu<TF>::rte_sw_work_arrays_gpu(
         const int ncols,
+        const int nlevs,
+        const int nlays,
         const int ngpt,
         Pool_base<TF*>* pool):Pool_client_group<TF*>(pool),
         sfc_alb_dir_gpt({ncols, ngpt}, pool),
-        sfc_alb_dif_gpt({ncols, ngpt}, pool)
+        sfc_alb_dif_gpt({ncols, ngpt}, pool),
+        r_dif({ncols, nlays, ngpt}, pool),
+        t_dif({ncols, nlays, ngpt}, pool),
+        r_dir({ncols, nlays, ngpt}, pool),
+        t_dir({ncols, nlays, ngpt}, pool),
+        t_noscat({ncols, nlays, ngpt}, pool),
+        source_up({ncols, nlays, ngpt}, pool),
+        source_dn({ncols, nlays, ngpt}, pool),
+        source_sfc({ncols, ngpt}, pool),
+        albedo({ncols, nlevs, ngpt}, pool),
+        src({ncols, nlevs, ngpt}, pool),
+        denom({ncols, nlays, ngpt}, pool)
 {
     this->add_client(sfc_alb_dir_gpt);
     this->add_client(sfc_alb_dif_gpt);
+    this->add_client(r_dif);
+    this->add_client(t_dif);
+    this->add_client(r_dir);
+    this->add_client(t_dir);
+    this->add_client(t_noscat);
+    this->add_client(source_up);
+    this->add_client(source_dn);
+    this->add_client(source_sfc);
+    this->add_client(albedo);
+    this->add_client(src);
+    this->add_client(denom);
 }
 
 template<typename TF>
@@ -150,7 +174,7 @@ void Rte_sw_gpu<TF>::rte_sw(
     auto work = workptr;
     if(workptr == nullptr)
     {
-        work = new rte_sw_work_arrays_gpu<TF>(ncol, ngpt);
+        work = new rte_sw_work_arrays_gpu<TF>(ncol, gpt_flux_up.get_dims()[1], nlay, ngpt);
     }
 
     expand_and_transpose(optical_props, sfc_alb_dir, work->sfc_alb_dir_gpt);
@@ -172,7 +196,10 @@ void Rte_sw_gpu<TF>::rte_sw(
             optical_props->get_g  (),
             mu0,
             work->sfc_alb_dir_gpt, work->sfc_alb_dif_gpt,
-            gpt_flux_up, gpt_flux_dn, gpt_flux_dir);
+            gpt_flux_up, gpt_flux_dn, gpt_flux_dir, work->r_dif, 
+            work->t_dif, work->r_dir, work->t_dir,
+            work->t_noscat, work->source_up, work->source_dn,
+            work->source_sfc, work->albedo, work->src, work->denom);
 
     // CvH: The original fortran code had a call to the reduce here.
     // fluxes->reduce(gpt_flux_up, gpt_flux_dn, gpt_flux_dir, optical_props, top_at_1);

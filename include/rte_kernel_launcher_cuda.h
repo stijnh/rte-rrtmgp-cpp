@@ -43,7 +43,11 @@ namespace rte_kernel_launcher_cuda
     void sw_solver_2stream(const int ncol, const int nlay, const int ngpt, const BOOL_TYPE top_at_1,
                            const Array_gpu<TF,3>& tau, const Array_gpu<TF,3>& ssa, const Array_gpu<TF,3>& g,
                            const Array_gpu<TF,1>& mu0, const Array_gpu<TF,2>& sfc_alb_dir, const Array_gpu<TF,2>& sfc_alb_dif,
-                           Array_gpu<TF,3>& flux_up, Array_gpu<TF,3>& flux_dn, Array_gpu<TF,3>& flux_dir);
+                           Array_gpu<TF,3>& flux_up, Array_gpu<TF,3>& flux_dn, Array_gpu<TF,3>& flux_dir,
+                           Array_gpu<TF,3>& r_dif, Array_gpu<TF,3>& t_dif, Array_gpu<TF,3>& r_dir, Array_gpu<TF,3>& t_dir,
+                           Array_gpu<TF,3>& t_noscat, Array_gpu<TF,3>& source_up, Array_gpu<TF,3>& source_dn,
+                           Array_gpu<TF,2>& source_sfc, Array_gpu<TF,3>& albedo, 
+                           Array_gpu<TF,3>& src, Array_gpu<TF,3>& denom);
     template<typename TF>
     void lw_solver_noscat_gaussquad(const int ncol, const int nlay, const int ngpt, const BOOL_TYPE top_at_1, const int nmus,
                                     const Array_gpu<TF,2>& ds, const Array_gpu<TF,2>& weights, const Array_gpu<TF,3>& tau, const Array_gpu<TF,3>& lay_source,

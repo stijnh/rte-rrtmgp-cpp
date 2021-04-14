@@ -3,6 +3,7 @@
 
 #define cuda_safe_call(err) Tools_gpu::__cuda_safe_call(err, __FILE__, __LINE__)
 #define cuda_check_error()  Tools_gpu::__cuda_check_error(__FILE__, __LINE__)
+#define cuda_check_memory()  Tools_gpu::__cuda_check_memory(__FILE__, __LINE__)
 
 namespace Tools_gpu
 {
@@ -37,6 +38,28 @@ namespace Tools_gpu
             printf("cudaCheckError() with sync failed at %s:%i : %s\n", file, line, cudaGetErrorString( err ) );
             throw 1;
         }
+        #endif
+    }
+
+    inline void __cuda_check_memory(const char *file, const int line)
+    {
+        typedef unsigned size_type;
+
+        #ifdef CUDACHECKS
+        size_type free_byte, total_byte ;
+
+        cudaError err = cudaMemGetInfo( &free_byte, &total_byte ) ;
+
+        if ( cudaSuccess != err ){
+
+            printf("Error: cudaMemGetInfo fails, %s \n", cudaGetErrorString(err) );
+            throw 1;
+
+        }
+
+        double used_db = (double)total_byte - (double)free_byte ;
+
+        printf("GPU memory usage at %s:%i: %f MB\n", file, line, used_db/1024.0/1024.0);
         #endif
     }
 }

@@ -80,9 +80,22 @@ struct rte_sw_work_arrays_gpu: public Pool_client_group<TF*>
 {
     Array_gpu<TF,2> sfc_alb_dir_gpt;
     Array_gpu<TF,2> sfc_alb_dif_gpt;
+    Array_gpu<TF,3> r_dif;
+    Array_gpu<TF,3> t_dif;
+    Array_gpu<TF,3> r_dir;
+    Array_gpu<TF,3> t_dir;
+    Array_gpu<TF,3> t_noscat;
+    Array_gpu<TF,3> source_up;
+    Array_gpu<TF,3> source_dn;
+    Array_gpu<TF,2> source_sfc;
+    Array_gpu<TF,3> albedo; 
+    Array_gpu<TF,3> src; 
+    Array_gpu<TF,3> denom;
 
     rte_sw_work_arrays_gpu(
             const int ncols,
+            const int nlevs,
+            const int nlays,
             const int ngpt,
             Pool_base<TF*>* pool=nullptr);
 };

@@ -574,7 +574,7 @@ void radiation_block_work_arrays_gpu<TF>::allocate_sw_data(
 
         if(recursive)
         {
-            rte_sw_work = std::make_unique<rte_sw_work_arrays_gpu<TF>>(ncols, ngpt, pool);
+            rte_sw_work = std::make_unique<rte_sw_work_arrays_gpu<TF>>(ncols, nlevs, nlays, ngpt, pool);
             rte_sw_work->release_memory();
         }
 

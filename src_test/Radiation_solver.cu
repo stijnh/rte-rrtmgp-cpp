@@ -409,7 +409,7 @@ radiation_block_work_arrays_gpu<TF>::radiation_block_work_arrays_gpu(
         const Radiation_solver_longwave<TF>* lws,
         const Radiation_solver_shortwave<TF>* sws,
         const bool recursive):
-//        memory_pool(create_pool(ncols, nlevs, nlays, switch_fluxes, switch_cloud_optics, lws, sws)),
+        memory_pool(create_pool(ncols, nlevs, nlays, switch_fluxes, switch_cloud_optics, lws, sws)),
         col_dry_subset({ncols, nlays}),
         delta_plev_subset({ncols, nlays}),
         m_air_subset({ncols, nlays}),
@@ -456,7 +456,8 @@ radiation_block_work_arrays_gpu<TF>::radiation_block_work_arrays_gpu(
     
     if(memory_pool)
     {
-        static_cast<Array_pool_gpu<TF>*>(memory_pool.get())->lock = true;
+// TODO: Enable the lock, figure out why not enough is allocated
+//        static_cast<Array_pool_gpu<TF>*>(memory_pool.get())->lock = true;
     }
 }
 

@@ -43,10 +43,8 @@ namespace Tools_gpu
 
     inline void __cuda_check_memory(const char *file, const int line)
     {
-        typedef unsigned size_type;
-
         #ifdef CUDACHECKS
-        size_type free_byte, total_byte ;
+        size_t free_byte, total_byte ;
 
         cudaError err = cudaMemGetInfo( &free_byte, &total_byte ) ;
 

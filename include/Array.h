@@ -389,7 +389,7 @@ class Array_gpu: public Pool_client<T*>
         #ifdef __CUDACC__
         ~Array_gpu() 
         {
-            if(this->pool == nullptr)
+            if(!this->is_pooled())
             {
                 cuda_safe_call(cudaFree((void*)data_ptr));
             }

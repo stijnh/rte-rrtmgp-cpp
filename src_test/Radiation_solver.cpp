@@ -421,7 +421,10 @@ radiation_block_work_arrays<TF>::radiation_block_work_arrays(
         }
     }
 
-    static_cast<Block_vector_pool<TF>*>(memory_pool.get())->lock = true;
+    if(memory_pool)
+    {
+        static_cast<Block_vector_pool<TF>*>(memory_pool.get())->lock = true;
+    }
 }
 
 template<typename TF>

@@ -453,8 +453,11 @@ radiation_block_work_arrays_gpu<TF>::radiation_block_work_arrays_gpu(
                             switch_cloud_optics, sws, recursive);
         }
     }
-
-    static_cast<Array_pool_gpu<TF>*>(memory_pool.get())->lock = true;
+    
+    if(memory_pool)
+    {
+        static_cast<Array_pool_gpu<TF>*>(memory_pool.get())->lock = true;
+    }
 }
 
 template<typename TF>

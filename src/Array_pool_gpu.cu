@@ -74,6 +74,9 @@ std::tuple<typename Array_pool_gpu<TF>::memory_storage_type::iterator, int> Arra
 template<typename TF>
 void Array_pool_gpu<TF>::acquire_memory(TF** block_, int size_)
 {
+    if (*block_ != nullptr)
+        return;
+    
     auto lookup = lookup_block_list(size_);
     
     if(std::get<0>(lookup) == blocks.end())
@@ -127,6 +130,9 @@ void Array_pool_gpu<TF>::acquire_memory(TF** block_, int size_)
 template<typename TF>
 void Array_pool_gpu<TF>::release_memory(TF** block_, int size_)
 {
+    if (*block_ == nullptr)
+        return;
+
     auto lookup = lookup_block_list(size_);
 
     if(std::get<0>(lookup) == blocks.end())

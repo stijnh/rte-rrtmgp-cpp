@@ -150,7 +150,7 @@ class Array: public Pool_client<std::vector<T>>
         Array<T,N>& operator=(const Array<T, N>&) = default; // CvH does this one need empty checking?
 
         // Implement the move constructor to set ncells back to 0.
-        Array(Array<T, N>&& array) :
+        Array(Array<T, N>&& array) : Pool_client<std::vector<T>>(std::move(array)),
             dims(std::exchange(array.dims, {})),
             ncells(std::exchange(array.ncells, 0)),
             data(std::move(array.data)),
@@ -388,7 +388,7 @@ class Array_gpu: public Pool_client<T*>
         {
             if(!this->is_pooled())
             {
-                cuda_safe_call(cudaFree((void*)data_ptr));
+                cuda_safe_call(cudaFree(data_ptr));
             }
             else
             {
@@ -400,6 +400,8 @@ class Array_gpu: public Pool_client<T*>
         #ifdef __CUDACC__
         Array_gpu& operator=(const Array_gpu<T, N>& array)
         {
+            Pool_client<T*>::operator=(array);
+
             if ( !(this->ncells == 0 && data_ptr == nullptr) )
                 throw std::runtime_error("Only arrays with uninitialized pointers can be resized");
 
@@ -418,6 +420,8 @@ class Array_gpu: public Pool_client<T*>
         #ifdef __CUDACC__
         Array_gpu& operator=(Array_gpu<T, N>&& array)
         {
+            Pool_client<T*>::operator=(std::move(array));
+            
             if ( !(this->ncells == 0 && data_ptr == nullptr) )
                 throw std::runtime_error("Only arrays with uninitialized pointers can be resized");
 
@@ -445,7 +449,7 @@ class Array_gpu: public Pool_client<T*>
         #endif
 
         #ifdef __CUDACC__
-        Array_gpu(Array_gpu<T, N>&& array) :
+        Array_gpu(Array_gpu<T, N>&& array) : Pool_client<T*>(std::move(array)),
             dims(std::exchange(array.dims, {})),
             ncells(std::exchange(array.ncells, 0)),
             data_ptr(std::exchange(array.data_ptr, nullptr)),

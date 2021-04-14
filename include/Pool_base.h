@@ -50,6 +50,19 @@ class Pool_client
 
         Pool_client(const Pool_client<T>& other):pool(nullptr){}
 
+        Pool_client(Pool_client<T>&& other):pool(std::exchange(other.pool, nullptr)){}
+
+        Pool_client& operator=(const Pool_client<T>& other)
+        {
+            return *this;
+        }
+
+        Pool_client& operator=(Pool_client<T>&& other)
+        {
+            pool = std::exchange(other.pool, nullptr);
+            return *this;
+        }
+
         virtual ~Pool_client(){}
 
         void acquire_memory()

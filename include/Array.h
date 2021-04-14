@@ -388,8 +388,15 @@ class Array_gpu: public Pool_client<T*>
 
         #ifdef __CUDACC__
         ~Array_gpu() 
-        { 
-            this->release_memory();
+        {
+            if(this->pool == nullptr)
+            {
+                cuda_safe_call(cudaFree((void*)data_ptr));
+            }
+            else
+            {
+                this->release_memory();
+            }
         }
         #endif
 
@@ -473,7 +480,14 @@ class Array_gpu: public Pool_client<T*>
             strides(calc_strides<N>(dims)),
             offsets({})
         {
-            this->acquire_memory();
+            if(pool == nullptr)
+            {
+                cuda_safe_call(cudaMalloc((void **) &data_ptr, ncells*sizeof(T)));
+            }
+            else
+            {
+                this->acquire_memory();
+            }
         }
         #endif
 
@@ -580,7 +594,8 @@ class Array_gpu: public Pool_client<T*>
         void deallocate_memory(T** v, int n) const
         {
         #ifdef __CUDACC__
-            cuda_safe_call(cudaFree(*v));
+            if (*v != nullptr)
+                cuda_safe_call(cudaFree(*v));
         #endif
             *v = nullptr;
         }

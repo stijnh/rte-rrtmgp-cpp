@@ -994,6 +994,7 @@ void Radiation_solver_shortwave<TF>::solve(
                 *(work->sw_gpt_flux_dn),
                 *(work->sw_gpt_flux_dn_dir),
                 work->rte_sw_work.get());
+                
         if(work->rte_sw_work)
         {
             work->rte_sw_work->release_memory();

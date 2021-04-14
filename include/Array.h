@@ -117,7 +117,14 @@ class Array: public Pool_client<std::vector<T>>
             strides(calc_strides<N>(dims)),
             offsets({})
         {
-            this->acquire_memory();
+            if(this->is_pooled())
+            {
+                this->acquire_memory();
+            }
+            else
+            {
+                data.resize(ncells);
+            }
         }
 
         // Create an array from copying the contents of an std::vector.
@@ -294,16 +301,6 @@ class Array: public Pool_client<std::vector<T>>
         int get_num_elements() const
         {
             return ncells;
-        }
-
-        void allocate_memory(std::vector<T>* v, int n) const
-        {
-            v->resize(n);
-        }
-
-        void deallocate_memory(std::vector<T>* v, int n) const
-        {
-            v->clear();
         }
 
     private:
@@ -583,23 +580,6 @@ class Array_gpu: public Pool_client<T*>
         {
             return ncells;
         }
-
-        void allocate_memory(T** v, int n) const
-        {
-        #ifdef __CUDACC__
-            cuda_safe_call(cudaMalloc((void**)v, n * sizeof(T)));
-        #endif
-        }
-
-        void deallocate_memory(T** v, int n) const
-        {
-        #ifdef __CUDACC__
-            if (*v != nullptr)
-                cuda_safe_call(cudaFree(*v));
-        #endif
-            *v = nullptr;
-        }
-
 
         #ifdef __CUDACC__
         inline Array_gpu<T, N> subset(

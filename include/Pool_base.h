@@ -50,17 +50,11 @@ class Pool_client
 
         Pool_client(const Pool_client<T>& other):pool(nullptr){}
 
-//        Pool_client(Pool_client<T>&& other):pool(std::exchange(other.pool, nullptr)){}
-
         virtual ~Pool_client(){}
 
         void acquire_memory()
         {
-            if(pool == nullptr)
-            {
-                allocate_memory(get_memory(), get_num_elements());
-            }
-            else
+            if(pool != nullptr)
             {
                 pool->acquire_memory(get_memory(), get_num_elements());
             }
@@ -68,11 +62,7 @@ class Pool_client
 
         void release_memory()
         {
-            if(pool == nullptr)
-            {
-                deallocate_memory(get_memory(), get_num_elements());
-            }
-            else
+            if(pool != nullptr)
             {
                 pool->release_memory(get_memory(), get_num_elements());
             }
@@ -88,10 +78,6 @@ class Pool_client
         virtual T* get_memory()=0;
 
         virtual int get_num_elements() const=0;
-
-        virtual void allocate_memory(T* memory, int num_elems) const=0;
-
-        virtual void deallocate_memory(T* memory, int num_elems) const=0;
 
     private:
 

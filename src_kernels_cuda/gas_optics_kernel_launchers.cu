@@ -8,12 +8,14 @@
 #include "Array.h"
 #include "tuner.h"
 
-
 namespace
 {
     #include "gas_optics_kernels.cu"
 }
 
+// Only dump the binary files needed for the offline kernel tuner once.
+bool dumped_lw = false;
+bool dumped_sw = false;
 
 namespace rrtmgp_kernel_launcher_cuda
 {
@@ -119,6 +121,19 @@ namespace rrtmgp_kernel_launcher_cuda
         dim3 block_gpu(block_col, block_lay, block_flav);
 
         TF tmin = std::numeric_limits<TF>::min();
+
+        if (!dumped_lw)
+	    {
+            std::cout << ncol << " " << nlay << " " << ngas << " " << nflav << " " << neta << " " << npres << " " << ntemp << " " << tmin << std::endl;
+            std::cout << press_ref_log_delta << " " << temp_ref_min << " " << temp_ref_delta << " " << press_ref_trop_log << std::endl;
+
+            std::cout << "Dumping interpolation_kernel() fields" << std::endl;
+            flavor.dump("flavor");
+            press_ref_log.dump("press_ref_log");
+            temp_ref.dump("temp_ref");
+            vmr_ref.dump("vmr_ref");
+        }
+
         interpolation_kernel<<<grid_gpu, block_gpu>>>(
                 ncol, nlay, ngas, nflav, neta, npres, ntemp, tmin,
                 flavor.ptr(), press_ref_log.ptr(), temp_ref.ptr(),
@@ -211,6 +226,22 @@ namespace rrtmgp_kernel_launcher_cuda
             block = tunings["compute_tau_rayleigh_kernel"].second;
         }
 
+        if (!dumped_sw)
+        {
+            std::cout << "Dumping compute_tau_rayleigh_kernel() fields" << std::endl;
+            std::cout << ncol << " " << nlay << " " << nbnd << " " << ngpt << " " << ngas << " " << nflav << " " << neta << " " << npres << " " << ntemp << " " << idx_h2o << std::endl;
+
+            gpoint_flavor.dump("gpoint_flavor_sw");
+            band_lims_gpt.dump("band_lims_gpt_sw");
+            krayl.dump("krayl_sw");
+            col_dry.dump("col_dry_sw");
+            col_gas.dump("col_gas_sw");
+            fminor.dump("fminor_sw");
+            jeta.dump("jeta_sw");
+            tropo.dump("tropo_sw");
+            jtemp.dump("jtemp_sw");
+        }
+
         compute_tau_rayleigh_kernel<<<grid, block>>>(
                 ncol, nlay, nbnd, ngpt,
                 ngas, nflav, neta, npres, ntemp,
@@ -222,6 +253,12 @@ namespace rrtmgp_kernel_launcher_cuda
                 fminor.ptr(), jeta.ptr(),
                 tropo.ptr(), jtemp.ptr(),
                 tau_rayleigh.ptr());
+
+        if (!dumped_sw)
+        {
+            tau_rayleigh.dump("tau_rayleigh");
+            dumped_sw = true;
+        }
     }
 
     template<typename TF>
@@ -304,6 +341,19 @@ namespace rrtmgp_kernel_launcher_cuda
             block_gpu_maj = tunings["gas_optical_depths_major_kernel"].second;
         }
 
+        if (!dumped_lw)
+        {
+            gpoint_flavor.dump("gpoint_flavor");
+            band_lims_gpt.dump("band_lims_gpt");
+            kmajor.dump("kmajor");
+            col_mix.dump("col_mix");
+            fmajor.dump("fmajor");
+            jeta.dump("jeta");
+            tropo.dump("tropo");
+            jtemp.dump("jtemp");
+            jpress.dump("jpress");
+        }
+
         run_kernel_compile_time<Gas_optical_depths_major_kernel<TF>>(
                 std::integer_sequence<int, 1, 2, 4, 8, 16, 24, 32, 48, 64>{},
                 std::integer_sequence<int, 1, 2, 4>{},
@@ -315,6 +365,29 @@ namespace rrtmgp_kernel_launcher_cuda
                 kmajor.ptr(), col_mix.ptr(), fmajor.ptr(), jeta.ptr(),
                 tropo.ptr(), jtemp.ptr(), jpress.ptr(),
                 tau.ptr());
+
+        if (!dumped_lw)
+        {
+            tau.dump("tau_after_major");
+            kminor_lower.dump("kminor_lower");
+            kminor_upper.dump("kminor_upper");
+            minor_limits_gpt_lower.dump("minor_limits_gpt_lower");
+            minor_limits_gpt_upper.dump("minor_limits_gpt_upper");
+            minor_scales_with_density_lower.dump("minor_scales_with_density_lower");
+            minor_scales_with_density_upper.dump("minor_scales_with_density_upper");
+            scale_by_complement_lower.dump("scale_by_complement_lower");
+            scale_by_complement_upper.dump("scale_by_complement_upper");
+            idx_minor_lower.dump("idx_minor_lower");
+            idx_minor_upper.dump("idx_minor_upper");
+            idx_minor_scaling_lower.dump("idx_minor_scaling_lower");
+            idx_minor_scaling_upper.dump("idx_minor_scaling_upper");
+            kminor_start_lower.dump("kminor_start_lower");
+            kminor_start_upper.dump("kminor_start_upper");
+            play.dump("play");
+            tlay.dump("tlay");
+            col_gas.dump("col_gas");
+            fminor.dump("fminor");
+        }
 
         const int nscale_lower = scale_by_complement_lower.dim(1);
         const int nscale_upper = scale_by_complement_upper.dim(1);
@@ -383,12 +456,13 @@ namespace rrtmgp_kernel_launcher_cuda
                 fminor.ptr(), jeta.ptr(), jtemp.ptr(),
                 tropo.ptr(), tau.ptr(), nullptr);
 
+        if (!dumped_lw)
+            tau.dump("tau_after_minor_tropo_one");
 
         // Upper
         idx_tropo = 0;
 
         dim3 grid_gpu_min_2{ngpt, nlay, ncol}, block_gpu_min_2;
-
 
         if (tunings.count("gas_optical_depths_minor_kernel_upper") == 0)
         {
@@ -448,8 +522,10 @@ namespace rrtmgp_kernel_launcher_cuda
                 play.ptr(), tlay.ptr(), col_gas.ptr(),
                 fminor.ptr(), jeta.ptr(), jtemp.ptr(),
                 tropo.ptr(), tau.ptr(), nullptr);
-    }
 
+        if (!dumped_lw)
+            tau.dump("tau_after_minor");
+    }
 
     template<typename TF>
     void Planck_source(
@@ -490,7 +566,7 @@ namespace rrtmgp_kernel_launcher_cuda
 
         dim3 grid_gpu(grid_gpt, grid_lay, grid_col);
         dim3 block_gpu(block_gpt, block_lay, block_col);
-        
+
         if (tunings.count("Planck_source_kernel") == 0)
         {
             std::tie(grid_gpu, block_gpu) = tune_kernel(
@@ -520,6 +596,16 @@ namespace rrtmgp_kernel_launcher_cuda
             block_gpu = tunings["Planck_source_kernel"].second;
         }
 
+        if (!dumped_lw)
+        {
+            std::cout << "Dumping Planck_source_kernel fields" << std::endl;
+            tlev.dump("tlev");
+            tsfc.dump("tsfc");
+            gpoint_bands.dump("gpoint_bands");
+            pfracin.dump("pfracin");
+            totplnk.dump("totplnk");
+        }
+
         Planck_source_kernel<<<grid_gpu, block_gpu>>>(
                 ncol, nlay, nbnd, ngpt,
                 nflav, neta, npres, ntemp, nPlanckTemp,
@@ -532,6 +618,17 @@ namespace rrtmgp_kernel_launcher_cuda
                 sfc_src.ptr(), lay_src.ptr(),
                 lev_src_inc.ptr(), lev_src_dec.ptr(),
                 sfc_src_jac.ptr());
+
+        if (!dumped_lw)
+        {
+            sfc_src.dump("sfc_src");
+            sfc_src_jac.dump("sfc_src_jac");
+            lay_src.dump("lay_src");
+            lev_src_inc.dump("lev_src_inc");
+            lev_src_dec.dump("lev_src_dec");
+
+            dumped_lw = true;
+        }
     }
 }
 

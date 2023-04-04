@@ -106,6 +106,8 @@ if(USECUDA)
   endif()
 endif()
 
+add_subdirectory(external/kernel_launcher)
+
 add_subdirectory(src_kernels)
 add_subdirectory(src)
 if(USECUDA)

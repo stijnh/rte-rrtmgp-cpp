@@ -299,8 +299,11 @@ void interpolation_kernel(
 // const int loop_unroll_factor_x = 1;
 // #endif
 
-
-template<int block_size_x, int block_size_y, int block_size_z, int max_gpt=16> __global__
+#pragma kernel set(block_size_x=256, block_size_y=1, block_size_z=1, max_gpt=16)
+#pragma kernel block_size(block_size_x, block_size_y, block_size_z)
+#pragma kernel problem_size(ngpt, nlay, ncol)
+template<int block_size_x, int block_size_y, int block_size_z, int max_gpt=16>
+__global__
 void gas_optical_depths_major_kernel(
         const int ncol, const int nlay, const int nband, const int ngpt,
         const int nflav, const int neta, const int npres, const int ntemp,
@@ -347,13 +350,13 @@ void gas_optical_depths_major_kernel(
     }
 }
 
-#ifndef kernel_tuner
- #undef block_size_x
-#endif
-
-#ifndef kernel_tuner
- #define use_shared_tau 0
-#endif
+//#ifndef kernel_tuner
+// #undef block_size_x
+//#endif
+//
+//#ifndef kernel_tuner
+// #define use_shared_tau 0
+//#endif
 
 /*
 #if use_shared_tau
@@ -521,7 +524,10 @@ void compute_tau_minor_absorption_kernel(
 #endif
 */
 
-#if use_shared_tau == 0
+//#if use_shared_tau == 0
+#pragma kernel set(block_size_x=1, block_size_y=16, block_size_z=16, max_gpt=16)
+#pragma kernel problem_size(1, nlay, ncol)
+#pragma kernel block_size(block_size_x, block_size_y, block_size_z)
 template<int block_size_x, int block_size_y, int block_size_z, int max_gpt=16> __global__
 void gas_optical_depths_minor_kernel(
         const int ncol, const int nlay, const int ngpt,
@@ -608,7 +614,7 @@ void gas_optical_depths_minor_kernel(
                 const int band_gpt = gpt_end-gpt_start;
                 const int gpt_offset = kminor_start[imnr]-1;
 
-                if constexpr (block_size_x == max_gpt)
+                if (block_size_x == max_gpt)
                 {
                     if (threadIdx.x < band_gpt)
                     {
@@ -640,7 +646,7 @@ void gas_optical_depths_minor_kernel(
         }
     }
 }
-#endif
+//#endif
 
 
 /*

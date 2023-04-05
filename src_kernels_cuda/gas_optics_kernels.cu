@@ -642,6 +642,8 @@ void gas_optical_depths_minor_kernel(
                         tau[idx_out] += ltau_minor * scaling;
                     }
                 }
+
+                __syncthreads();
             }
         }
     }

@@ -525,8 +525,8 @@ void compute_tau_minor_absorption_kernel(
 */
 
 //#if use_shared_tau == 0
-#pragma kernel set(block_size_x=1, block_size_y=16, block_size_z=16, max_gpt=16)
-#pragma kernel problem_size(1, nlay, ncol)
+#pragma kernel set(block_size_x=16, block_size_y=16, block_size_z=1, max_gpt=16)
+#pragma kernel problem_size(ngpt, nlay, ncol)
 #pragma kernel block_size(block_size_x, block_size_y, block_size_z)
 template<int block_size_x, int block_size_y, int block_size_z, int max_gpt=16> __global__
 void gas_optical_depths_minor_kernel(

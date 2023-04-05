@@ -36,9 +36,11 @@ struct Kernel: kernel_launcher::PragmaKernel {
         auto builder = kernel_launcher::PragmaKernel::build();
         builder.define("USECUDA", "1");
         builder.define("RESTRICTKEYWORD", "__restrict__");
+
 #ifdef RTE_RRTMGP_USE_CBOOL
         builder.define("RTE_RRTMGP_USE_CBOOL", "1");
 #endif
+
 #ifdef RTE_RRTMGP_SINGLE_PRECISION
         builder.define("RTE_RRTMGP_SINGLE_PRECISION", "1");
 #endif
@@ -349,69 +351,25 @@ namespace rrtmgp_kernel_launcher_cuda
         // Upper
         idx_tropo = 0;
 
-        dim3 grid_gpu_min_2(ngpt, nlay, ncol);
-        dim3 block_gpu_min_2;
-
-        Tuner_map& tunings = Tuner::get_map();
-
-        if (tunings.count("gas_optical_depths_minor_kernel_upper") == 0)
-        {
-            Float* tau_tmp = Tools_gpu::allocate_gpu<Float>(ngpt*nlay*ncol);
-            std::tie(grid_gpu_min_2, block_gpu_min_2) =
-                    tune_kernel_compile_time<Gas_optical_depths_minor_kernel>(
-                            "gas_optical_depths_minor_kernel_upper",
-                            dim3(ncol, nlay),
-                            std::integer_sequence<unsigned int, 1, 2, 4, 8, 16>{},
-                            std::integer_sequence<unsigned int, 1, 2, 4>{},
-                            std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
-                            ncol, nlay, ngpt,
-                            ngas, nflav, ntemp, neta,
-                            nminorupper,
-                            nminorkupper,
-                            idx_h2o, idx_tropo,
-                            gpoint_flavor.ptr(),
-                            kminor_upper.ptr(),
-                            minor_limits_gpt_upper.ptr(),
-                            minor_scales_with_density_upper.ptr(),
-                            scale_by_complement_upper.ptr(),
-                            idx_minor_upper.ptr(),
-                            idx_minor_scaling_upper.ptr(),
-                            kminor_start_upper.ptr(),
-                            play.ptr(), tlay.ptr(), col_gas.ptr(),
-                            fminor.ptr(), jeta.ptr(), jtemp.ptr(),
-                            tropo.ptr(), tau_tmp, nullptr);
-            Tools_gpu::free_gpu<Float>(tau_tmp);
-
-            tunings["gas_optical_depths_minor_kernel_upper"].first = grid_gpu_min_2;
-            tunings["gas_optical_depths_minor_kernel_upper"].second = block_gpu_min_2;
-        }
-        else
-        {
-            grid_gpu_min_2 = tunings["gas_optical_depths_minor_kernel_upper"].first;
-            block_gpu_min_2 = tunings["gas_optical_depths_minor_kernel_upper"].second;
-        }
-
-        run_kernel_compile_time<Gas_optical_depths_minor_kernel>(
-                std::integer_sequence<unsigned int, 1, 2, 4, 8, 16>{},
-                std::integer_sequence<unsigned int, 1, 2, 4>{},
-                std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
-                grid_gpu_min_2, block_gpu_min_2,
+        kernel_launcher::launch(
+                Kernel("gas_optical_depths_minor_kernel"),
                 ncol, nlay, ngpt,
                 ngas, nflav, ntemp, neta,
                 nminorupper,
                 nminorkupper,
                 idx_h2o, idx_tropo,
-                gpoint_flavor.ptr(),
-                kminor_upper.ptr(),
-                minor_limits_gpt_upper.ptr(),
-                minor_scales_with_density_upper.ptr(),
-                scale_by_complement_upper.ptr(),
-                idx_minor_upper.ptr(),
-                idx_minor_scaling_upper.ptr(),
-                kminor_start_upper.ptr(),
-                play.ptr(), tlay.ptr(), col_gas.ptr(),
-                fminor.ptr(), jeta.ptr(), jtemp.ptr(),
-                tropo.ptr(), tau.ptr(), nullptr);
+                gpoint_flavor,
+                kminor_upper,
+                minor_limits_gpt_upper,
+                minor_scales_with_density_upper,
+                scale_by_complement_upper,
+                idx_minor_upper,
+                idx_minor_scaling_upper,
+                kminor_start_upper,
+                play, tlay, col_gas,
+                fminor, jeta, jtemp,
+                tropo, tau,
+                kernel_launcher::cuda_span<Float>(nullptr, 0));
     }
 
 

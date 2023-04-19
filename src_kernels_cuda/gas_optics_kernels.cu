@@ -591,8 +591,6 @@ void gas_optical_depths_minor_kernel(
                                 scaling *= col_gas[idx_collay + idx_minor_scaling[imnr] * ncl] * vmr_fact * dry_fact;
                         }
                     }
-
-                    scalings[threadIdx.y][threadIdx.x] = scaling;
                 }
 
                 if (block_size_z > 1) {

@@ -1198,12 +1198,12 @@ void Gas_optics_rrtmgp_gpu::source(
     rrtmgp_kernel_launcher_cuda::Planck_source(
             ncol, nlay, nbnd, ngpt,
             nflav, neta, npres, ntemp, nPlanckTemp,
-            tlay.ptr(), tlev.ptr(), tsfc.ptr(), sfc_lay,
-            fmajor.ptr(), jeta.ptr(), tropo.ptr(), jtemp.ptr(), jpress.ptr(),
-            gpoint_bands.ptr(), band_lims_gpoint.ptr(), this->planck_frac_gpu.ptr(), this->temp_ref_min,
-            this->totplnk_delta, this->totplnk_gpu.ptr(), this->gpoint_flavor_gpu.ptr(),
-            sources.get_sfc_source().ptr(), sources.get_lay_source().ptr(), sources.get_lev_source_inc().ptr(), 
-            sources.get_lev_source_dec().ptr(), sources.get_sfc_source_jac().ptr());
+            tlay, tlev, tsfc, sfc_lay,
+            fmajor, jeta, tropo, jtemp, jpress,
+            gpoint_bands, band_lims_gpoint, this->planck_frac_gpu, this->temp_ref_min,
+            this->totplnk_delta, this->totplnk_gpu, this->gpoint_flavor_gpu,
+            sources.get_sfc_source(), sources.get_lay_source(), sources.get_lev_source_inc(), 
+            sources.get_lev_source_dec(), sources.get_sfc_source_jac());
 }
 
 

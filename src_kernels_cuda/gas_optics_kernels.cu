@@ -128,6 +128,13 @@ void zero_array_kernel(
 }
 
 
+#pragma kernel tune(block_size_x=16, 32, 64, 128, 256) default(32)
+#pragma kernel tune(block_size_y=1, 2, 4, 8, 16, 32) default(4)
+#pragma kernel tune(block_size_z=1, 2, 4, 8)
+#pragma kernel restriction(block_size_x * block_size_y * block_size_z >= 64)
+#pragma kernel restriction(block_size_x * block_size_y * block_size_z <= 1024)
+#pragma kernel block_size(block_size_x, block_size_y, block_size_z)
+#pragma kernel problem_size(ncol, nlay, ngpt)
 __global__
 void Planck_source_kernel(
         const int ncol, const int nlay, const int nband, const int ngpt,
@@ -147,9 +154,9 @@ void Planck_source_kernel(
         Float* __restrict__ lev_src_inc, Float* __restrict__ lev_src_dec,
         Float* __restrict__ sfc_src_jac)
 {
-    const int igpt = blockIdx.x*blockDim.x + threadIdx.x;
+    const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
-    const int icol = blockIdx.z*blockDim.z + threadIdx.z;
+    const int igpt = blockIdx.z*blockDim.z + threadIdx.z;
 
     if ( (icol < ncol) && (ilay < nlay) && (igpt < ngpt))
     {
@@ -299,7 +306,12 @@ void interpolation_kernel(
 // const int loop_unroll_factor_x = 1;
 // #endif
 
-#pragma kernel set(block_size_x=256, block_size_y=1, block_size_z=1, max_gpt=16)
+#pragma kernel tune(block_size_x=16, 32, 64, 128, 256) default(256)
+#pragma kernel tune(block_size_y=1, 2, 4, 8, 16, 32) default(1)
+#pragma kernel tune(block_size_z=1, 2, 4, 8)
+#pragma kernel restriction(block_size_x * block_size_y * block_size_z >= 64)
+#pragma kernel restriction(block_size_x * block_size_y * block_size_z <= 1024)
+#pragma kernel set(max_gpt=16)
 #pragma kernel block_size(block_size_x, block_size_y, block_size_z)
 #pragma kernel problem_size(ncol, nlay, ngpt)
 template<int block_size_x, int block_size_y, int block_size_z, int max_gpt=16>
@@ -525,7 +537,12 @@ void compute_tau_minor_absorption_kernel(
 */
 
 //#if use_shared_tau == 0
-#pragma kernel set(block_size_x=16, block_size_y=16, block_size_z=1, max_gpt=16)
+#pragma kernel tune(block_size_x=16, 32, 64, 128, 256) default(32)
+#pragma kernel tune(block_size_y=1, 2, 4, 8, 16, 32) default(4)
+#pragma kernel tune(block_size_z=1, 2, 4, 8)
+#pragma kernel restriction(block_size_x * block_size_y * block_size_z >= 64)
+#pragma kernel restriction(block_size_x * block_size_y * block_size_z <= 1024)
+#pragma kernel set(max_gpt = 16)
 #pragma kernel problem_size(ncol, nlay, ngpt)
 #pragma kernel block_size(block_size_x, block_size_y, block_size_z)
 #pragma kernel grid_divisors(block_size_x, block_size_y, max_gpt)

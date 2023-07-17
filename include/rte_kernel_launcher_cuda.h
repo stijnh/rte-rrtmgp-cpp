@@ -39,13 +39,13 @@ namespace rte_kernel_launcher_cuda
 
     void sw_solver_2stream(
             const int ncol, const int nlay, const int ngpt, const Bool top_at_1,
-            const Float* tau, const Float* ssa, const Float* g,
-            const Float* mu0,
-            const Float* sfc_alb_dir, const Float* sfc_alb_dif,
-            const Float* inc_flux_dir,
-            Float* flux_up, Float* flux_dn, Float* flux_dir,
-            const Bool has_dif_bc, const Float* inc_flux_dif,
-            const Bool do_broadband, Float* flux_up_loc, Float* flux_dn_loc, Float* flux_dir_loc);
+            const Array_gpu<Float, 3>& tau, const Array_gpu<Float, 3>& ssa, const Array_gpu<Float, 3>& g,
+            const Array_gpu<Float, 1>& mu0,
+            const Array_gpu<Float, 2>& sfc_alb_dir, const Array_gpu<Float, 2>& sfc_alb_dif,
+            const Array_gpu<Float, 2>& inc_flux_dir,
+            Array_gpu<Float, 3>& flux_up, Array_gpu<Float, 3>& flux_dn, Array_gpu<Float, 3>& flux_dir,
+            const Bool has_dif_bc, const Array_gpu<Float, 2>& inc_flux_dif,
+            const Bool do_broadband, Array_gpu<Float, 3>& flux_up_loc, Array_gpu<Float, 3>& flux_dn_loc, Array_gpu<Float, 3>& flux_dir_loc);
 
 
     void lw_solver_noscat_gaussquad(

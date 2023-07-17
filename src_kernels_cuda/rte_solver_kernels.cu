@@ -1,9 +1,9 @@
 #include <float.h>
 #include "Types.h"
 
-#ifndef kernel_tuner
+//#ifndef kernel_tuner
 const int loop_unroll_factor_nlay = 4;
-#endif
+//#endif
 
 
 template<typename TF> __device__ constexpr TF k_min();
@@ -182,12 +182,15 @@ void lw_solver_noscat_step_3_kernel(
 }
 
 
+#pragma kernel set(block_size_x=32, block_size_y=8)
+#pragma kernel block_size(block_size_x, block_size_y)
+#pragma kernel problem_size(ncol, ngpt)
 template<Bool top_at_1> __global__
 void sw_adding_kernel(
         const int ncol, const int nlay, const int ngpt, const Bool _top_at_1,
         const Float* __restrict__ sfc_alb_dif, const Float* __restrict__ r_dif, const Float* __restrict__ t_dif,
         const Float* __restrict__ source_dn, const Float* __restrict__ source_up, const Float* __restrict__ source_sfc,
-        Float* __restrict__ flux_up, Float* __restrict__ flux_dn, const Float* __restrict__ flux_dir,
+        Float* __restrict__ flux_up, Float* __restrict__ flux_dn, Float* __restrict__ flux_dir,
         Float* __restrict__ albedo, Float* __restrict__ src, Float* __restrict__ denom)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -581,6 +584,9 @@ void sw_2stream_function(
 }
 
 
+#pragma kernel set(block_size_x=32, block_size_y=8)
+#pragma kernel block_size(block_size_x, block_size_y)
+#pragma kernel problem_size(ncol, ngpt)
 template<Bool top_at_1> __global__
 void sw_source_2stream_kernel(
         const int ncol, const int nlay, const int ngpt,
@@ -597,8 +603,9 @@ void sw_source_2stream_kernel(
     {
         if (top_at_1)
         {
-            for (int ilay=0; ilay<nlay; ++ilay)
+            for (int index=0; index<nlay; ++index)
             {
+                int ilay = index;
 
                 Float r_dir, t_dir, t_noscat;
                 sw_2stream_function(icol, ilay, igpt,
@@ -620,8 +627,10 @@ void sw_source_2stream_kernel(
         }
         else
         {
-            for (int ilay=nlay-1; ilay>=0; --ilay)
+            for (int index=0; index < nlay; ++index)
             {
+                int ilay = nlay - index - 1;
+
                 Float r_dir, t_dir, t_noscat;
                 sw_2stream_function(icol, ilay, igpt,
                         ncol, nlay, ngpt,

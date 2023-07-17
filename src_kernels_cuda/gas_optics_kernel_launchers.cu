@@ -9,6 +9,7 @@
 #include "tools_gpu.h"
 #include "Array.h"
 #include "tuner.h"
+#include "Kernel.h"
 
 
 namespace
@@ -16,39 +17,6 @@ namespace
 #include "gas_optics_kernels.cu"
 }
 
-namespace kernel_launcher {
-    template <typename T, int N>
-    struct IntoKernelArg<Array_gpu<T, N>> {
-        static KernelArg convert(Array_gpu<T, N>& arg) {
-            return KernelArg::from_array<T>(arg.ptr(), arg.size());
-        }
-
-        static KernelArg convert(const Array_gpu<T, N>& arg) {
-            return KernelArg::from_array<const T>(arg.ptr(), arg.size());
-        }
-    };
-}
-
-struct Kernel: kernel_launcher::PragmaKernel {
-    Kernel(std::string name): kernel_launcher::PragmaKernel("gas_optics_kernels.cu", name) {}
-
-    virtual kernel_launcher::KernelBuilder build() const {
-        auto builder = kernel_launcher::PragmaKernel::build();
-        builder.define("USECUDA", "1");
-        builder.define("RESTRICTKEYWORD", "__restrict__");
-
-#ifdef RTE_RRTMGP_USE_CBOOL
-        builder.define("RTE_RRTMGP_USE_CBOOL", "1");
-#endif
-
-#ifdef RTE_RRTMGP_SINGLE_PRECISION
-        builder.define("RTE_RRTMGP_SINGLE_PRECISION", "1");
-#endif
-
-        return builder;
-    }
-
-};
 
 namespace rrtmgp_kernel_launcher_cuda
 {
@@ -316,7 +284,7 @@ namespace rrtmgp_kernel_launcher_cuda
             Array_gpu<Float, 3>& tau)
     {
         kernel_launcher::launch(
-                Kernel("gas_optical_depths_major_kernel"),
+                Kernel("gas_optical_depths_major_kernel", "gas_optics_kernels.cu"),
                 ncol, nlay, nband, ngpt,
                 nflav, neta, npres, ntemp,
                 gpoint_flavor, band_lims_gpt,
@@ -328,7 +296,7 @@ namespace rrtmgp_kernel_launcher_cuda
         int idx_tropo = 1;
 
         kernel_launcher::launch(
-                Kernel("gas_optical_depths_minor_kernel"),
+                Kernel("gas_optical_depths_minor_kernel", "gas_optics_kernels.cu"),
                 ncol, nlay, ngpt,
                 ngas, nflav, ntemp, neta,
                 nminorlower,
@@ -352,7 +320,7 @@ namespace rrtmgp_kernel_launcher_cuda
         idx_tropo = 0;
 
         kernel_launcher::launch(
-                Kernel("gas_optical_depths_minor_kernel"),
+                Kernel("gas_optical_depths_minor_kernel", "gas_optics_kernels.cu"),
                 ncol, nlay, ngpt,
                 ngas, nflav, ntemp, neta,
                 nminorupper,
@@ -377,72 +345,31 @@ namespace rrtmgp_kernel_launcher_cuda
             const int ncol, const int nlay, const int nbnd, const int ngpt,
             const int nflav, const int neta, const int npres, const int ntemp,
             const int nPlanckTemp,
-            const Float* tlay,
-            const Float* tlev,
-            const Float* tsfc,
+            const Array_gpu<Float, 2>& tlay,
+            const Array_gpu<Float, 2>& tlev,
+            const Array_gpu<Float, 1>& tsfc,
             const int sfc_lay,
-            const Float* fmajor,
-            const int* jeta,
-            const Bool* tropo,
-            const int* jtemp,
-            const int* jpress,
-            const int* gpoint_bands,
-            const int* band_lims_gpt,
-            const Float* pfracin,
+            const Array_gpu<Float, 6>& fmajor,
+            const Array_gpu<int, 4>& jeta,
+            const Array_gpu<Bool, 2>& tropo,
+            const Array_gpu<int, 2>& jtemp,
+            const Array_gpu<int, 2>& jpress,
+            const Array_gpu<int, 1>& gpoint_bands,
+            const Array_gpu<int, 2>& band_lims_gpt,
+            const Array_gpu<Float, 4>& pfracin,
             const Float temp_ref_min, const Float totplnk_delta,
-            const Float* totplnk,
-            const int* gpoint_flavor,
-            Float* sfc_src,
-            Float* lay_src,
-            Float* lev_src_inc,
-            Float* lev_src_dec,
-            Float* sfc_src_jac)
+            const Array_gpu<Float, 2>& totplnk,
+            const Array_gpu<int, 2>& gpoint_flavor,
+            Array_gpu<Float, 2>& sfc_src,
+            Array_gpu<Float, 3>& lay_src,
+            Array_gpu<Float, 3>& lev_src_inc,
+            Array_gpu<Float, 3>& lev_src_dec,
+            Array_gpu<Float, 2>& sfc_src_jac)
     {
-        Tuner_map& tunings = Tuner::get_map();
-
         const Float delta_Tsurf = Float(1.);
 
-        const int block_gpt = 16;
-        const int block_lay = 4;
-        const int block_col = 2;
-
-        const int grid_gpt = ngpt/block_gpt + (ngpt%block_gpt > 0);
-        const int grid_lay = nlay/block_lay + (nlay%block_lay > 0);
-        const int grid_col = ncol/block_col + (ncol%block_col > 0);
-
-        dim3 grid_gpu(grid_gpt, grid_lay, grid_col);
-        dim3 block_gpu(block_gpt, block_lay, block_col);
-
-        if (tunings.count("Planck_source_kernel") == 0)
-        {
-            std::tie(grid_gpu, block_gpu) = tune_kernel(
-                    "Planck_source_kernel",
-                    dim3(ngpt, nlay, ncol),
-                    {1, 2, 4},
-                    {1, 2},
-                    {1, 2, 4, 8, 16, 32, 48, 64, 96, 128, 256},
-                    Planck_source_kernel,
-                    ncol, nlay, nbnd, ngpt,
-                    nflav, neta, npres, ntemp, nPlanckTemp,
-                    tlay, tlev, tsfc, sfc_lay,
-                    fmajor, jeta, tropo, jtemp,
-                    jpress, gpoint_bands, band_lims_gpt,
-                    pfracin, temp_ref_min, totplnk_delta,
-                    totplnk, gpoint_flavor,
-                    delta_Tsurf, sfc_src, lay_src,
-                    lev_src_inc, lev_src_dec,
-                    sfc_src_jac);
-
-            tunings["Planck_source_kernel"].first = grid_gpu;
-            tunings["Planck_source_kernel"].second = block_gpu;
-        }
-        else
-        {
-            grid_gpu = tunings["Planck_source_kernel"].first;
-            block_gpu = tunings["Planck_source_kernel"].second;
-        }
-
-        Planck_source_kernel<<<grid_gpu, block_gpu>>>(
+        kernel_launcher::launch(
+                Kernel("Planck_source_kernel", "gas_optics_kernels.cu"),
                 ncol, nlay, nbnd, ngpt,
                 nflav, neta, npres, ntemp, nPlanckTemp,
                 tlay, tlev, tsfc, sfc_lay,

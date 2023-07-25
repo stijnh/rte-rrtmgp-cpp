@@ -366,7 +366,7 @@ namespace rte_kernel_launcher_cuda
             Kernel("sw_adding_kernel", "rte_solver_kernels.cu", {int(top_at_1)}),
             ncol, nlay, ngpt, top_at_1,
             sfc_alb_dif, (const Array_gpu<Float, 3>&) r_dif, (const Array_gpu<Float, 3>&) t_dif,
-            (const Array_gpu<Float, 3>&) source_dn, (const Array_gpu<Float, 3>&) source_up, (const Array_gpu<Float, 3>&) source_sfc,
+            (const Array_gpu<Float, 3>&) source_dn, (const Array_gpu<Float, 3>&) source_up, (const Array_gpu<Float, 2>&) source_sfc,
             flux_up, flux_dn, flux_dir,
             albedo, src, denom);
     }

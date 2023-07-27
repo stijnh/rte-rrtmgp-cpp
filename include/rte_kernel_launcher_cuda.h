@@ -50,14 +50,14 @@ namespace rte_kernel_launcher_cuda
 
     void lw_solver_noscat_gaussquad(
             const int ncol, const int nlay, const int ngpt, const Bool top_at_1, const int nmus,
-            const Float* secants, const Float* weights,
-            const Float* tau, const Float* lay_source,
-            const Float* lev_source_inc, const Float* lev_source_dec,
-            const Float* sfc_emis, const Float* sfc_src,
-            const Float* inc_flux,
-            Float* flux_up, Float* flux_dn,
-            const Bool do_broadband, Float* flux_up_loc, Float* flux_dn_loc,
-            const Bool do_jacobians, const Float* sfc_src_jac, Float* flux_up_jac);
+            const Array_gpu<Float, 3>& secants, const Array_gpu<Float, 2>& weights,
+            const Array_gpu<Float, 3>& tau, const Array_gpu<Float, 3>& lay_source,
+            const Array_gpu<Float, 3>& lev_source_inc, const Array_gpu<Float, 3>& lev_source_dec,
+            const Array_gpu<Float, 2>& sfc_emis, const Array_gpu<Float, 2>& sfc_src,
+            const Array_gpu<Float, 2>& inc_flux,
+            Array_gpu<Float, 3>& flux_up, Array_gpu<Float, 3>& flux_dn,
+            const Bool do_broadband, Array_gpu<Float, 3>& flux_up_loc, Array_gpu<Float, 3>& flux_dn_loc,
+            const Bool do_jacobians, const Array_gpu<Float, 2>& sfc_src_jac, Array_gpu<Float, 3>& flux_up_jac);
 
 
     void lw_secants_array(

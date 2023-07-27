@@ -92,41 +92,14 @@ void lw_transport_noscat_kernel(
 }
 
 
-__global__
-void lw_solver_noscat_step_1_kernel(
-        const int ncol, const int nlay, const int ngpt, const Float eps, const Bool top_at_1,
-        const Float* __restrict__ D, const Float* __restrict__ weight, const Float* __restrict__ tau, const Float* __restrict__ lay_source,
-        const Float* __restrict__ lev_source_inc, const Float* __restrict__ lev_source_dec, const Float* __restrict__ sfc_emis,
-        const Float* __restrict__ sfc_src, Float* __restrict__ radn_up, Float* __restrict__ radn_dn,
-        const Float* __restrict__ sfc_src_jac, Float* __restrict__ radn_up_jac, Float* __restrict__ tau_loc,
-        Float* __restrict__ trans, Float* __restrict__ source_dn, Float* __restrict__ source_up,
-        Float* __restrict__ source_sfc, Float* __restrict__ sfc_albedo, Float* __restrict__ source_sfc_jac)
-{
-    const int icol = blockIdx.x*blockDim.x + threadIdx.x;
-    const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
-    const int igpt = blockIdx.z*blockDim.z + threadIdx.z;
-
-    if ( (icol < ncol) && (ilay < nlay) && (igpt < ngpt) )
-    {
-        const int idx = icol + ilay*ncol + igpt*ncol*nlay;
-        const int idx_D = icol + igpt*ncol;
-        tau_loc[idx] = tau[idx] * D[idx_D];
-        trans[idx] = exp(-tau_loc[idx]);
-
-        const Float fact = (tau_loc[idx]>0. && (tau_loc[idx]*tau_loc[idx])>eps) ? (Float(1.) - trans[idx]) / tau_loc[idx] - trans[idx] : tau_loc[idx] * (Float(.5) - Float(1.)/Float(3.)*tau_loc[idx]);
-
-        Float src_inc = (Float(1.) - trans[idx]) * lev_source_inc[idx] + Float(2.) * fact * (lay_source[idx]-lev_source_inc[idx]);
-        Float src_dec = (Float(1.) - trans[idx]) * lev_source_dec[idx] + Float(2.) * fact * (lay_source[idx]-lev_source_dec[idx]);
-
-        source_dn[idx] = top_at_1 ? src_inc : src_dec;
-        source_up[idx] = top_at_1 ? src_dec : src_inc;
-    }
-}
-
-
+#pragma kernel tune(block_size_x=64, 128, 256, 512, 1024)
+#pragma kernel tune(block_size_y=1, 2, 4)
+#pragma kernel block_size(block_size_x, block_size_y)
+#pragma kernel problem_size(ncol, ngpt)
+template <bool top_at_1>
 __global__
 void lw_solver_noscat_step_2_kernel(
-        const int ncol, const int nlay, const int ngpt, const Float eps, const Bool top_at_1,
+        const int ncol, const int nlay, const int ngpt, const Float eps, const Bool top_at_1_,
         const Float* __restrict__ D, const Float* __restrict__ weight, const Float* __restrict__ tau, const Float* __restrict__ lay_source,
         const Float* __restrict__ lev_source_inc, const Float* __restrict__ lev_source_dec, const Float* __restrict__ sfc_emis,
         const Float* __restrict__ sfc_src, Float* __restrict__ radn_up, Float* __restrict__ radn_dn,
@@ -139,45 +112,47 @@ void lw_solver_noscat_step_2_kernel(
 
     if ( (icol < ncol) && (igpt < ngpt) )
     {
-        const int idx2d = icol + igpt*ncol;
-        sfc_albedo[idx2d] = Float(1.) - sfc_emis[idx2d];
-        source_sfc[idx2d] = sfc_emis[idx2d] * sfc_src[idx2d];
-        source_sfc_jac[idx2d] = sfc_emis[idx2d] * sfc_src_jac[idx2d];
+        for (int ilay = 0; ilay < nlay; ilay++)
+        {
+            const int idx = icol + ilay*ncol + igpt*ncol*nlay;
+            const int idx_D = icol + igpt*ncol;
+            tau_loc[idx] = tau[idx] * D[idx_D];
+            trans[idx] = exp(-tau_loc[idx]);
 
-        const Float pi = acos(Float(-1.));
-        const int idx_top = icol + (top_at_1 ? 0 : nlay)*ncol + igpt*ncol*(nlay+1);
-        radn_dn[idx_top] = radn_dn[idx_top] / (Float(2.) * pi * weight[0]);
+            const Float fact = (tau_loc[idx]>0. && (tau_loc[idx]*tau_loc[idx])>eps) ? (Float(1.) - trans[idx]) / tau_loc[idx] - trans[idx] : tau_loc[idx] * (Float(.5) - Float(1.)/Float(3.)*tau_loc[idx]);
+
+            Float src_inc = (Float(1.) - trans[idx]) * lev_source_inc[idx] + Float(2.) * fact * (lay_source[idx]-lev_source_inc[idx]);
+            Float src_dec = (Float(1.) - trans[idx]) * lev_source_dec[idx] + Float(2.) * fact * (lay_source[idx]-lev_source_dec[idx]);
+
+            source_dn[idx] = top_at_1 ? src_inc : src_dec;
+            source_up[idx] = top_at_1 ? src_dec : src_inc;
+        }
+
+        {
+            const int idx2d = icol + igpt * ncol;
+            sfc_albedo[idx2d] = Float(1.) - sfc_emis[idx2d];
+            source_sfc[idx2d] = sfc_emis[idx2d] * sfc_src[idx2d];
+            source_sfc_jac[idx2d] = sfc_emis[idx2d] * sfc_src_jac[idx2d];
+
+            const Float pi = acos(Float(-1.));
+            const int idx_top = icol + (top_at_1 ? 0 : nlay) * ncol + igpt * ncol * (nlay + 1);
+            radn_dn[idx_top] = radn_dn[idx_top] / (Float(2.) * pi * weight[0]);
 
 
-        lw_transport_noscat_kernel(
-                icol, igpt, ncol, nlay, ngpt, top_at_1, tau, trans, sfc_albedo, source_dn,
-                source_up, source_sfc, radn_up, radn_dn, source_sfc_jac, radn_up_jac);
-    }
-}
+            lw_transport_noscat_kernel(
+                    icol, igpt, ncol, nlay, ngpt, top_at_1, tau, trans, sfc_albedo, source_dn,
+                    source_up, source_sfc, radn_up, radn_dn, source_sfc_jac, radn_up_jac);
+        }
 
+        for (int ilev = 0; ilev < nlay + 1; ilev++)
+        {
+            const Float pi = acos(Float(-1.));
 
-__global__
-void lw_solver_noscat_step_3_kernel(
-        const int ncol, const int nlay, const int ngpt, const Float eps, const Bool top_at_1,
-        const Float* __restrict__ D, const Float* __restrict__ weight, const Float* __restrict__ tau, const Float* __restrict__ lay_source,
-        const Float* __restrict__ lev_source_inc, const Float* __restrict__ lev_source_dec, const Float* __restrict__ sfc_emis,
-        const Float* __restrict__ sfc_src, Float* __restrict__ radn_up, Float* __restrict__ radn_dn,
-        const Float* __restrict__ sfc_src_jac, Float* __restrict__ radn_up_jac, Float* __restrict__ tau_loc,
-        Float* __restrict__ trans, Float* __restrict__ source_dn, Float* __restrict__ source_up,
-        Float* __restrict__ source_sfc, Float* __restrict__ sfc_albedo, Float* __restrict__ source_sfc_jac)
-{
-    const int icol = blockIdx.x*blockDim.x + threadIdx.x;
-    const int ilev = blockIdx.y*blockDim.y + threadIdx.y;
-    const int igpt = blockIdx.z*blockDim.z + threadIdx.z;
-
-    if ( (icol < ncol) && (ilev < (nlay+1)) && (igpt < ngpt) )
-    {
-        const Float pi = acos(Float(-1.));
-
-        const int idx = icol + ilev*ncol + igpt*ncol*(nlay+1);
-        radn_up[idx] *= Float(2.) * pi * weight[0];
-        radn_dn[idx] *= Float(2.) * pi * weight[0];
-        radn_up_jac[idx] *= Float(2.) * pi * weight[0];
+            const int idx = icol + ilev*ncol + igpt*ncol*(nlay+1);
+            radn_up[idx] *= Float(2.) * pi * weight[0];
+            radn_dn[idx] *= Float(2.) * pi * weight[0];
+            radn_up_jac[idx] *= Float(2.) * pi * weight[0];
+        }
     }
 }
 

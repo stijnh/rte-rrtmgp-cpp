@@ -117,13 +117,17 @@ void lw_solver_noscat_step_2_kernel(
             const int idx = icol + ilay*ncol + igpt*ncol*nlay;
             const int idx_D = icol + igpt*ncol;
             tau_loc[idx] = tau[idx] * D[idx_D];
-            trans[idx] = exp(-tau_loc[idx]);
+            const Float trans_loc = ::exp(-tau_loc[idx]);
+            const Float trans_inv = -::expm1(-tau_loc[idx]);  // 1 - trans_loc
 
-            const Float fact = (tau_loc[idx]>0. && (tau_loc[idx]*tau_loc[idx])>eps) ? (Float(1.) - trans[idx]) / tau_loc[idx] - trans[idx] : tau_loc[idx] * (Float(.5) - Float(1.)/Float(3.)*tau_loc[idx]);
+            const Float fact = (tau_loc[idx]>0. && (tau_loc[idx]*tau_loc[idx])>eps)
+                    ? trans_inv / tau_loc[idx] - trans_loc
+                    : tau_loc[idx] * (Float(.5) - Float(1.)/Float(3.)*tau_loc[idx]);
 
-            Float src_inc = (Float(1.) - trans[idx]) * lev_source_inc[idx] + Float(2.) * fact * (lay_source[idx]-lev_source_inc[idx]);
-            Float src_dec = (Float(1.) - trans[idx]) * lev_source_dec[idx] + Float(2.) * fact * (lay_source[idx]-lev_source_dec[idx]);
+            Float src_inc = trans_inv * lev_source_inc[idx] + Float(2.) * fact * (lay_source[idx]-lev_source_inc[idx]);
+            Float src_dec = trans_inv * lev_source_dec[idx] + Float(2.) * fact * (lay_source[idx]-lev_source_dec[idx]);
 
+            trans[idx] = trans_loc;
             source_dn[idx] = top_at_1 ? src_inc : src_dec;
             source_up[idx] = top_at_1 ? src_dec : src_inc;
         }

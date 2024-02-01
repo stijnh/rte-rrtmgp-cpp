@@ -433,8 +433,8 @@ Gas_optics_rrtmgp_gpu::Gas_optics_rrtmgp_gpu(
         const Array<Float,1>& press_ref,
         const Float press_ref_trop,
         const Array<Float,1>& temp_ref,
-        const Float temp_ref_p,
-        const Float temp_ref_t,
+        const TempType temp_ref_p,
+        const TempType temp_ref_t,
         const Array<Float,3>& vmr_ref,
         const Array<Float,4>& kmajor,
         const Array<Float,3>& kminor_lower,
@@ -905,15 +905,15 @@ void Gas_optics_rrtmgp_gpu::get_col_dry(
 
 // Gas optics solver longwave variant.
 void Gas_optics_rrtmgp_gpu::gas_optics(
-        const Array_gpu<Float,2>& play,
-        const Array_gpu<Float,2>& plev,
-        const Array_gpu<Float,2>& tlay,
-        const Array_gpu<Float,1>& tsfc,
+        const Array_gpu<PressureType,2>& play,
+        const Array_gpu<PressureType,2>& plev,
+        const Array_gpu<TempType,2>& tlay,
+        const Array_gpu<TempType,1>& tsfc,
         const Gas_concs_gpu& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         Source_func_lw_gpu& sources,
         const Array_gpu<Float,2>& col_dry,
-        const Array_gpu<Float,2>& tlev)
+        const Array_gpu<TempType,2>& tlev)
 {
     const int ncol = play.dim(1);
     const int nlay = play.dim(2);
@@ -945,9 +945,9 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
 
 // Gas optics solver shortwave variant.
 void Gas_optics_rrtmgp_gpu::gas_optics(
-        const Array_gpu<Float,2>& play,
-        const Array_gpu<Float,2>& plev,
-        const Array_gpu<Float,2>& tlay,
+        const Array_gpu<PressureType,2>& play,
+        const Array_gpu<PressureType,2>& plev,
+        const Array_gpu<TempType,2>& tlay,
         const Gas_concs_gpu& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         Array_gpu<Float,2>& toa_src,
@@ -979,9 +979,9 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
 
 void Gas_optics_rrtmgp_gpu::compute_gas_taus(
         const int ncol, const int nlay, const int ngpt, const int nband,
-        const Array_gpu<Float,2>& play,
-        const Array_gpu<Float,2>& plev,
-        const Array_gpu<Float,2>& tlay,
+        const Array_gpu<PressureType,2>& play,
+        const Array_gpu<PressureType,2>& plev,
+        const Array_gpu<TempType,2>& tlay,
         const Gas_concs_gpu& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         Array_gpu<int,2>& jtemp, Array_gpu<int,2>& jpress,
@@ -1166,13 +1166,13 @@ void Gas_optics_rrtmgp_gpu::combine_abs_and_rayleigh(
 
 void Gas_optics_rrtmgp_gpu::source(
         const int ncol, const int nlay, const int nbnd, const int ngpt,
-        const Array_gpu<Float,2>& play, const Array_gpu<Float,2>& plev,
-        const Array_gpu<Float,2>& tlay, const Array_gpu<Float,1>& tsfc,
+        const Array_gpu<PressureType,2>& play, const Array_gpu<PressureType,2>& plev,
+        const Array_gpu<TempType,2>& tlay, const Array_gpu<TempType,1>& tsfc,
         const Array_gpu<int,2>& jtemp, const Array_gpu<int,2>& jpress,
         const Array_gpu<int,4>& jeta, const Array_gpu<Bool,2>& tropo,
         const Array_gpu<Float,6>& fmajor,
         Source_func_lw_gpu& sources,
-        const Array_gpu<Float,2>& tlev)
+        const Array_gpu<TempType,2>& tlev)
 {
     const int nflav = this->get_nflav();
     const int neta = this->get_neta();

@@ -545,8 +545,8 @@ void Gas_optics_rrtmgp::init_abs_coeffs(
         const Array<Float,1>& press_ref,
         const Array<Float,1>& temp_ref,
         const Float press_ref_trop,
-        const Float temp_ref_p,
-        const Float temp_ref_t,
+        const TempType temp_ref_p,
+        const TempType temp_ref_t,
         const Array<Float,3>& vmr_ref,
         const Array<Float,4>& kmajor,
         const Array<Float,3>& kminor_lower,
@@ -794,15 +794,15 @@ void Gas_optics_rrtmgp::get_col_dry(
 
 // Gas optics solver longwave variant.
 void Gas_optics_rrtmgp::gas_optics(
-        const Array<Float,2>& play,
-        const Array<Float,2>& plev,
-        const Array<Float,2>& tlay,
-        const Array<Float,1>& tsfc,
+        const Array<PressureType,2>& play,
+        const Array<PressureType,2>& plev,
+        const Array<TempType,2>& tlay,
+        const Array<TempType,1>& tsfc,
         const Gas_concs& gas_desc,
         std::unique_ptr<Optical_props_arry>& optical_props,
         Source_func_lw& sources,
         const Array<Float,2>& col_dry,
-        const Array<Float,2>& tlev) const
+        const Array<TempType,2>& tlev) const
 {
     const int ncol = play.dim(1);
     const int nlay = play.dim(2);
@@ -851,9 +851,9 @@ void Gas_optics_rrtmgp::gas_optics(
 
 // Gas optics solver shortwave variant.
 void Gas_optics_rrtmgp::gas_optics(
-        const Array<Float,2>& play,
-        const Array<Float,2>& plev,
-        const Array<Float,2>& tlay,
+        const Array<PressureType,2>& play,
+        const Array<PressureType,2>& plev,
+        const Array<TempType,2>& tlay,
         const Gas_concs& gas_desc,
         std::unique_ptr<Optical_props_arry>& optical_props,
         Array<Float,2>& toa_src,
@@ -920,12 +920,12 @@ namespace rrtmgp_kernel_launcher
             const Array<Float,1>& press_ref_log,
             const Array<Float,1>& temp_ref,
             Float press_ref_log_delta,
-            Float temp_ref_min,
-            Float temp_ref_delta,
+            TempType temp_ref_min,
+            TempType temp_ref_delta,
             Float press_ref_trop_log,
             const Array<Float,3>& vmr_ref,
-            const Array<Float,2>& play,
-            const Array<Float,2>& tlay,
+            const Array<PressureType,2>& play,
+            const Array<TempType,2>& tlay,
             Array<Float,3>& col_gas,
             Array<int,2>& jtemp,
             Array<Float,6>& fmajor, Array<Float,5>& fminor,
@@ -945,8 +945,8 @@ namespace rrtmgp_kernel_launcher
                 &temp_ref_delta,
                 &press_ref_trop_log,
                 const_cast<Float*>(vmr_ref.ptr()),
-                const_cast<Float*>(play.ptr()),
-                const_cast<Float*>(tlay.ptr()),
+                const_cast<PressureType*>(play.ptr()),
+                const_cast<TempType*>(tlay.ptr()),
                 col_gas.ptr(),
                 jtemp.ptr(),
                 fmajor.ptr(), fminor.ptr(),
@@ -982,8 +982,8 @@ namespace rrtmgp_kernel_launcher
             const Array<int,1>& kminor_start_upper,
             const Array<Bool,2>& tropo,
             const Array<Float,4>& col_mix, const Array<Float,6>& fmajor,
-            const Array<Float,5>& fminor, const Array<Float,2>& play,
-            const Array<Float,2>& tlay, Array<Float,3>& col_gas,
+            const Array<Float,5>& fminor, const Array<PressureType,2>& play,
+            const Array<TempType,2>& tlay, Array<Float,3>& col_gas,
             const Array<int,4>& jeta, const Array<int,2>& jtemp,
             const Array<int,2>& jpress, Array<Float,3>& tau)
     {
@@ -1012,7 +1012,7 @@ namespace rrtmgp_kernel_launcher
             const_cast<int*>(kminor_start_upper.ptr()),
             const_cast<Bool*>(tropo.ptr()),
             const_cast<Float*>(col_mix.ptr()), const_cast<Float*>(fmajor.ptr()), const_cast<Float*>(fminor.ptr()),
-            const_cast<Float*>(play.ptr()), const_cast<Float*>(tlay.ptr()), const_cast<Float*>(col_gas.ptr()),
+            const_cast<PressureType*>(play.ptr()), const_cast<TempType*>(tlay.ptr()), const_cast<Float*>(col_gas.ptr()),
             const_cast<int*>(jeta.ptr()), const_cast<int*>(jtemp.ptr()), const_cast<int*>(jpress.ptr()),
             tau.ptr());
     }
@@ -1060,9 +1060,9 @@ namespace rrtmgp_kernel_launcher
     void compute_Planck_source(
             int ncol, int nlay, int nbnd, int ngpt,
             int nflav, int neta, int npres, int ntemp, int nPlanckTemp,
-            const Array<Float,2>& tlay, const Array<Float,2>& tlev, const Array<Float,1>& tsfc, int sfc_lay,
+            const Array<TempType,2>& tlay, const Array<TempType,2>& tlev, const Array<TempType,1>& tsfc, int sfc_lay,
             const Array<Float,6>& fmajor, const Array<int,4>& jeta, const Array<Bool,2>& tropo, const Array<int,2>& jtemp, const Array<int,2>& jpress,
-            const Array<int,1>& gpoint_bands, const Array<int,2>& band_lims_gpt, const Array<Float,4>& pfracin, Float temp_ref_min,
+            const Array<int,1>& gpoint_bands, const Array<int,2>& band_lims_gpt, const Array<Float,4>& pfracin, TempType temp_ref_min,
             Float totplnk_delta, const Array<Float,2>& totplnk, const Array<int,2>& gpoint_flavor,
             Array<Float,2>& sfc_src, Array<Float,3>& lay_src, Array<Float,3>& lev_src_inc, Array<Float,3>& lev_src_dec,
             Array<Float,2>& sfc_src_jac)
@@ -1070,9 +1070,9 @@ namespace rrtmgp_kernel_launcher
         rrtmgp_kernels::rrtmgp_compute_Planck_source(
                 &ncol, &nlay, &nbnd, &ngpt,
                 &nflav, &neta, &npres, &ntemp, &nPlanckTemp,
-                const_cast<Float*>(tlay.ptr()),
-                const_cast<Float*>(tlev.ptr()),
-                const_cast<Float*>(tsfc.ptr()),
+                const_cast<TempType*>(tlay.ptr()),
+                const_cast<TempType*>(tlev.ptr()),
+                const_cast<TempType*>(tsfc.ptr()),
                 &sfc_lay,
                 const_cast<Float*>(fmajor.ptr()),
                 const_cast<int*>(jeta.ptr()),
@@ -1089,9 +1089,9 @@ namespace rrtmgp_kernel_launcher
 
 void Gas_optics_rrtmgp::compute_gas_taus(
         const int ncol, const int nlay, const int ngpt, const int nband,
-        const Array<Float,2>& play,
-        const Array<Float,2>& plev,
-        const Array<Float,2>& tlay,
+        const Array<PressureType,2>& play,
+        const Array<PressureType,2>& plev,
+        const Array<TempType,2>& tlay,
         const Gas_concs& gas_desc,
         std::unique_ptr<Optical_props_arry>& optical_props,
         Array<int,2>& jtemp, Array<int,2>& jpress,
@@ -1311,13 +1311,13 @@ void Gas_optics_rrtmgp::combine_abs_and_rayleigh(
 
 void Gas_optics_rrtmgp::source(
         const int ncol, const int nlay, const int nbnd, const int ngpt,
-        const Array<Float,2>& play, const Array<Float,2>& plev,
-        const Array<Float,2>& tlay, const Array<Float,1>& tsfc,
+        const Array<PressureType,2>& play, const Array<PressureType,2>& plev,
+        const Array<TempType,2>& tlay, const Array<TempType,1>& tsfc,
         const Array<int,2>& jtemp, const Array<int,2>& jpress,
         const Array<int,4>& jeta, const Array<Bool,2>& tropo,
         const Array<Float,6>& fmajor,
         Source_func_lw& sources,
-        const Array<Float,2>& tlev) const
+        const Array<TempType,2>& tlev) const
 {
     // CvH Assume tlev is available.
     // Compute internal (Planck) source functions at layers and levels,

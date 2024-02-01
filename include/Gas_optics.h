@@ -29,6 +29,7 @@
 
 #include "Array.h"
 #include "Optical_props.h"
+#include "data_types.h"
 
 // Forward declarations.
 class Gas_concs_gpu;
@@ -54,26 +55,26 @@ class Gas_optics : public Optical_props
         virtual Float get_press_ref_min() const = 0;
         virtual Float get_press_ref_max() const = 0;
 
-        virtual Float get_temp_min() const = 0;
-        virtual Float get_temp_max() const = 0;
+        virtual TempType get_temp_min() const = 0;
+        virtual TempType get_temp_max() const = 0;
 
         // Longwave variant.
         virtual void gas_optics(
                 const Array<Float,2>& play,
                 const Array<Float,2>& plev,
-                const Array<Float,2>& tlay,
-                const Array<Float,1>& tsfc,
+                const Array<TempType,2>& tlay,
+                const Array<TempType,1>& tsfc,
                 const Gas_concs& gas_desc,
                 std::unique_ptr<Optical_props_arry>& optical_props,
                 Source_func_lw& sources,
                 const Array<Float,2>& col_dry,
-                const Array<Float,2>& tlev) const = 0;
+                const Array<TempType,2>& tlev) const = 0;
 
         // Shortwave variant.
         virtual void gas_optics(
                 const Array<Float,2>& play,
                 const Array<Float,2>& plev,
-                const Array<Float,2>& tlay,
+                const Array<TempType,2>& tlay,
                 const Gas_concs& gas_desc,
                 std::unique_ptr<Optical_props_arry>& optical_props,
                 Array<Float,2>& toa_src,
@@ -98,29 +99,29 @@ class Gas_optics_gpu : public Optical_props_gpu
         virtual bool source_is_internal() const = 0;
         virtual bool source_is_external() const = 0;
 
-        virtual Float get_press_ref_min() const = 0;
-        virtual Float get_press_ref_max() const = 0;
+        virtual PressureType get_press_ref_min() const = 0;
+        virtual PressureType get_press_ref_max() const = 0;
 
-        virtual Float get_temp_min() const = 0;
-        virtual Float get_temp_max() const = 0;
+        virtual TempType get_temp_min() const = 0;
+        virtual TempType get_temp_max() const = 0;
 
         // Longwave variant.
         virtual void gas_optics(
-                const Array_gpu<Float,2>& play,
-                const Array_gpu<Float,2>& plev,
-                const Array_gpu<Float,2>& tlay,
-                const Array_gpu<Float,1>& tsfc,
+                const Array_gpu<PressureType,2>& play,
+                const Array_gpu<PressureType,2>& plev,
+                const Array_gpu<TempType,2>& tlay,
+                const Array_gpu<TempType,1>& tsfc,
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Source_func_lw_gpu& sources,
                 const Array_gpu<Float,2>& col_dry,
-                const Array_gpu<Float,2>& tlev) = 0;
+                const Array_gpu<TempType,2>& tlev) = 0;
 
         // Shortwave variant.
         virtual void gas_optics(
-                const Array_gpu<Float,2>& play,
-                const Array_gpu<Float,2>& plev,
-                const Array_gpu<Float,2>& tlay,
+                const Array_gpu<PressureType,2>& play,
+                const Array_gpu<PressureType,2>& plev,
+                const Array_gpu<TempType,2>& tlay,
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Array_gpu<Float,2>& toa_src,

@@ -26,6 +26,7 @@
 #define GAS_OPTICS_RRTMGP_KERNELS_CUDA_H
 
 #include "types.h"
+#include "data_types.h"
 
 
 namespace Gas_optics_rrtmgp_kernels_cuda
@@ -46,12 +47,12 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const Float* press_ref_log,
             const Float* temp_ref,
             Float press_ref_log_delta,
-            Float temp_ref_min,
-            Float temp_ref_delta,
+            TempType temp_ref_min,
+            TempType temp_ref_delta,
             Float press_ref_trop_log,
             const Float* vmr_ref,
-            const Float* play,
-            const Float* tlay,
+            const PressureType* play,
+            const TempType* tlay,
             Float* col_gas,
             int* jtemp,
             Float* fmajor, Float* fminor,
@@ -102,8 +103,8 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int* kminor_start_upper,
             const Bool* tropo,
             const Float* col_mix, const Float* fmajor,
-            const Float* fminor, const Float* play,
-            const Float* tlay, const Float* col_gas,
+            const Float* fminor, const PressureType* play,
+            const TempType* tlay, const Float* col_gas,
             const int* jeta, const int* jtemp,
             const int* jpress, Float* tau);
 
@@ -111,9 +112,9 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int ncol, const int nlay, const int nbnd, const int ngpt,
             const int nflav, const int neta, const int npres, const int ntemp,
             const int nPlanckTemp,
-            const Float* tlay,
-            const Float* tlev,
-            const Float* tsfc,
+            const TempType* tlay,
+            const TempType* tlev,
+            const TempType* tsfc,
             const int sfc_lay,
             const Float* fmajor,
             const int* jeta,

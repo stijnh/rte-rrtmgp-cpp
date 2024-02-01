@@ -26,6 +26,7 @@
 #define RRTMGP_KERNELS_H
 
 #include "types.h"
+#include "data_types.h"
 
 
 // Kernels of fluxes.
@@ -64,12 +65,12 @@ namespace rrtmgp_kernels
                 Float* press_ref_log,
                 Float* temp_ref,
                 Float* press_ref_log_delta,
-                Float* temp_ref_min,
-                Float* temp_ref_delta,
+                TempType* temp_ref_min,
+                TempType* temp_ref_delta,
                 Float* press_ref_trop_log,
                 Float* vmr_ref,
-                Float* play,
-                Float* tlay,
+                PressureType* play,
+                TempType* tlay,
                 Float* col_gas,
                 int* jtemp,
                 Float* fmajor, Float* fminor,
@@ -103,7 +104,7 @@ namespace rrtmgp_kernels
             int* kminor_start_upper,
             Bool* tropo,
             Float* col_mix, Float* fmajor, Float* fminor,
-            Float* play, Float* tlay, Float* col_gas,
+            PressureType* play, TempType* tlay, Float* col_gas,
             int* jeta, int* jtemp, int* jpress,
             Float* tau);
 
@@ -119,9 +120,9 @@ namespace rrtmgp_kernels
     extern "C" void rrtmgp_compute_Planck_source(
             int* ncol, int* nlay, int* nbnd, int* ngpt,
             int* nflav, int* neta, int* npres, int* ntemp, int* nPlanckTemp,
-            Float* tlay, Float* tlev, Float* tsfc, int* sfc_lay,
+            TempType* tlay, TempType* tlev, TempType* tsfc, int* sfc_lay,
             Float* fmajor, int* jeta, Bool* tropo, int* jtemp, int* jpress,
-            int* gpoint_bands, int* band_lims_gpt, Float* pfracin, Float* temp_ref_min,
+            int* gpoint_bands, int* band_lims_gpt, Float* pfracin, TempType* temp_ref_min,
             Float* totplnk_delta, Float* totplnk, int* gpoint_flavor,
             Float* sfc_src, Float* lay_src, Float* lev_src, Float* lev_source_dec,
             Float* sfc_src_jac);

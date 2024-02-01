@@ -418,12 +418,12 @@ void solve_radiation(int argc, char** argv)
 
         auto run_solver = [&]()
         {
-            Array_gpu<Float,2> p_lay_gpu(p_lay);
-            Array_gpu<Float,2> p_lev_gpu(p_lev);
-            Array_gpu<Float,2> t_lay_gpu(t_lay);
-            Array_gpu<Float,2> t_lev_gpu(t_lev);
+            Array_gpu<PressureType,2> p_lay_gpu(p_lay);
+            Array_gpu<PressureType,2> p_lev_gpu(p_lev);
+            Array_gpu<TempType,2> t_lay_gpu(t_lay);
+            Array_gpu<TempType,2> t_lev_gpu(t_lev);
             Array_gpu<Float,2> col_dry_gpu(col_dry);
-            Array_gpu<Float,1> t_sfc_gpu(t_sfc);
+            Array_gpu<TempType,1> t_sfc_gpu(t_sfc);
             Array_gpu<Float,2> emis_sfc_gpu(emis_sfc);
             Array_gpu<Float,2> lwp_gpu(lwp);
             Array_gpu<Float,2> iwp_gpu(iwp);
@@ -631,8 +631,8 @@ void solve_radiation(int argc, char** argv)
         {
             Array_gpu<Float,2> p_lay_gpu(p_lay);
             Array_gpu<Float,2> p_lev_gpu(p_lev);
-            Array_gpu<Float,2> t_lay_gpu(t_lay);
-            Array_gpu<Float,2> t_lev_gpu(t_lev);
+            Array_gpu<TempType,2> t_lay_gpu(t_lay);
+            Array_gpu<TempType,2> t_lev_gpu(t_lev);
             Array_gpu<Float,2> col_dry_gpu(col_dry);
             Array_gpu<Float,2> sfc_alb_dir_gpu(sfc_alb_dir);
             Array_gpu<Float,2> sfc_alb_dif_gpu(sfc_alb_dif);

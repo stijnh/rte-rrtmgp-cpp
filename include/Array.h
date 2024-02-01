@@ -333,6 +333,28 @@ void fill_kernel(
     }
 }
 
+template<typename T, typename U> __global__
+void convert_kernel(
+        T* __restrict__ output,
+        const U* __restrict__ input,
+        const int ncells)
+{
+    const int idx = blockIdx.x*blockDim.x + threadIdx.x;
+
+    if (idx < ncells)
+    {
+        output[idx] = U(input[idx]);
+    }
+}
+
+template <typename T, typename U>
+void cuda_convert(T* output, const U* input, int ncells) {
+    int block_size = 256;
+    int grid_size = ncells / block_size + 1;
+    convert_kernel<<<grid_size, block_size>>>(output, input, ncells);
+    cuda_check_error();
+    cuda_safe_call(cudaDeviceSynchronize());
+}
 #endif
 
 
@@ -340,6 +362,9 @@ template<typename T, int N>
 class Array_gpu
 {
     public:
+        template <typename, int>
+        friend class Array_gpu;
+
         // Create an empty array, without dimensions.
         Array_gpu() :
             dims({}),
@@ -368,22 +393,47 @@ class Array_gpu
             ncells = array.ncells;
             strides = array.strides;
             offsets = array.offsets;
+            is_view = array.is_view;
 
             if (array.is_view)
             {
-                is_view = true;
                 data_ptr = array.data_ptr;
-            }
-            else if (this->ncells == 0)
-            {
-                is_view = false;
-                data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
-                cuda_safe_call(cudaMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), cudaMemcpyDeviceToDevice));
             }
             else
             {
+                if (this->ncells == 0)
+                {
+                    this->ncells = array.ncells;
+                    data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
+                }
+
                 cuda_safe_call(cudaMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), cudaMemcpyDeviceToDevice));
             }
+
+            return (*this);
+        }
+        #endif
+
+        #ifdef __CUDACC__
+        template <typename U>
+        Array_gpu& operator=(const Array_gpu<U, N>& array)
+        {
+            if ( !(this->ncells == array.size() || (this->ncells == 0 && data_ptr == nullptr)) )
+                throw std::runtime_error("Initialised arrays can not be resized");
+
+            dims = array.dims;
+            ncells = array.ncells;
+            strides = array.strides;
+            offsets = array.offsets;
+            is_view = false;
+
+            if (this->ncells == 0)
+            {
+                this->ncells = array.ncells;
+                data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
+            }
+
+            cuda_convert(data_ptr, array.ptr(), ncells);
             return (*this);
         }
         #endif
@@ -427,6 +477,13 @@ class Array_gpu
                 data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
                 cuda_safe_call(cudaMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), cudaMemcpyDeviceToDevice));
             }
+        }
+        #endif
+
+        #ifdef __CUDACC__
+        template <typename U>
+        Array_gpu(const Array_gpu<U, N>& array) {
+            *this = array;
         }
         #endif
 
@@ -481,6 +538,11 @@ class Array_gpu
             data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
             cuda_safe_call(cudaMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), cudaMemcpyHostToDevice));
         }
+        #endif
+
+        #ifdef __CUDACC__
+        template <typename U>
+        Array_gpu(const Array<U, N>& array): Array_gpu(Array_gpu<U, N>(array)) {}
         #endif
 
         inline void set_offsets(const std::array<int, N>& offsets)

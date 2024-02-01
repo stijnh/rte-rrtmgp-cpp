@@ -131,8 +131,8 @@ class Gas_optics_rrtmgp : public Gas_optics
         Float get_press_ref_min() const { return press_ref_min; }
         Float get_press_ref_max() const { return press_ref_max; }
 
-        Float get_temp_min() const { return temp_ref_min; }
-        Float get_temp_max() const { return temp_ref_max; }
+        TempType get_temp_min() const { return temp_ref_min; }
+        TempType get_temp_max() const { return temp_ref_max; }
 
         int get_nflav() const { return flavor.dim(2); }
         int get_neta() const { return kmajor.dim(2); }
@@ -144,21 +144,21 @@ class Gas_optics_rrtmgp : public Gas_optics
 
         // Longwave variant.
         void gas_optics(
-                const Array<Float,2>& play,
-                const Array<Float,2>& plev,
-                const Array<Float,2>& tlay,
-                const Array<Float,1>& tsfc,
+                const Array<PressureType,2>& play,
+                const Array<PressureType,2>& plev,
+                const Array<TempType,2>& tlay,
+                const Array<TempType,1>& tsfc,
                 const Gas_concs& gas_desc,
                 std::unique_ptr<Optical_props_arry>& optical_props,
                 Source_func_lw& sources,
                 const Array<Float,2>& col_dry,
-                const Array<Float,2>& tlev) const;
+                const Array<TempType,2>& tlev) const;
 
         // Shortwave variant.
         void gas_optics(
-                const Array<Float,2>& play,
-                const Array<Float,2>& plev,
-                const Array<Float,2>& tlay,
+                const Array<PressureType,2>& play,
+                const Array<PressureType,2>& plev,
+                const Array<TempType,2>& tlay,
                 const Gas_concs& gas_desc,
                 std::unique_ptr<Optical_props_arry>& optical_props,
                 Array<Float,2>& toa_src,
@@ -168,8 +168,8 @@ class Gas_optics_rrtmgp : public Gas_optics
         Array<Float,2> totplnk;
         Array<Float,4> planck_frac;
         Float totplnk_delta;
-        Float temp_ref_min, temp_ref_max;
-        Float press_ref_min, press_ref_max;
+        TempType temp_ref_min, temp_ref_max;
+        PressureType press_ref_min, press_ref_max;
         Float press_ref_trop_log;
 
         Float press_ref_log_delta;
@@ -229,8 +229,8 @@ class Gas_optics_rrtmgp : public Gas_optics
                 const Array<Float,1>& press_ref,
                 const Array<Float,1>& temp_ref,
                 const Float press_ref_trop,
-                const Float temp_ref_p,
-                const Float temp_ref_t,
+                const TempType temp_ref_p,
+                const TempType temp_ref_t,
                 const Array<Float,3>& vmr_ref,
                 const Array<Float,4>& kmajor,
                 const Array<Float,3>& kminor_lower,
@@ -257,9 +257,9 @@ class Gas_optics_rrtmgp : public Gas_optics
 
         void compute_gas_taus(
                 const int ncol, const int nlay, const int ngpt, const int nband,
-                const Array<Float,2>& play,
-                const Array<Float,2>& plev,
-                const Array<Float,2>& tlay,
+                const Array<PressureType,2>& play,
+                const Array<PressureType,2>& plev,
+                const Array<TempType,2>& tlay,
                 const Gas_concs& gas_desc,
                 std::unique_ptr<Optical_props_arry>& optical_props,
                 Array<int,2>& jtemp, Array<int,2>& jpress,
@@ -275,13 +275,13 @@ class Gas_optics_rrtmgp : public Gas_optics
 
         void source(
                 const int ncol, const int nlay, const int nband, const int ngpt,
-                const Array<Float,2>& play, const Array<Float,2>& plev,
-                const Array<Float,2>& tlay, const Array<Float,1>& tsfc,
+                const Array<PressureType,2>& play, const Array<PressureType,2>& plev,
+                const Array<TempType,2>& tlay, const Array<TempType,1>& tsfc,
                 const Array<int,2>& jtemp, const Array<int,2>& jpress,
                 const Array<int,4>& jeta, const Array<Bool,2>& tropo,
                 const Array<Float,6>& fmajor,
                 Source_func_lw& sources,
-                const Array<Float,2>& tlev) const;
+                const Array<TempType,2>& tlev) const;
 
 };
 
@@ -299,8 +299,8 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
                 const Array<Float,1>& press_ref,
                 const Float press_ref_trop,
                 const Array<Float,1>& temp_ref,
-                const Float temp_ref_p,
-                const Float temp_ref_t,
+                const TempType temp_ref_p,
+                const TempType temp_ref_t,
                 const Array<Float,3>& vmr_ref,
                 const Array<Float,4>& kmajor,
                 const Array<Float,3>& kminor_lower,
@@ -371,11 +371,11 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
         bool source_is_internal() const { return (totplnk.size() > 0) && (planck_frac.size() > 0); }
         bool source_is_external() const { return (solar_source.size() > 0); }
 
-        Float get_press_ref_min() const { return press_ref_min; }
-        Float get_press_ref_max() const { return press_ref_max; }
+        PressureType get_press_ref_min() const { return press_ref_min; }
+        PressureType get_press_ref_max() const { return press_ref_max; }
 
-        Float get_temp_min() const { return temp_ref_min; }
-        Float get_temp_max() const { return temp_ref_max; }
+        TempType get_temp_min() const { return temp_ref_min; }
+        TempType get_temp_max() const { return temp_ref_max; }
 
         int get_nflav() const { return flavor.dim(2); }
         int get_neta() const { return kmajor.dim(2); }
@@ -387,32 +387,32 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
 
         // Longwave variant.
         void gas_optics(
-                const Array_gpu<Float,2>& play,
-                const Array_gpu<Float,2>& plev,
-                const Array_gpu<Float,2>& tlay,
-                const Array_gpu<Float,1>& tsfc,
+                const Array_gpu<PressureType,2>& play,
+                const Array_gpu<PressureType,2>& plev,
+                const Array_gpu<TempType,2>& tlay,
+                const Array_gpu<TempType,1>& tsfc,
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Source_func_lw_gpu& sources,
                 const Array_gpu<Float,2>& col_dry,
-                const Array_gpu<Float,2>& tlev);
+                const Array_gpu<TempType,2>& tlev) override;
 
         // shortwave variant
         void gas_optics(
-                const Array_gpu<Float,2>& play,
-                const Array_gpu<Float,2>& plev,
-                const Array_gpu<Float,2>& tlay,
+                const Array_gpu<PressureType,2>& play,
+                const Array_gpu<PressureType,2>& plev,
+                const Array_gpu<TempType,2>& tlay,
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Array_gpu<Float,2>& toa_src,
-                const Array_gpu<Float,2>& col_dry);
+                const Array_gpu<Float,2>& col_dry) override;
 
     private:
         Array<Float,2> totplnk;
         Array<Float,4> planck_frac;
         Float totplnk_delta;
-        Float temp_ref_min, temp_ref_max;
-        Float press_ref_min, press_ref_max;
+        TempType temp_ref_min, temp_ref_max;
+        PressureType press_ref_min, press_ref_max;
         Float press_ref_trop_log;
 
         Float press_ref_log_delta;
@@ -523,9 +523,9 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
 
         void compute_gas_taus(
                 const int ncol, const int nlay, const int ngpt, const int nband,
-                const Array_gpu<Float,2>& play,
-                const Array_gpu<Float,2>& plev,
-                const Array_gpu<Float,2>& tlay,
+                const Array_gpu<PressureType,2>& play,
+                const Array_gpu<PressureType,2>& plev,
+                const Array_gpu<TempType,2>& tlay,
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Array_gpu<int,2>& jtemp, Array_gpu<int,2>& jpress,
@@ -541,13 +541,13 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
 
         void source(
                 const int ncol, const int nlay, const int nband, const int ngpt,
-                const Array_gpu<Float,2>& play, const Array_gpu<Float,2>& plev,
-                const Array_gpu<Float,2>& tlay, const Array_gpu<Float,1>& tsfc,
+                const Array_gpu<PressureType,2>& play, const Array_gpu<PressureType,2>& plev,
+                const Array_gpu<TempType,2>& tlay, const Array_gpu<TempType,1>& tsfc,
                 const Array_gpu<int,2>& jtemp, const Array_gpu<int,2>& jpress,
                 const Array_gpu<int,4>& jeta, const Array_gpu<Bool,2>& tropo,
                 const Array_gpu<Float,6>& fmajor,
                 Source_func_lw_gpu& sources,
-                const Array_gpu<Float,2>& tlev);
+                const Array_gpu<TempType,2>& tlev);
 };
 #endif
 

@@ -152,7 +152,7 @@ class Gas_optics_rrtmgp : public Gas_optics
                 std::unique_ptr<Optical_props_arry>& optical_props,
                 Source_func_lw& sources,
                 const Array<Float,2>& col_dry,
-                const Array<TempType,2>& tlev) const;
+                const Array<TempType,2>& tlev) const override;
 
         // Shortwave variant.
         void gas_optics(
@@ -162,7 +162,7 @@ class Gas_optics_rrtmgp : public Gas_optics
                 const Gas_concs& gas_desc,
                 std::unique_ptr<Optical_props_arry>& optical_props,
                 Array<Float,2>& toa_src,
-                const Array<Float,2>& col_dry) const;
+                const Array<Float,2>& col_dry) const override;
 
     private:
         Array<Float,2> totplnk;
@@ -461,7 +461,7 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
 
         Array_gpu<Float,1> solar_source_g;
         Array_gpu<Float,2> totplnk_gpu;
-        Array_gpu<Float,4> planck_frac_gpu;
+        Array_gpu<PlanckFracType,4> planck_frac_gpu;
         Array_gpu<Float,1> press_ref_gpu, press_ref_log_gpu, temp_ref_gpu;
         Array_gpu<Float,3> vmr_ref_gpu;
         Array_gpu<int,2> flavor_gpu;

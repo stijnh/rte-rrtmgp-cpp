@@ -390,7 +390,6 @@ class Array_gpu
                 throw std::runtime_error("Initialised arrays can not be resized");
 
             dims = array.dims;
-            ncells = array.ncells;
             strides = array.strides;
             offsets = array.offsets;
             is_view = array.is_view;
@@ -422,7 +421,6 @@ class Array_gpu
                 throw std::runtime_error("Initialised arrays can not be resized");
 
             dims = array.dims;
-            ncells = array.ncells;
             strides = array.strides;
             offsets = array.offsets;
             is_view = false;
@@ -482,7 +480,7 @@ class Array_gpu
 
         #ifdef __CUDACC__
         template <typename U>
-        Array_gpu(const Array_gpu<U, N>& array) {
+        Array_gpu(const Array_gpu<U, N>& array): Array_gpu() {
             *this = array;
         }
         #endif

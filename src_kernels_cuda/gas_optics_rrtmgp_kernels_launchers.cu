@@ -454,7 +454,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int* jpress,
             const int* gpoint_bands,
             const int* band_lims_gpt,
-            const Float* pfracin,
+            const PlanckFracType* pfracin,
             const Float temp_ref_min, const Float totplnk_delta,
             const Float* totplnk,
             const int* gpoint_flavor,

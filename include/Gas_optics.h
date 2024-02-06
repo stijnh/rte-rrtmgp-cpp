@@ -60,8 +60,8 @@ class Gas_optics : public Optical_props
 
         // Longwave variant.
         virtual void gas_optics(
-                const Array<Float,2>& play,
-                const Array<Float,2>& plev,
+                const Array<PressureType,2>& play,
+                const Array<PressureType,2>& plev,
                 const Array<TempType,2>& tlay,
                 const Array<TempType,1>& tsfc,
                 const Gas_concs& gas_desc,
@@ -72,8 +72,8 @@ class Gas_optics : public Optical_props
 
         // Shortwave variant.
         virtual void gas_optics(
-                const Array<Float,2>& play,
-                const Array<Float,2>& plev,
+                const Array<PressureType,2>& play,
+                const Array<PressureType,2>& plev,
                 const Array<TempType,2>& tlay,
                 const Gas_concs& gas_desc,
                 std::unique_ptr<Optical_props_arry>& optical_props,

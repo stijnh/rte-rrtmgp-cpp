@@ -139,7 +139,7 @@ void Planck_source_kernel(
         const Float* __restrict__ fmajor, const int* __restrict__ jeta,
         const Bool* __restrict__ tropo, const int* __restrict__ jtemp,
         const int* __restrict__ jpress, const int* __restrict__ gpoint_bands,
-        const int* __restrict__ band_lims_gpt, const Float* __restrict__ pfracin,
+        const int* __restrict__ band_lims_gpt, const PlanckFracType* __restrict__ pfracin,
         const Float temp_ref_min, const Float totplnk_delta,
         const Float* __restrict__ totplnk, const int* __restrict__ gpoint_flavor,
         const Float delta_Tsurf,
@@ -181,15 +181,15 @@ void Planck_source_kernel(
             const int idx_sfc = icol + igpt*ncol;
 
             const Float pfrac_loc =
-                  (fmajor[idx_fcl3+0] * pfracin[(jtemp_idx-1) + (j0-1)*ntemp + (jpress_idx-1)*ntemp*neta + igpt*ntemp*neta*(npres+1)] +
-                   fmajor[idx_fcl3+1] * pfracin[(jtemp_idx-1) +  j0   *ntemp + (jpress_idx-1)*ntemp*neta + igpt*ntemp*neta*(npres+1)] +
-                   fmajor[idx_fcl3+2] * pfracin[(jtemp_idx-1) + (j0-1)*ntemp + jpress_idx    *ntemp*neta + igpt*ntemp*neta*(npres+1)] +
-                   fmajor[idx_fcl3+3] * pfracin[(jtemp_idx-1) +  j0   *ntemp + jpress_idx    *ntemp*neta + igpt*ntemp*neta*(npres+1)])
+                   fmajor[idx_fcl3+0] * Float(pfracin[(jtemp_idx-1) + (j0-1)*ntemp + (jpress_idx-1)*ntemp*neta + igpt*ntemp*neta*(npres+1)]) +
+                   fmajor[idx_fcl3+1] * Float(pfracin[(jtemp_idx-1) +  j0   *ntemp + (jpress_idx-1)*ntemp*neta + igpt*ntemp*neta*(npres+1)]) +
+                   fmajor[idx_fcl3+2] * Float(pfracin[(jtemp_idx-1) + (j0-1)*ntemp + jpress_idx    *ntemp*neta + igpt*ntemp*neta*(npres+1)]) +
+                   fmajor[idx_fcl3+3] * Float(pfracin[(jtemp_idx-1) +  j0   *ntemp + jpress_idx    *ntemp*neta + igpt*ntemp*neta*(npres+1)])
 
-                + (fmajor[idx_fcl3+4] * pfracin[jtemp_idx + (j1-1)*ntemp + (jpress_idx-1)*ntemp*neta + igpt*ntemp*neta*(npres+1)] +
-                   fmajor[idx_fcl3+5] * pfracin[jtemp_idx +  j1   *ntemp + (jpress_idx-1)*ntemp*neta + igpt*ntemp*neta*(npres+1)] +
-                   fmajor[idx_fcl3+6] * pfracin[jtemp_idx + (j1-1)*ntemp + jpress_idx    *ntemp*neta + igpt*ntemp*neta*(npres+1)] +
-                   fmajor[idx_fcl3+7] * pfracin[jtemp_idx +  j1   *ntemp + jpress_idx    *ntemp*neta + igpt*ntemp*neta*(npres+1)]);
+                 + fmajor[idx_fcl3+4] * Float(pfracin[jtemp_idx + (j1-1)*ntemp + (jpress_idx-1)*ntemp*neta + igpt*ntemp*neta*(npres+1)]) +
+                   fmajor[idx_fcl3+5] * Float(pfracin[jtemp_idx +  j1   *ntemp + (jpress_idx-1)*ntemp*neta + igpt*ntemp*neta*(npres+1)]) +
+                   fmajor[idx_fcl3+6] * Float(pfracin[jtemp_idx + (j1-1)*ntemp + jpress_idx    *ntemp*neta + igpt*ntemp*neta*(npres+1)]) +
+                   fmajor[idx_fcl3+7] * Float(pfracin[jtemp_idx +  j1   *ntemp + jpress_idx    *ntemp*neta + igpt*ntemp*neta*(npres+1)]);
 
             // Layer source
             lay_src[idx] = pfrac_loc * planck_function_lay;

@@ -602,7 +602,6 @@ void sw_source_2stream_kernel(
         {
             for (int ilay=0; ilay<nlay; ++ilay)
             {
-
                 Float r_dir, t_dir, t_noscat;
                 sw_2stream_function(icol, ilay, igpt,
                         ncol, nlay, ngpt,

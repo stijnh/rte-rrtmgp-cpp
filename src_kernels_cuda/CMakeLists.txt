@@ -8,3 +8,4 @@ FILE(GLOB sourcefiles
 include_directories("../include" "../include_kernels_cuda" SYSTEM ${INCLUDE_DIRS})
 
 add_library(rte_rrtmgp_kernels_cuda STATIC ${sourcefiles})
+target_link_libraries(rte_rrtmgp_kernels_cuda PRIVATE kernel_launcher)

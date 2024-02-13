@@ -106,6 +106,9 @@ if(USECUDA)
   endif()
 endif()
 
+set(KERNEL_LAUNCHER_ZLIB 1)
+add_subdirectory(external/kernel_launcher)
+
 add_subdirectory(src_kernels)
 add_subdirectory(src)
 if(USECUDA)

@@ -3,6 +3,7 @@
 #include <iostream>
 #include <iomanip>
 
+#include "kernel.h"
 #include "gas_optics_rrtmgp_kernels_cuda.h"
 #include "tools_gpu.h"
 #include "tuner.h"
@@ -315,10 +316,10 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             std::tie(grid_gpu_min_1, block_gpu_min_1) =
                 tune_kernel_compile_time<Gas_optical_depths_minor_kernel>(
                         "gas_optical_depths_minor_kernel_lower",
-                        dim3(1, nlay, ncol),
-                        std::integer_sequence<unsigned int, 1, 2, 4, 8, 16>{},
-                        std::integer_sequence<unsigned int, 1, 2, 4>{},
+                        dim3(ncol, nlay),
                         std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
+                        std::integer_sequence<unsigned int, 1, 2, 4>{},
+                        std::integer_sequence<unsigned int, 1, 2, 4, 8, 16>{},
                         ncol, nlay, ngpt,
                         ngas, nflav, ntemp, neta,
                         nminorlower,
@@ -382,10 +383,10 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             std::tie(grid_gpu_min_2, block_gpu_min_2) =
                 tune_kernel_compile_time<Gas_optical_depths_minor_kernel>(
                         "gas_optical_depths_minor_kernel_upper",
-                        dim3(1, nlay, ncol),
-                        std::integer_sequence<unsigned int, 1, 2, 4, 8, 16>{},
-                        std::integer_sequence<unsigned int, 1, 2, 4>{},
+                        dim3(ncol, nlay),
                         std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
+                        std::integer_sequence<unsigned int, 1, 2, 4>{},
+                        std::integer_sequence<unsigned int, 1, 2, 4, 8, 16>{},
                         ncol, nlay, ngpt,
                         ngas, nflav, ntemp, neta,
                         nminorupper,
@@ -463,50 +464,10 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             Float* lev_src_dec,
             Float* sfc_src_jac)
     {
-        Tuner_map& tunings = Tuner::get_map();
-
         const Float delta_Tsurf = Float(1.);
 
-        const int block_col = 32;
-        const int block_lay = 4;
-
-        const int grid_col = ncol/block_col + (ncol%block_col > 0);
-        const int grid_lay = nlay/block_lay + (nlay%block_lay > 0);
-
-        dim3 grid_gpu(grid_col, grid_lay);
-        dim3 block_gpu(block_col, block_lay);
-        
-        if (tunings.count("Planck_source_kernel") == 0)
-        {
-            std::tie(grid_gpu, block_gpu) = tune_kernel(
-                    "Planck_source_kernel",
-                    dim3(ncol, nlay),
-                    {1, 2, 4, 8, 16, 32, 48, 64, 96, 128, 256, 512},
-                    {1, 2, 4, 8, 16, 32, 48, 64, 96, 128, 256, 512},
-                    {1},
-                    Planck_source_kernel,
-                    ncol, nlay, nbnd, ngpt,
-                    nflav, neta, npres, ntemp, nPlanckTemp,
-                    tlay, tlev, tsfc, sfc_lay,
-                    fmajor, jeta, tropo, jtemp,
-                    jpress, gpoint_bands, band_lims_gpt,
-                    pfracin, temp_ref_min, totplnk_delta,
-                    totplnk, gpoint_flavor,
-                    delta_Tsurf, sfc_src, lay_src,
-                    lev_src_inc, lev_src_dec,
-                    sfc_src_jac);
-            
-            tunings["Planck_source_kernel"].first = grid_gpu;
-            tunings["Planck_source_kernel"].second = block_gpu;
-        }
-        else
-        {
-            block_gpu = tunings["Planck_source_kernel"].second;
-        }
-
-        grid_gpu = calc_grid_size(block_gpu, dim3(ncol, nlay));
-
-        Planck_source_kernel<<<grid_gpu, block_gpu>>>(
+        kernel_launcher::launch(
+                Kernel("Planck_source_kernel", "src_kernels_cuda/gas_optics_rrtmgp_kernels.cu"),
                 ncol, nlay, nbnd, ngpt,
                 nflav, neta, npres, ntemp, nPlanckTemp,
                 tlay, tlev, tsfc, sfc_lay,

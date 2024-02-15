@@ -34,6 +34,7 @@ struct Kernel: kernel_launcher::PragmaKernel {
 
     kernel_launcher::KernelBuilder build() const override {
         auto builder = kernel_launcher::PragmaKernel::build();
+        builder.compiler_flag("-std=c++17");
 
         auto this_dir = find_base_dir();
         if (!this_dir.empty()) {

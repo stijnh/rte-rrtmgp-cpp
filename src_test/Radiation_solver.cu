@@ -441,7 +441,7 @@ void Radiation_solver_longwave::solve_gpu(
 
     const Bool top_at_1 = p_lay({1, 1}) < p_lay({1, n_lay});
 
-    constexpr int n_col_block = 1024;
+    constexpr int n_col_block = 4096;
 
     // Read the sources and create containers for the substeps.
     int n_blocks = n_col / n_col_block;
@@ -713,7 +713,7 @@ void Radiation_solver_shortwave::solve_gpu(
 
     const Bool top_at_1 = p_lay({1, 1}) < p_lay({1, n_lay});
 
-    constexpr int n_col_block = 1024;
+    constexpr int n_col_block = 4096;
 
     // Read the sources and create containers for the substeps.
     int n_blocks = n_col / n_col_block;

@@ -311,7 +311,19 @@ void interpolation_kernel(
     }
 }
 
-
+#pragma kernel problem_size(ncol, nlay, ngpt)
+#pragma kernel tune(block_dim=64, 128, 256, 512, 1024) default(256)
+#pragma kernel block_size(block_dim)
+#pragma kernel buffer(gpoint_flavor[2*ngpt])
+#pragma kernel buffer(band_lims_gpt[1])
+#pragma kernel buffer(kmajor[ngpt*ntemp*neta*(npres+1)])
+#pragma kernel buffer(col_mix[2*nflav*ncol*nlay])
+#pragma kernel buffer(fmajor[2 * 2 * 2 * nflav * ncol * nlay])
+#pragma kernel buffer(jeta[2*nflav*ncol*nlay])
+#pragma kernel buffer(tropo[nlay*ncol])
+#pragma kernel buffer(jtemp[nlay*ncol])
+#pragma kernel buffer(jpress[nlay*ncol])
+#pragma kernel buffer(tau[ngpt*ncol*nlay])
 __global__
 void gas_optical_depths_major_kernel(
         const int ncol, const int nlay, const int nband, const int ngpt,
@@ -372,6 +384,29 @@ void gas_optical_depths_major_kernel(
 
 
 #if use_shared_tau == 0
+#pragma kernel problem_size(ncol, nlay)
+#pragma kernel tune(block_size_x=32, 64, 128, 256) default(256)
+#pragma kernel tune(block_size_y=1, 2, 4,8, 16, 32) default(1)
+#pragma kernel tune(block_size_z=1, 2, 4,8, 16, 32) default(1)
+#pragma kernel block_size(block_size_x, block_size_y, block_size_z)
+#pragma kernel buffer(gpoint_flavor[2*ngpt])
+#pragma kernel buffer(kminor[nminork*ntemp*neta])
+#pragma kernel buffer(minor_limits_gpt[2*nminor])
+#pragma kernel buffer(minor_scales_with_density[nminor])
+#pragma kernel buffer(scale_by_complement[nminor])
+#pragma kernel buffer(idx_minor[nminor])
+#pragma kernel buffer(idx_minor_scaling[nminor])
+#pragma kernel buffer(kminor_start[nminor])
+#pragma kernel buffer(play[nlay*ncol])
+#pragma kernel buffer(tlay[nlay*ncol])
+#pragma kernel buffer(col_gas[ncol*nlay*(ngas + 1)])
+#pragma kernel buffer(fminor[4*nflav*ncol*nlay])
+#pragma kernel buffer(jeta[2*nflav*ncol*nlay])
+#pragma kernel buffer(jtemp[nlay*ncol])
+#pragma kernel buffer(tropo[nlay*ncol])
+#pragma kernel buffer(tau[ngpt*ncol*nlay])
+#pragma kernel set(max_gpt=16)
+//#pragma kernel buffer(tau_minor[1])
 template<int block_size_x, int block_size_y, int block_size_z, int max_gpt=16> __global__
 void gas_optical_depths_minor_kernel(
         const int ncol, const int nlay, const int ngpt,
@@ -394,8 +429,8 @@ void gas_optical_depths_minor_kernel(
         const int* __restrict__ jeta,
         const int* __restrict__ jtemp,
         const Bool* __restrict__ tropo,
-        Float* __restrict__ tau,
-        Float* __restrict__ tau_minor)
+        Float* __restrict__ tau
+        /*Float* __restrict__ tau_minor*/)
 {
     __shared__ Float scalings[block_size_y][block_size_x];
 

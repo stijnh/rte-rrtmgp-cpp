@@ -324,9 +324,9 @@ void gas_optical_depths_major_kernel(
         const int* __restrict__ jtemp, const int* __restrict__ jpress,
         Float* __restrict__ tau)
 {
-    const int igpt = blockIdx.x * blockDim.x + threadIdx.x;
+    const int icol = blockIdx.x * blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y * blockDim.y + threadIdx.y;
-    const int icol = blockIdx.z * blockDim.z + threadIdx.z;
+    const int igpt = blockIdx.z * blockDim.z + threadIdx.z;
 
     if ( (icol < ncol) && (ilay < nlay) && (igpt < ngpt) )
     {

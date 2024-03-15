@@ -274,8 +274,8 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
             std::tie(grid_gpu_maj, block_gpu_maj) = tune_kernel(
                     "gas_optical_depths_major_kernel",
-                    dim3(ngpt, nlay, ncol),
-                    {1, 2, 4, 8, 16, 24, 32, 48, 64}, {1, 2, 4}, {8, 16, 24, 32, 48, 64, 96, 128, 256},
+                    dim3(ncol, nlay, ngpt),
+                    {8, 16, 24, 32, 48, 64, 96, 128, 256}, {1, 2, 4}, {1, 2, 4, 8, 16, 24, 32, 48, 64},
                     gas_optical_depths_major_kernel,
                     ncol, nlay, nband, ngpt,
                     nflav, neta, npres, ntemp,
@@ -294,7 +294,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             block_gpu_maj = tunings["gas_optical_depths_major_kernel"].second;
         }
 
-        grid_gpu_maj = calc_grid_size(block_gpu_maj, dim3(ngpt, nlay, ncol));
+        grid_gpu_maj = calc_grid_size(block_gpu_maj, dim3(ncol, nlay, ngpt));
 
         gas_optical_depths_major_kernel<<<grid_gpu_maj, block_gpu_maj>>>(
                 ncol, nlay, nband, ngpt,

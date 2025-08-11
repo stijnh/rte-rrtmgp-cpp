@@ -160,99 +160,6 @@ void lw_solver_noscat_kernel(
 
 
 template<Bool top_at_1> __global__
-void sw_adding_kernel(
-        const int ncol, const int nlay, const int ngpt, const Bool _top_at_1,
-        const Float* __restrict__ sfc_alb_dif, const Float* __restrict__ r_dif, const Float* __restrict__ t_dif,
-        const Float* __restrict__ source_dn, const Float* __restrict__ source_up, const Float* __restrict__ source_sfc,
-        Float* __restrict__ flux_up, Float* __restrict__ flux_dn, const Float* __restrict__ flux_dir,
-        Float* __restrict__ albedo, Float* __restrict__ src, Float* __restrict__ denom)
-{
-    const int icol = blockIdx.x*blockDim.x + threadIdx.x;
-    const int igpt = blockIdx.y*blockDim.y + threadIdx.y;
-
-    if ( (icol < ncol) && (igpt < ngpt) )
-    {
-        if constexpr (top_at_1)
-        {
-            const int sfc_idx_3d = icol + nlay*ncol + igpt*(nlay+1)*ncol;
-            const int sfc_idx_2d = icol + igpt*ncol;
-            albedo[sfc_idx_3d] = sfc_alb_dif[sfc_idx_2d];
-            src[sfc_idx_3d] = source_sfc[sfc_idx_2d];
-
-            #pragma unroll loop_unroll_factor_nlay
-            for (int ilay=nlay-1; ilay >= 0; --ilay)
-            {
-                const int lay_idx  = icol + ilay*ncol + igpt*ncol*nlay;
-                const int lev_idx1 = icol + ilay*ncol + igpt*ncol*(nlay+1);
-                const int lev_idx2 = icol + (ilay+1)*ncol + igpt*ncol*(nlay+1);
-                denom[lay_idx] = Float(1.)/(Float(1.) - r_dif[lay_idx] * albedo[lev_idx2]);
-                albedo[lev_idx1] = r_dif[lay_idx] + t_dif[lay_idx] * t_dif[lay_idx]
-                                                  * albedo[lev_idx2] * denom[lay_idx];
-                src[lev_idx1] = source_up[lay_idx] + t_dif[lay_idx] * denom[lay_idx] *
-                                (src[lev_idx2] + albedo[lev_idx2] * source_dn[lay_idx]);
-            }
-            const int top_idx = icol + igpt*(nlay+1)*ncol;
-            flux_up[top_idx] = flux_dn[top_idx]*albedo[top_idx] + src[top_idx];
-
-            for (int ilay=1; ilay < (nlay+2); ++ilay)
-            {
-                const int lev_idx1 = icol + ilay*ncol + igpt*(nlay+1)*ncol;
-                const int lev_idx2 = icol + (ilay-1)*ncol + igpt*(nlay+1)*ncol;
-                const int lay_idx = icol + (ilay-1)*ncol + igpt*(nlay)*ncol;
-                if (ilay < (nlay+1)) {
-                    flux_dn[lev_idx1] = (t_dif[lay_idx]*flux_dn[lev_idx2] +
-                                         r_dif[lay_idx]*src[lev_idx1] +
-                                         source_dn[lay_idx]) * denom[lay_idx];
-                    flux_up[lev_idx1] = flux_dn[lev_idx1] * albedo[lev_idx1] + src[lev_idx1];
-                }
-                flux_dn[lev_idx2] += flux_dir[lev_idx2];
-            }
-        }
-        else
-        {
-            const int sfc_idx_3d = icol + igpt*(nlay+1)*ncol;
-            const int sfc_idx_2d = icol + igpt*ncol;
-            albedo[sfc_idx_3d] = sfc_alb_dif[sfc_idx_2d];
-            src[sfc_idx_3d] = source_sfc[sfc_idx_2d];
-
-            #pragma unroll loop_unroll_factor_nlay
-            for (int ilay=0; ilay<nlay; ++ilay)
-            {
-                const int lay_idx  = icol + ilay*ncol + igpt*ncol*nlay;
-                const int lev_idx1 = icol + ilay*ncol + igpt*ncol*(nlay+1);
-                const int lev_idx2 = icol + (ilay+1)*ncol + igpt*ncol*(nlay+1);
-                denom[lay_idx] = Float(1.)/(Float(1.) - r_dif[lay_idx] * albedo[lev_idx1]);
-                albedo[lev_idx2] = r_dif[lay_idx] + (t_dif[lay_idx] * t_dif[lay_idx] *
-                                                     albedo[lev_idx1] * denom[lay_idx]);
-                src[lev_idx2] = source_up[lay_idx] + t_dif[lay_idx]*denom[lay_idx]*
-                                                     (src[lev_idx1]+albedo[lev_idx1]*source_dn[lay_idx]);
-            }
-
-            const int top_idx = icol + nlay*ncol + igpt*(nlay+1)*ncol;
-            flux_up[top_idx] = flux_dn[top_idx] *albedo[top_idx] + src[top_idx];
-
-            for (int ilay=nlay-1; ilay >= -1; --ilay)
-            {
-                const int lay_idx  = icol + ilay*ncol + igpt*nlay*ncol;
-                const int lev_idx1 = icol + ilay*ncol + igpt*(nlay+1)*ncol;
-                const int lev_idx2 = icol + (ilay+1)*ncol + igpt*(nlay+1)*ncol;
-
-                    if (ilay >= 0)
-                    {
-                        flux_dn[lev_idx1] = (t_dif[lay_idx]*flux_dn[lev_idx2] +
-                                             r_dif[lay_idx]*src[lev_idx1] +
-                                             source_dn[lay_idx]) * denom[lay_idx];
-                        flux_up[lev_idx1] = flux_dn[lev_idx1] * albedo[lev_idx1] + src[lev_idx1];
-                    }
-
-                    flux_dn[lev_idx2] += flux_dir[lev_idx2];
-            }
-        }
-    }
-}
-
-
-template<Bool top_at_1> __global__
 void sw_source_kernel(
         const int ncol, const int nlay, const int ngpt, const Bool _top_at_1,
         Float* __restrict__ r_dir, Float* __restrict__ t_dir, Float* __restrict__ t_noscat,
@@ -559,29 +466,30 @@ void sw_2stream_function(
 
 
 template<Bool top_at_1> __global__
-void sw_source_2stream_kernel(
+void sw_solver_kernel(
         const int ncol, const int nlay, const int ngpt,
         const Float* __restrict__ tau, const Float* __restrict__ ssa,
         const Float* __restrict__ g, const Float* __restrict__ mu0,
         Float* __restrict__ r_dif, Float* __restrict__ t_dif,
-        const Float* __restrict__ sfc_alb_dir, Float* __restrict__ source_up, Float* __restrict__ source_dn,
-        Float* __restrict__ source_sfc, Float* __restrict__ flux_dir)
+        const Float* __restrict__ sfc_alb_dir, const Float* __restrict__ sfc_alb_dif,
+        Float* __restrict__ source_up, Float* __restrict__ source_dn, Float* __restrict__ source_sfc,
+        Float* __restrict__ flux_up, Float* __restrict__ flux_dn, Float* __restrict__ flux_dir,
+        Float* __restrict__ albedo, Float* __restrict__ src, Float* __restrict__ denom)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int igpt = blockIdx.y*blockDim.y + threadIdx.y;
 
     if ( (icol < ncol) && (igpt < ngpt) )
     {
-        if (top_at_1)
+        if constexpr (top_at_1)
         {
             for (int ilay=0; ilay<nlay; ++ilay)
             {
-
                 Float r_dir, t_dir, t_noscat;
                 sw_2stream_function(icol, ilay, igpt,
-                        ncol, nlay, ngpt,
-                        tau, ssa, g, mu0,
-                        r_dif, t_dif, &r_dir, &t_dir, &t_noscat);
+                                    ncol, nlay, ngpt,
+                                    tau, ssa, g, mu0,
+                                    r_dif, t_dif, &r_dir, &t_dir, &t_noscat);
 
                 const int idx_lay  = icol + ilay*ncol + igpt*nlay*ncol;
                 const int idx_lev1 = icol + ilay*ncol + igpt*(nlay+1)*ncol;
@@ -589,11 +497,45 @@ void sw_source_2stream_kernel(
                 source_up[idx_lay] = r_dir * flux_dir[idx_lev1];
                 source_dn[idx_lay] = t_dir * flux_dir[idx_lev1];
                 flux_dir[idx_lev2] = t_noscat * flux_dir[idx_lev1];
-
             }
+
             const int sfc_idx = icol + igpt*ncol;
             const int flx_idx = icol + nlay*ncol + igpt*(nlay+1)*ncol;
             source_sfc[sfc_idx] = flux_dir[flx_idx] * sfc_alb_dir[icol];
+
+            const int sfc_idx_3d = icol + nlay*ncol + igpt*(nlay+1)*ncol;
+            const int sfc_idx_2d = icol + igpt*ncol;
+            albedo[sfc_idx_3d] = sfc_alb_dif[sfc_idx_2d];
+            src[sfc_idx_3d] = source_sfc[sfc_idx_2d];
+
+#pragma unroll loop_unroll_factor_nlay
+            for (int ilay=nlay-1; ilay >= 0; --ilay)
+            {
+                const int lay_idx  = icol + ilay*ncol + igpt*ncol*nlay;
+                const int lev_idx1 = icol + ilay*ncol + igpt*ncol*(nlay+1);
+                const int lev_idx2 = icol + (ilay+1)*ncol + igpt*ncol*(nlay+1);
+                denom[lay_idx] = Float(1.)/(Float(1.) - r_dif[lay_idx] * albedo[lev_idx2]);
+                albedo[lev_idx1] = r_dif[lay_idx] + t_dif[lay_idx] * t_dif[lay_idx]
+                                                    * albedo[lev_idx2] * denom[lay_idx];
+                src[lev_idx1] = source_up[lay_idx] + t_dif[lay_idx] * denom[lay_idx] *
+                                                     (src[lev_idx2] + albedo[lev_idx2] * source_dn[lay_idx]);
+            }
+            const int top_idx = icol + igpt*(nlay+1)*ncol;
+            flux_up[top_idx] = flux_dn[top_idx]*albedo[top_idx] + src[top_idx];
+
+            for (int ilay=1; ilay < (nlay+2); ++ilay)
+            {
+                const int lev_idx1 = icol + ilay*ncol + igpt*(nlay+1)*ncol;
+                const int lev_idx2 = icol + (ilay-1)*ncol + igpt*(nlay+1)*ncol;
+                const int lay_idx = icol + (ilay-1)*ncol + igpt*(nlay)*ncol;
+                if (ilay < (nlay+1)) {
+                    flux_dn[lev_idx1] = (t_dif[lay_idx]*flux_dn[lev_idx2] +
+                                         r_dif[lay_idx]*src[lev_idx1] +
+                                         source_dn[lay_idx]) * denom[lay_idx];
+                    flux_up[lev_idx1] = flux_dn[lev_idx1] * albedo[lev_idx1] + src[lev_idx1];
+                }
+                flux_dn[lev_idx2] += flux_dir[lev_idx2];
+            }
         }
         else
         {
@@ -601,9 +543,9 @@ void sw_source_2stream_kernel(
             {
                 Float r_dir, t_dir, t_noscat;
                 sw_2stream_function(icol, ilay, igpt,
-                        ncol, nlay, ngpt,
-                        tau, ssa, g, mu0,
-                        r_dif, t_dif, &r_dir, &t_dir, &t_noscat);
+                                    ncol, nlay, ngpt,
+                                    tau, ssa, g, mu0,
+                                    r_dif, t_dif, &r_dir, &t_dir, &t_noscat);
 
                 const int idx_lay  = icol + ilay*ncol + igpt*nlay*ncol;
                 const int idx_lev1 = icol + (ilay)*ncol + igpt*(nlay+1)*ncol;
@@ -616,6 +558,44 @@ void sw_source_2stream_kernel(
             const int sfc_idx = icol + igpt*ncol;
             const int flx_idx = icol + igpt*(nlay+1)*ncol;
             source_sfc[sfc_idx] = flux_dir[flx_idx] * sfc_alb_dir[icol];
+
+            const int sfc_idx_3d = icol + igpt*(nlay+1)*ncol;
+            const int sfc_idx_2d = icol + igpt*ncol;
+            albedo[sfc_idx_3d] = sfc_alb_dif[sfc_idx_2d];
+            src[sfc_idx_3d] = source_sfc[sfc_idx_2d];
+
+#pragma unroll loop_unroll_factor_nlay
+            for (int ilay=0; ilay<nlay; ++ilay)
+            {
+                const int lay_idx  = icol + ilay*ncol + igpt*ncol*nlay;
+                const int lev_idx1 = icol + ilay*ncol + igpt*ncol*(nlay+1);
+                const int lev_idx2 = icol + (ilay+1)*ncol + igpt*ncol*(nlay+1);
+                denom[lay_idx] = Float(1.)/(Float(1.) - r_dif[lay_idx] * albedo[lev_idx1]);
+                albedo[lev_idx2] = r_dif[lay_idx] + (t_dif[lay_idx] * t_dif[lay_idx] *
+                                                     albedo[lev_idx1] * denom[lay_idx]);
+                src[lev_idx2] = source_up[lay_idx] + t_dif[lay_idx]*denom[lay_idx]*
+                                                     (src[lev_idx1]+albedo[lev_idx1]*source_dn[lay_idx]);
+            }
+
+            const int top_idx = icol + nlay*ncol + igpt*(nlay+1)*ncol;
+            flux_up[top_idx] = flux_dn[top_idx] *albedo[top_idx] + src[top_idx];
+
+            for (int ilay=nlay-1; ilay >= -1; --ilay)
+            {
+                const int lay_idx  = icol + ilay*ncol + igpt*nlay*ncol;
+                const int lev_idx1 = icol + ilay*ncol + igpt*(nlay+1)*ncol;
+                const int lev_idx2 = icol + (ilay+1)*ncol + igpt*(nlay+1)*ncol;
+
+                if (ilay >= 0)
+                {
+                    flux_dn[lev_idx1] = (t_dif[lay_idx]*flux_dn[lev_idx2] +
+                                         r_dif[lay_idx]*src[lev_idx1] +
+                                         source_dn[lay_idx]) * denom[lay_idx];
+                    flux_up[lev_idx1] = flux_dn[lev_idx1] * albedo[lev_idx1] + src[lev_idx1];
+                }
+
+                flux_dn[lev_idx2] += flux_dir[lev_idx2];
+            }
         }
     }
 }

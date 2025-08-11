@@ -6,7 +6,7 @@ Float interpolate1D(
         const int len,
         const Float* __restrict__ table)
 {
-    Float val0 = (val - offset)/delta;
+    Float val0 = (val - offset) * (Float(1) / delta);
     Float frac = val0 - int(val0);
     int idx = min(len-1, max(1, int(val0)+1));
     return table[idx-1] + frac * (table[idx] - table[idx-1]);
@@ -192,6 +192,14 @@ struct Index_6d
     const int s6;
 };
 
+template <typename T, size_t N>
+struct alignas(sizeof(T) * N) vector {
+    __device__ __forceinline__ T& operator[](const int i) { return data[i]; }
+    __device__ __forceinline__ const T& operator[](const int i) const { return data[i]; }
+
+    T data[N];
+};
+
 
 __global__
 void Planck_source_kernel(
@@ -235,7 +243,7 @@ void Planck_source_kernel(
     const Index_2d<const Float> tlay        (tlay_ptr, ncol, nlay);
     const Index_2d<const Float> tlev        (tlev_ptr, ncol, nlay+1);
     const Index_1d<const Float> tsfc        (tsfc_ptr, ncol);
-    const Index_6d<const Float> fmajor      (fmajor_ptr, 2, 2, 2, ncol, nlay, nflav);
+    const Index_3d<const vector<Float, 8>> fmajor (reinterpret_cast<const vector<Float, 8>*>(fmajor_ptr), ncol, nlay, nflav);
     const Index_4d<const int> jeta          (jeta_ptr, 2, ncol, nlay, nflav);
     const Index_2d<const Bool> tropo        (tropo_ptr, ncol, nlay);
     const Index_2d<const int> jtemp         (jtemp_ptr, ncol, nlay);
@@ -260,15 +268,15 @@ void Planck_source_kernel(
 
         // 3D interp.
         const Float pfrac =
-              ( fmajor(1, 1, 1, icol, ilay, iflav) * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)  , jpress(icol, ilay)-1 + itropo, igpt)
-              + fmajor(2, 1, 1, icol, ilay, iflav) * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)+1, jpress(icol, ilay)-1 + itropo, igpt)
-              + fmajor(1, 2, 1, icol, ilay, iflav) * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)  , jpress(icol, ilay)   + itropo, igpt)
-              + fmajor(2, 2, 1, icol, ilay, iflav) * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)+1, jpress(icol, ilay)   + itropo, igpt) )
+              ( fmajor(icol, ilay, iflav)[0] * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)  , jpress(icol, ilay)-1 + itropo, igpt)
+              + fmajor(icol, ilay, iflav)[1] * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)+1, jpress(icol, ilay)-1 + itropo, igpt)
+              + fmajor(icol, ilay, iflav)[2] * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)  , jpress(icol, ilay)   + itropo, igpt)
+              + fmajor(icol, ilay, iflav)[3] * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)+1, jpress(icol, ilay)   + itropo, igpt) )
 
-            + ( fmajor(1, 1, 2, icol, ilay, iflav) * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)  , jpress(icol, ilay)-1 + itropo, igpt)
-              + fmajor(2, 1, 2, icol, ilay, iflav) * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)+1, jpress(icol, ilay)-1 + itropo, igpt)
-              + fmajor(1, 2, 2, icol, ilay, iflav) * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)  , jpress(icol, ilay)   + itropo, igpt)
-              + fmajor(2, 2, 2, icol, ilay, iflav) * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)+1, jpress(icol, ilay)   + itropo, igpt) );
+            + ( fmajor(icol, ilay, iflav)[4] * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)  , jpress(icol, ilay)-1 + itropo, igpt)
+              + fmajor(icol, ilay, iflav)[5] * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)+1, jpress(icol, ilay)-1 + itropo, igpt)
+              + fmajor(icol, ilay, iflav)[6] * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)  , jpress(icol, ilay)   + itropo, igpt)
+              + fmajor(icol, ilay, iflav)[7] * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)+1, jpress(icol, ilay)   + itropo, igpt) );
 
         Float planck_function_1 = interpolate1D(tlay(icol, ilay), temp_ref_min, totplnk_delta, nPlanckTemp, &totplnk(1, ibnd));
         lay_src(icol, ilay, igpt) = pfrac * planck_function_1;
@@ -284,15 +292,15 @@ void Planck_source_kernel(
             const int iflav = gpoint_flavor(itropo, igpt);
 
             const Float pfrac_m1 =
-                  ( fmajor(1, 1, 1, icol, ilay-1, iflav) * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)  , jpress(icol, ilay-1)-1 + itropo, igpt)
-                  + fmajor(2, 1, 1, icol, ilay-1, iflav) * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)-1 + itropo, igpt)
-                  + fmajor(1, 2, 1, icol, ilay-1, iflav) * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)  , jpress(icol, ilay-1)   + itropo, igpt)
-                  + fmajor(2, 2, 1, icol, ilay-1, iflav) * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)   + itropo, igpt) )
+                  ( fmajor(icol, ilay-1, iflav)[0] * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)  , jpress(icol, ilay-1)-1 + itropo, igpt)
+                  + fmajor(icol, ilay-1, iflav)[1] * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)-1 + itropo, igpt)
+                  + fmajor(icol, ilay-1, iflav)[2] * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)  , jpress(icol, ilay-1)   + itropo, igpt)
+                  + fmajor(icol, ilay-1, iflav)[3] * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)   + itropo, igpt) )
 
-                + ( fmajor(1, 1, 2, icol, ilay-1, iflav) * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)  , jpress(icol, ilay-1)-1 + itropo, igpt)
-                  + fmajor(2, 1, 2, icol, ilay-1, iflav) * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)-1 + itropo, igpt)
-                  + fmajor(1, 2, 2, icol, ilay-1, iflav) * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)  , jpress(icol, ilay-1)   + itropo, igpt)
-                  + fmajor(2, 2, 2, icol, ilay-1, iflav) * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)   + itropo, igpt) );
+                + ( fmajor(icol, ilay-1, iflav)[4] * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)  , jpress(icol, ilay-1)-1 + itropo, igpt)
+                  + fmajor(icol, ilay-1, iflav)[5] * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)-1 + itropo, igpt)
+                  + fmajor(icol, ilay-1, iflav)[6] * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)  , jpress(icol, ilay-1)   + itropo, igpt)
+                  + fmajor(icol, ilay-1, iflav)[7] * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)   + itropo, igpt) );
 
             lev_src(icol, ilay, igpt) = sqrt(pfrac * pfrac_m1) * planck_function_1;
         }

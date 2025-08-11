@@ -86,6 +86,7 @@ namespace Rte_solver_kernels_cuda
         dim3 grid_gpu2d = calc_grid_size(block_gpu2d, dim3(ncol, ngpt));
 
         const int top_level = top_at_1 ? 0 : nlay;
+        const Float tau_thres = sqrt(sqrt(eps));
 
 
         // Upper boundary condition.
@@ -111,7 +112,7 @@ namespace Rte_solver_kernels_cuda
                     dim3(ncol, ngpt),
                     {8, 16, 24, 32, 48, 64, 96, 128, 256, 512, 1024}, {1, 2, 4, 8}, {1},
                     lw_solver_noscat_kernel<top_at_1>,
-                    ncol, nlay, ngpt, eps,
+                    ncol, nlay, ngpt, tau_thres,
                     secants, weights, tau, lay_source,
                     lev_source,
                     sfc_emis, sfc_src, flux_up_tmp, flux_dn_tmp, sfc_src_jac,
@@ -133,7 +134,7 @@ namespace Rte_solver_kernels_cuda
         grid_1 = calc_grid_size(block_1, dim3(ncol, ngpt));
 
         lw_solver_noscat_kernel<top_at_1><<<grid_1, block_1>>>(
-                ncol, nlay, ngpt, eps,
+                ncol, nlay, ngpt, tau_thres,
                 secants, weights, tau, lay_source,
                 lev_source,
                 sfc_emis, sfc_src, flux_up, flux_dn, sfc_src_jac,

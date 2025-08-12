@@ -321,33 +321,37 @@ std::tuple<dim3, dim3> tune_kernel_compile_time(
 
 // Running functions.
 template<class Func, unsigned int I, unsigned int J, unsigned int K, class... Args>
-void run_ijk(
+bool run_ijk(
         dim3 grid, dim3 block,
         Args... args)
 {
-    if ( (block.x == I) && (block.y == J) && (block.z == K) )
+    if ( (block.x == I) && (block.y == J) && (block.z == K) ) {
         Func::template launch<I, J, K>(grid, block, args...);
+        return true;
+    } else {
+        return false;
+    }
 }
 
 
 template<class Func, unsigned int I, unsigned int J, unsigned int... Ks, class... Args>
-void run_ij(
+bool run_ij(
         std::integer_sequence<unsigned int, Ks...> ks,
         dim3 grid, dim3 block,
         Args... args)
 {
-    (run_ijk<Func, I, J, Ks>(grid, block, args...), ...);
+    return ((run_ijk<Func, I, J, Ks>(grid, block, args...)) || ...);
 }
 
 
 template<class Func, unsigned int I, unsigned int... Js, unsigned int... Ks, class... Args>
-void run_i(
+bool run_i(
         std::integer_sequence<unsigned int, Js...> js,
         std::integer_sequence<unsigned int, Ks...> ks,
         dim3 grid, dim3 block,
         Args... args)
 {
-    (run_ij<Func, I, Js>(ks, grid, block, args...), ...);
+    return ((run_ij<Func, I, Js>(ks, grid, block, args...)) || ...);
 }
 
 
@@ -359,6 +363,10 @@ void run_kernel_compile_time(
         dim3 grid, dim3 block,
         Args&&... args)
 {
-    (run_i<Func, Is>(js, ks, grid, block, args...), ...);
+    bool executed = ((run_i<Func, Is>(js, ks, grid, block, args...)) || ...);
+
+    if (!executed) {
+        throw std::runtime_error("failed to run kernel for given block dimensions");
+    }
 }
 #endif

@@ -42,7 +42,7 @@ void lw_transport_noscat_kernel(
 {
     if (top_at_1)
     {
-        const int idx_top = top_at_1 ? icol + igpt*ncol*(nlay+1) : icol + nlay*ncol + igpt*ncol*(nlay+1);
+        const int idx_top = icol + igpt*ncol*(nlay+1);
         Float radn_dn_loc = radn_dn_top;
         radn_dn[idx_top] = radn_dn_loc * scaling;
 
@@ -431,7 +431,7 @@ void sw_2stream_function(
         const Float* __restrict__ g, const Float* __restrict__ mu0,
         Float* __restrict__ r_dif, Float* __restrict__ t_dif,
         Float* __restrict__ r_dir, Float* __restrict__ t_dir,
-        Float* __restrict__ t_noscat)
+        Float* __restrict__ t_noscat_out)
 {
         const int idx = icol + ilay*ncol + igpt*nlay*ncol;
 
@@ -447,12 +447,16 @@ void sw_2stream_function(
         const Float k = sqrt(max((gamma1 - gamma2) * (gamma1 + gamma2), k_min<Float>()));
         const Float exp_minusktau = exp(-tau[idx] * k);
         const Float exp_minus2ktau = exp_minusktau * exp_minusktau;
+        const Float one_minus_exp_minus2ktau = -expm1(Float(-2) * tau[idx] * k);
 
         const Float rt_term = Float(1.) / (k      * (Float(1.) + exp_minus2ktau) +
-                                     gamma1 * (Float(1.) - exp_minus2ktau));
-        r_dif[idx] = rt_term * gamma2 * (Float(1.) - exp_minus2ktau);
+                                     gamma1 * one_minus_exp_minus2ktau);
+        r_dif[idx] = rt_term * gamma2 * one_minus_exp_minus2ktau;
         t_dif[idx] = rt_term * Float(2.) * k * exp_minusktau;
-        *t_noscat = exp(-tau[idx] * mu0_inv);
+
+        Float t_noscat = exp(-tau[idx] * mu0_inv);
+        Float one_minus_t_noscat = -expm1(-tau[idx] * mu0_inv);
+        *t_noscat_out = t_noscat;
 
         const Float k_mu     = k * mu0[icol];
         const Float k_gamma3 = k * gamma3;
@@ -463,15 +467,15 @@ void sw_2stream_function(
 
         *r_dir = rt_term2  * ((Float(1.) - k_mu) * (alpha2 + k_gamma3)   -
                                   (Float(1.) + k_mu) * (alpha2 - k_gamma3) * exp_minus2ktau -
-                                   Float(2.) * (k_gamma3 - alpha2 * k_mu)  * exp_minusktau * t_noscat[0]);
+                                   Float(2.) * (k_gamma3 - alpha2 * k_mu)  * exp_minusktau * t_noscat);
 
-        *t_dir = -rt_term2 * ((Float(1.) + k_mu) * (alpha1 + k_gamma4) * t_noscat[0]   -
-                                  (Float(1.) - k_mu) * (alpha1 - k_gamma4) * exp_minus2ktau * t_noscat[0] -
+        *t_dir = -rt_term2 * ((Float(1.) + k_mu) * (alpha1 + k_gamma4) * t_noscat   -
+                                  (Float(1.) - k_mu) * (alpha1 - k_gamma4) * exp_minus2ktau * t_noscat -
                                    Float(2.) * (k_gamma4 + alpha1 * k_mu)  * exp_minusktau);
 
         // fix thanks to peter ukkonen (see https://github.com/earth-system-radiation/rte-rrtmgp/pull/39#issuecomment-1026698541)
-        *r_dir = max(tmin<Float>(), min(*r_dir, Float(1.0) - *t_noscat));
-        *t_dir = max(tmin<Float>(), min(*t_dir, Float(1.0) - *t_noscat - *r_dir));
+        *r_dir = max(tmin<Float>(), min(*r_dir, one_minus_t_noscat));
+        *t_dir = max(tmin<Float>(), min(*t_dir, one_minus_t_noscat - *r_dir));
 }
 
 

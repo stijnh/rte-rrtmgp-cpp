@@ -264,7 +264,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
     {
         Tuner_map& tunings = Tuner::get_map();
 
-        dim3 grid_gpu_maj(ngpt, nlay, ncol);
+        dim3 grid_gpu_maj(ncol, nlay, ngpt);
         dim3 block_gpu_maj;
 
         if (tunings.count("gas_optical_depths_major_kernel") == 0)
@@ -273,8 +273,8 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
             std::tie(grid_gpu_maj, block_gpu_maj) = tune_kernel(
                     "gas_optical_depths_major_kernel",
-                    dim3(ngpt, nlay, ncol),
-                    {1, 2, 4, 8, 16, 24, 32, 48, 64}, {1, 2, 4}, {8, 16, 24, 32, 48, 64, 96, 128, 256},
+                    dim3(ncol, nlay, ngpt),
+                    {8, 16, 24, 32, 48, 64, 96, 128, 256}, {1, 2, 4, 8, 16, 24, 32, 48, 64}, {1, 2, 4},
                     gas_optical_depths_major_kernel,
                     ncol, nlay, nband, ngpt,
                     nflav, neta, npres, ntemp,
@@ -293,7 +293,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             block_gpu_maj = tunings["gas_optical_depths_major_kernel"].second;
         }
 
-        grid_gpu_maj = calc_grid_size(block_gpu_maj, dim3(ngpt, nlay, ncol));
+        grid_gpu_maj = calc_grid_size(block_gpu_maj, dim3(ncol, nlay, ngpt));
 
         gas_optical_depths_major_kernel<<<grid_gpu_maj, block_gpu_maj>>>(
                 ncol, nlay, nband, ngpt,
@@ -306,7 +306,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
         // Lower
         int idx_tropo = 1;
 
-        dim3 grid_gpu_min_1(1, nlay, ncol);
+        dim3 grid_gpu_min_1(ncol, nlay, 1);
         dim3 block_gpu_min_1;
 
         if (tunings.count("gas_optical_depths_minor_kernel_lower") == 0)
@@ -315,10 +315,10 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             std::tie(grid_gpu_min_1, block_gpu_min_1) =
                 tune_kernel_compile_time<Gas_optical_depths_minor_kernel>(
                         "gas_optical_depths_minor_kernel_lower",
-                        dim3(1, nlay, ncol),
+                        dim3(ncol, nlay, 1),
+                        std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
                         std::integer_sequence<unsigned int, 1, 2, 4, 8, 16>{},
                         std::integer_sequence<unsigned int, 1, 2, 4>{},
-                        std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
                         ncol, nlay, ngpt,
                         ngas, nflav, ntemp, neta,
                         nminorlower,
@@ -345,12 +345,12 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             block_gpu_min_1 = tunings["gas_optical_depths_minor_kernel_lower"].second;
         }
 
-        grid_gpu_min_1 = calc_grid_size(block_gpu_min_1, dim3(1, nlay, ncol));
+        grid_gpu_min_1 = calc_grid_size(block_gpu_min_1, dim3(ncol, nlay, 1));
 
         run_kernel_compile_time<Gas_optical_depths_minor_kernel>(
+                std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
                 std::integer_sequence<unsigned int, 1, 2, 4, 8, 16>{},
                 std::integer_sequence<unsigned int, 1, 2, 4>{},
-                std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
                 grid_gpu_min_1, block_gpu_min_1,
                 ncol, nlay, ngpt,
                 ngas, nflav, ntemp, neta,
@@ -373,7 +373,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
         // Upper
         idx_tropo = 0;
 
-        dim3 grid_gpu_min_2(ngpt, nlay, ncol);
+        dim3 grid_gpu_min_2(ncol, nlay, 1);
         dim3 block_gpu_min_2;
 
         if (tunings.count("gas_optical_depths_minor_kernel_upper") == 0)
@@ -382,10 +382,10 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             std::tie(grid_gpu_min_2, block_gpu_min_2) =
                 tune_kernel_compile_time<Gas_optical_depths_minor_kernel>(
                         "gas_optical_depths_minor_kernel_upper",
-                        dim3(1, nlay, ncol),
+                        dim3(ncol, nlay, 1),
+                        std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
                         std::integer_sequence<unsigned int, 1, 2, 4, 8, 16>{},
                         std::integer_sequence<unsigned int, 1, 2, 4>{},
-                        std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
                         ncol, nlay, ngpt,
                         ngas, nflav, ntemp, neta,
                         nminorupper,
@@ -412,12 +412,12 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             block_gpu_min_2 = tunings["gas_optical_depths_minor_kernel_upper"].second;
         }
 
-        grid_gpu_min_2 = calc_grid_size(block_gpu_min_2, dim3(1, nlay, ncol));
+        grid_gpu_min_2 = calc_grid_size(block_gpu_min_2, dim3(ncol, nlay, 1));
 
         run_kernel_compile_time<Gas_optical_depths_minor_kernel>(
+                std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
                 std::integer_sequence<unsigned int, 1, 2, 4, 8, 16>{},
                 std::integer_sequence<unsigned int, 1, 2, 4>{},
-                std::integer_sequence<unsigned int, 1, 2, 4, 8, 16, 32, 48, 64, 96, 128>{},
                 grid_gpu_min_2, block_gpu_min_2,
                 ncol, nlay, ngpt,
                 ngas, nflav, ntemp, neta,

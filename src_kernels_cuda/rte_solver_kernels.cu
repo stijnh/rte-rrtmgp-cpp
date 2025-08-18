@@ -3,9 +3,7 @@
 #include "types.h"
 
 
-#ifndef kernel_tuner
 const int loop_unroll_factor_nlay = 4;
-#endif
 
 
 template<typename TF> __device__ constexpr TF k_min();
@@ -30,7 +28,6 @@ void lw_secants_array_kernel(
         secants[idx_s] = gauss_Ds[idx_g];
     }
 }
-
 
 __device__
 void lw_transport_noscat_kernel(
@@ -110,6 +107,22 @@ void lw_transport_noscat_kernel(
     }
 }
 
+#pragma kernel problem_size(ncol, ngpt)
+#pragma kernel block_size(32, 4)
+#pragma kernel buffer(D[ncol*ngpt])
+#pragma kernel buffer(weight[1])
+#pragma kernel buffer(tau[ncol*nlay*ngpt])
+#pragma kernel buffer(lay_source[ncol*nlay*ngpt])
+#pragma kernel buffer(lev_source[ngpt * ncol * (nlay + 1)])
+#pragma kernel buffer(sfc_emis[ngpt*ncol])
+#pragma kernel buffer(sfc_src[ngpt*ncol])
+#pragma kernel buffer(radn_up[ngpt*ncol*(nlay+1)])
+#pragma kernel buffer(radn_dn[ngpt*ncol*(nlay+1)])
+#pragma kernel buffer(sfc_src_jac[ngpt*ncol])
+#pragma kernel buffer(radn_up_jac[ngpt*ncol*(nlay+1)])
+#pragma kernel buffer(trans[ncol*nlay*ngpt])
+#pragma kernel buffer(source_dn[ncol*nlay*ngpt])
+#pragma kernel buffer(source_up[ncol*nlay*ngpt])
 template <Bool top_at_1>
 __global__
 void lw_solver_noscat_kernel(
@@ -478,7 +491,25 @@ void sw_2stream_function(
         *t_dir = max(tmin<Float>(), min(*t_dir, one_minus_t_noscat - *r_dir));
 }
 
-
+#pragma kernel problem_size(ncol, ngpt)
+#pragma kernel block_size(32, 4)
+#pragma kernel buffer(tau[ngpt*nlay*ncol])
+#pragma kernel buffer(ssa[ngpt*nlay*ncol])
+#pragma kernel buffer(g[ngpt*nlay*ncol])
+#pragma kernel buffer(mu0[ncol])
+#pragma kernel buffer(r_dif[ncol*nlay*ngpt])
+#pragma kernel buffer(t_dif[ncol*nlay*ngpt])
+#pragma kernel buffer(sfc_alb_dir[ngpt*ncol])
+#pragma kernel buffer(sfc_alb_dif[ngpt*ncol])
+#pragma kernel buffer(source_up[ngpt*nlay*ncol])
+#pragma kernel buffer(source_dn[ngpt*nlay*ncol])
+#pragma kernel buffer(source_sfc[ngpt*ncol])
+#pragma kernel buffer(flux_up[ngpt*(nlay+1)*ncol])
+#pragma kernel buffer(flux_dn[ngpt*(nlay+1)*ncol])
+#pragma kernel buffer(flux_dir[ngpt*(nlay+1)*ncol])
+#pragma kernel buffer(albedo[ncol*(nlay+1)*ngpt])
+#pragma kernel buffer(src[ncol*(nlay+1)*ngpt])
+#pragma kernel buffer(denom[ngpt*ncol*nlay])
 template<Bool top_at_1> __global__
 void sw_solver_kernel(
         const int ncol, const int nlay, const int ngpt,
@@ -495,7 +526,7 @@ void sw_solver_kernel(
 
     if ( (icol < ncol) && (igpt < ngpt) )
     {
-        if constexpr (top_at_1)
+        if (top_at_1)
         {
             Float flux_dir_loc = flux_dir[icol + igpt*(nlay+1)*ncol];
 

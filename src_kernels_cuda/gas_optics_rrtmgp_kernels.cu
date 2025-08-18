@@ -200,7 +200,6 @@ struct alignas(sizeof(T) * N) vector {
     T data[N];
 };
 
-
 __global__
 void Planck_source_kernel(
         const int ncol,

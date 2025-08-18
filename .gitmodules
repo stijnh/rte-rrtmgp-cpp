@@ -4,3 +4,6 @@
 [submodule "rrtmgp-data"]
 	path = rrtmgp-data
 	url = https://github.com/earth-system-radiation/rrtmgp-data
+[submodule "external/kernel_launcher"]
+	path = external/kernel_launcher
+	url = https://github.com/KernelTuner/kernel_launcher.git

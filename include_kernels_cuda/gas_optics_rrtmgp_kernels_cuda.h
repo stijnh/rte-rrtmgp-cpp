@@ -35,13 +35,22 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
     void reorder12x21(const int ni, const int nj, const Float* arr_in, Float* arr_out);
 
-    void zero_array(const int ni, Float* arr);
-    void zero_array(const int ni, const int nj, Float* arr);
-    void zero_array(const int ni, const int nj, const int nk, Float* arr);
+    void zero_array_bytes(const size_t nbytes, void* arr);
 
-    void zero_array(const int ni, half* arr);
-    void zero_array(const int ni, const int nj, half* arr);
-    void zero_array(const int ni, const int nj, const int nk, half* arr);
+    template <typename T>
+    void zero_array(const int n, T* arr) {
+        return zero_array_bytes(n * sizeof(T), arr);
+    }
+
+    template <typename T>
+    void zero_array(const int ni, const int nj, T* arr) {
+        return zero_array(ni * nj, arr);
+    }
+
+    template <typename T>
+    void zero_array(const int ni, const int nj, const int nk, T* arr) {
+        return zero_array(ni * nj * nk, arr);
+    }
 
     void interpolation(
             const int ncol, const int nlay,

@@ -32,8 +32,8 @@ void lw_secants_array_kernel(
 __device__
 void lw_transport_noscat_kernel(
         const int icol, const int igpt, const int ncol, const int nlay, const int ngpt, const Bool top_at_1,
-        const Float* __restrict__ tau, const Float* __restrict__ trans, const Float sfc_albedo,
-        const Float* __restrict__ source_dn, const Float* __restrict__ source_up, Float source_sfc,
+        const Float* __restrict__ tau, const INTERMEDIATE_TYPE* __restrict__ trans, const Float sfc_albedo,
+        const INTERMEDIATE_TYPE* __restrict__ source_dn, const INTERMEDIATE_TYPE* __restrict__ source_up, Float source_sfc,
         Float* __restrict__ radn_up, Float* __restrict__ radn_dn, Float source_sfc_jac, Float* __restrict__ radn_up_jac,
         Float radn_dn_top, Float scaling)
 {
@@ -48,7 +48,7 @@ void lw_transport_noscat_kernel(
         {
             const int idx1 = icol + (ilev+1)*ncol + igpt*ncol*(nlay+1);
             const int idx3 = icol + ilev*ncol + igpt*ncol*nlay;
-            radn_dn_loc = trans[idx3] * radn_dn_loc + source_dn[idx3];
+            radn_dn_loc = static_cast<Float>(trans[idx3]) * radn_dn_loc + static_cast<Float>(source_dn[idx3]);
             radn_dn[idx1] = radn_dn_loc * scaling;
         }
 
@@ -63,8 +63,8 @@ void lw_transport_noscat_kernel(
         for (int ilev=nlay-1; ilev>=0; --ilev)
         {
             const int idx3 = icol + ilev*ncol + igpt*ncol*nlay;
-            radn_up_loc = trans[idx3] * radn_up_loc + source_up[idx3];
-            radn_jac_loc = trans[idx3] * radn_jac_loc;
+            radn_up_loc = static_cast<Float>(trans[idx3]) * radn_up_loc + static_cast<Float>(source_up[idx3]);
+            radn_jac_loc = static_cast<Float>(trans[idx3]) * radn_jac_loc;
 
             const int idx1 = icol + ilev*ncol + igpt*ncol*(nlay+1);
             radn_up[idx1] = radn_up_loc * scaling;
@@ -82,7 +82,7 @@ void lw_transport_noscat_kernel(
         {
             const int idx1 = icol + ilev*ncol + igpt*ncol*(nlay+1);
             const int idx3 = icol + ilev*ncol + igpt*ncol*nlay;
-            radn_dn_loc = trans[idx3] * radn_dn_loc + source_dn[idx3];
+            radn_dn_loc = static_cast<Float>(trans[idx3]) * radn_dn_loc + static_cast<Float>(source_dn[idx3]);
             radn_dn[idx1] = radn_dn_loc * scaling;
         }
 
@@ -97,8 +97,8 @@ void lw_transport_noscat_kernel(
         for (int ilev=0; ilev<nlay; ++ilev)
         {
             const int idx3 = icol + ilev*ncol + igpt*ncol*nlay;
-            radn_up_loc = trans[idx3] * radn_up_loc + source_up[idx3];
-            radn_jac_loc = trans[idx3] * radn_jac_loc;
+            radn_up_loc = static_cast<Float>(trans[idx3]) * radn_up_loc + static_cast<Float>(source_up[idx3]);
+            radn_jac_loc = static_cast<Float>(trans[idx3]) * radn_jac_loc;
 
             const int idx1 = icol + (ilev+1)*ncol + igpt*ncol*(nlay+1);
             radn_up[idx1] = radn_up_loc * scaling;
@@ -131,7 +131,7 @@ void lw_solver_noscat_kernel(
         const Float* __restrict__ lev_source, const Float* __restrict__ sfc_emis,
         const Float* __restrict__ sfc_src, Float* __restrict__ radn_up, Float* __restrict__ radn_dn,
         const Float* __restrict__ sfc_src_jac, Float* __restrict__ radn_up_jac,
-        Float* __restrict__ trans, Float* __restrict__ source_dn, Float* __restrict__ source_up)
+        INTERMEDIATE_TYPE* __restrict__ trans, INTERMEDIATE_TYPE* __restrict__ source_dn, INTERMEDIATE_TYPE* __restrict__ source_up)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int igpt = blockIdx.y*blockDim.y + threadIdx.y;
@@ -160,9 +160,9 @@ void lw_solver_noscat_kernel(
             Float src_dec = trans_loc_inv * lev_source[idx_lev] +
                             Float(2.) * fact * (lay_source[idx_lay] - lev_source[idx_lev]);
 
-            trans[idx_lay] = trans_loc;
-            source_dn[idx_lay] = top_at_1 ? src_inc : src_dec;
-            source_up[idx_lay] = top_at_1 ? src_dec : src_inc;
+            trans[idx_lay] = static_cast<INTERMEDIATE_TYPE>(trans_loc);
+            source_dn[idx_lay] = static_cast<INTERMEDIATE_TYPE>(top_at_1 ? src_inc : src_dec);
+            source_up[idx_lay] = static_cast<INTERMEDIATE_TYPE>(top_at_1 ? src_dec : src_inc);
         }
 
         const int idx2d = icol + igpt*ncol;

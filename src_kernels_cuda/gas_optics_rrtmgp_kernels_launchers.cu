@@ -64,52 +64,9 @@ namespace Gas_optics_rrtmgp_kernels_cuda
                 ni, nj, arr_in, arr_out);
     }
 
-
-    void zero_array(const int ni, const int nj, const int nk, Float* arr)
-    {
-        dim3 block_gpu(32, 16, 1);
-        dim3 grid_gpu = calc_grid_size(block_gpu, dim3(ni, nj, nk));
-
-        zero_array_kernel<<<grid_gpu, block_gpu>>>(
-                ni, nj, nk, arr);
-
+    void zero_array_bytes(const size_t nbytes, void* arr) {
+        cuda_safe_call(cudaMemsetAsync(arr, 0, nbytes, nullptr));
     }
-
-
-    void zero_array(const int ni, Float* arr)
-    {
-        zero_array(ni, 1, 1, arr);
-    }
-
-
-    void zero_array(const int ni, const int nj, Float* arr)
-    {
-        zero_array(ni, nj, 1, arr);
-    }
-
-
-    void zero_array(const int ni, const int nj, const int nk, half* arr)
-    {
-        dim3 block_gpu(32, 16, 1);
-        dim3 grid_gpu = calc_grid_size(block_gpu, dim3(ni, nj, nk));
-
-        zero_array_kernel<<<grid_gpu, block_gpu>>>(
-                ni, nj, nk, arr);
-
-    }
-
-
-    void zero_array(const int ni, half* arr)
-    {
-        zero_array(ni, 1, 1, arr);
-    }
-
-
-    void zero_array(const int ni, const int nj, half* arr)
-    {
-        zero_array(ni, nj, 1, arr);
-    }
-
 
     void interpolation(
             const int ncol, const int nlay,

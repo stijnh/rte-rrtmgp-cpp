@@ -76,19 +76,15 @@ namespace Rte_solver_kernels_cuda
         const int opt_size = ncol*nlay*ngpt;
         const int sfc_size = ncol*ngpt;;
 
-        Float* trans = Tools_gpu::allocate_gpu<Float>(opt_size);
-        Float* source_dn = Tools_gpu::allocate_gpu<Float>(opt_size);
-        Float* source_up = Tools_gpu::allocate_gpu<Float>(opt_size);
+        INTERMEDIATE_TYPE* trans = Tools_gpu::allocate_gpu<INTERMEDIATE_TYPE>(opt_size);
+        INTERMEDIATE_TYPE* source_dn = Tools_gpu::allocate_gpu<INTERMEDIATE_TYPE>(opt_size);
+        INTERMEDIATE_TYPE* source_up = Tools_gpu::allocate_gpu<INTERMEDIATE_TYPE>(opt_size);
         Float* radn_dn = Tools_gpu::allocate_gpu<Float>(flx_size);
         Float* radn_up = Tools_gpu::allocate_gpu<Float>(flx_size);
         Float* radn_up_jac = Tools_gpu::allocate_gpu<Float>(flx_size);
 
-        dim3 block_gpu2d(64, 2);
-        dim3 grid_gpu2d = calc_grid_size(block_gpu2d, dim3(ncol, ngpt));
-
         const int top_level = top_at_1 ? 0 : nlay;
         const Float tau_thres = sqrt(sqrt(eps));
-
 
         // Upper boundary condition.
         if (inc_flux == nullptr)
@@ -104,6 +100,9 @@ namespace Rte_solver_kernels_cuda
                 sfc_emis, sfc_src, flux_up, flux_dn, sfc_src_jac,
                 flux_up_jac, trans,
                 source_dn, source_up);
+
+        dim3 block_gpu2d(64, 2);
+        dim3 grid_gpu2d = calc_grid_size(block_gpu2d, dim3(ncol, ngpt));
 
         apply_BC_kernel_lw<<<grid_gpu2d, block_gpu2d>>>(top_level, ncol, nlay, ngpt, top_at_1, flux_dn, radn_dn);
 

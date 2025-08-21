@@ -28,6 +28,7 @@ const Float Float_epsilon = DBL_EPSILON;
 using Int = unsigned long long;
 const Int Atomic_reduce_const = (Int)(-1LL);
 
-using ATMOS_TYPE = half;
+using ATMOS_TYPE = float;
+using INTERMEDIATE_TYPE = half;
 
 #endif

@@ -428,8 +428,8 @@ void Radiation_solver_longwave::solve_gpu(
         const Array_gpu<Float,1>& t_sfc, const Array_gpu<Float,2>& emis_sfc,
         const Array_gpu<Float,2>& lwp, const Array_gpu<Float,2>& iwp,
         const Array_gpu<Float,2>& rel, const Array_gpu<Float,2>& dei,
-        Array_gpu<Float,3>& tau, Array_gpu<Float,3>& lay_source,
-        Array_gpu<Float,3>& lev_source, Array_gpu<Float,2>& sfc_source,
+        Array_gpu<ATMOS_TYPE,3>& tau, Array_gpu<ATMOS_TYPE,3>& lay_source,
+        Array_gpu<ATMOS_TYPE,3>& lev_source, Array_gpu<Float,2>& sfc_source,
         Array_gpu<Float,2>& lw_flux_up, Array_gpu<Float,2>& lw_flux_dn, Array_gpu<Float,2>& lw_flux_net,
         Array_gpu<Float,3>& lw_bnd_flux_up, Array_gpu<Float,3>& lw_bnd_flux_dn, Array_gpu<Float,3>& lw_bnd_flux_net)
 {
@@ -518,7 +518,8 @@ void Radiation_solver_longwave::solve_gpu(
         if (switch_output_optical)
         {
             Subset_kernels_cuda::get_from_subset(
-                    n_col, n_lay, n_gpt, n_col_in, col_s_in, tau.ptr(), lay_source.ptr(), lev_source.ptr(),
+                    n_col, n_lay, n_gpt, n_col_in, col_s_in,
+                    tau.ptr(), lay_source.ptr(), lev_source.ptr(),
                     optical_props_subset_in->get_tau().ptr(), sources_subset_in.get_lay_source().ptr(),
                     sources_subset_in.get_lev_source().ptr());
 
@@ -566,7 +567,8 @@ void Radiation_solver_longwave::solve_gpu(
 
         // Copy the data to the output.
         Subset_kernels_cuda::get_from_subset(
-                n_col, n_lev, n_col_in, col_s_in, lw_flux_up.ptr(), lw_flux_dn.ptr(), lw_flux_net.ptr(),
+                n_col, n_lev, n_col_in, col_s_in,
+                lw_flux_up.ptr(), lw_flux_dn.ptr(), lw_flux_net.ptr(),
                 fluxes.get_flux_up().ptr(), fluxes.get_flux_dn().ptr(), fluxes.get_flux_net().ptr());
 
 
@@ -575,7 +577,8 @@ void Radiation_solver_longwave::solve_gpu(
             bnd_fluxes.reduce(gpt_flux_up, gpt_flux_dn, optical_props_subset_in, top_at_1);
 
             Subset_kernels_cuda::get_from_subset(
-                    n_col, n_lev, n_bnd, n_col_in, col_s_in, lw_bnd_flux_up.ptr(), lw_bnd_flux_dn.ptr(), lw_bnd_flux_net.ptr(),
+                    n_col, n_lev, n_bnd, n_col_in, col_s_in,
+                    lw_bnd_flux_up.ptr(), lw_bnd_flux_dn.ptr(), lw_bnd_flux_net.ptr(),
                     bnd_fluxes.get_bnd_flux_up().ptr(), bnd_fluxes.get_bnd_flux_dn().ptr(), bnd_fluxes.get_bnd_flux_net().ptr());
 
         }
@@ -698,7 +701,7 @@ void Radiation_solver_shortwave::solve_gpu(
         const Array_gpu<Float,2>& rel, const Array_gpu<Float,2>& dei,
         const Array_gpu<Float,2>& rh,
         const Aerosol_concs_gpu& aerosol_concs,
-        Array_gpu<Float,3>& tau, Array_gpu<Float,3>& ssa, Array_gpu<Float,3>& g,
+        Array_gpu<ATMOS_TYPE,3>& tau, Array_gpu<Float,3>& ssa, Array_gpu<Float,3>& g,
         Array_gpu<Float,2>& toa_src,
         Array_gpu<Float,2>& sw_flux_up, Array_gpu<Float,2>& sw_flux_dn,
         Array_gpu<Float,2>& sw_flux_dn_dir, Array_gpu<Float,2>& sw_flux_net,

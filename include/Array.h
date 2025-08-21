@@ -153,6 +153,13 @@ class Array
         }
         #endif
 
+
+        #ifdef __CUDACC__
+        template <typename U>
+        Array(const Array_gpu<U, N>& array_gpu):
+            Array(Array_gpu<T, N>(array_gpu)) {}
+        #endif
+
         inline void set_offsets(const std::array<int, N>& offsets)
         {
             this->offsets = offsets;
@@ -308,10 +315,10 @@ struct Subset_data
     bool do_spread[N];
 };
 
-template<typename T, int N> __global__
+template<typename T, typename U, int N> __global__
 void subset_kernel(
         T* __restrict__ a_sub,
-        const T* __restrict__ a,
+        const U* __restrict__ a,
         Subset_data<N> subset_data,
         const int ncells)
 {
@@ -319,20 +326,50 @@ void subset_kernel(
 
     if (idx_out < ncells)
     {
+        int point[N];
         int ic = idx_out;
-        int idx_in = 0;
 
         #pragma unroll
         for (int n=N-1; n>=0; --n)
         {
-            const int idx_dim = subset_data.do_spread[n] ? 1 : ic / subset_data.sub_strides[n] + subset_data.starts[n];
+            point[n] = ic / subset_data.sub_strides[n];
             ic %= subset_data.sub_strides[n];
-
-            idx_in += (idx_dim - subset_data.offsets[n] - 1) * subset_data.strides[n];
         }
 
-        a_sub[idx_out] = a[idx_in];
+        int idx_in = 0;
+
+        #pragma unroll
+        for (int n=0; n < N; n++)
+        {
+            idx_in += (subset_data.do_spread[n] ? 1 : point[n])  * subset_data.strides[n];
+        }
+
+        a_sub[idx_out] = static_cast<T>(a[idx_in]);
     }
+}
+
+template<typename T, typename U, int N>
+void launch_subset_kernel(
+        T* __restrict__ a_sub,
+        const U* __restrict__ a,
+        Subset_data<N> subset_data,
+        const int ncells
+) {
+    constexpr int block_ncells = 256;
+    const int grid_ncells = ncells/block_ncells + (ncells%block_ncells > 0);
+
+    dim3 block_gpu(block_ncells);
+    dim3 grid_gpu(grid_ncells);
+
+    int a_offset = 0;
+
+    #pragma unroll
+    for (int n=0; n < N; n++)
+    {
+        a_offset += (subset_data.starts[n] - 1 - subset_data.offsets[n]) * subset_data.strides[n];
+    }
+
+    subset_kernel<<<grid_gpu, block_gpu>>>(a_sub, a + a_offset, subset_data, ncells);
 }
 
 template<typename T> __global__
@@ -390,14 +427,14 @@ class Array_gpu
                 is_view = true;
                 data_ptr = array.data_ptr;
             }
-            else if (this->ncells == 0)
-            {
-                is_view = false;
-                data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
-                cuda_safe_call(cudaMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), cudaMemcpyDeviceToDevice));
-            }
             else
             {
+                if (this->ncells == 0)
+                {
+                    is_view = false;
+                    data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
+                }
+
                 cuda_safe_call(cudaMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), cudaMemcpyDeviceToDevice));
             }
             return (*this);
@@ -446,6 +483,29 @@ class Array_gpu
         }
         #endif
 
+
+        #ifdef __CUDACC__
+        template <typename U>
+        Array_gpu(const Array_gpu<U, N>& array) :
+            dims(array.dims),
+            ncells(array.ncells),
+            data_ptr(nullptr),
+            strides(array.strides),
+            offsets(array.offsets),
+            is_view(false)
+        {
+            if (array.is_view)
+            {
+                throw std::runtime_error("cannot convert from array view");
+            }
+            else
+            {
+                data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
+                array.copy_to(*this);
+            }
+        }
+        #endif
+
         #ifdef __CUDACC__
         Array_gpu(Array_gpu<T, N>&& array) :
             dims(std::exchange(array.dims, {})),
@@ -485,8 +545,8 @@ class Array_gpu
         }
         #endif
 
-        #ifdef __CUDACC__
-        Array_gpu(const Array<T, N>& array) :
+    #ifdef __CUDACC__
+    Array_gpu(const Array<T, N>& array) :
             dims(array.dims),
             ncells(array.ncells),
             data_ptr(nullptr),
@@ -496,6 +556,14 @@ class Array_gpu
         {
             data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
             cuda_safe_call(cudaMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), cudaMemcpyHostToDevice));
+        }
+        #endif
+
+        #ifdef __CUDACC__
+        template <typename U>
+        Array_gpu(const Array<U, N>& array) :
+            Array_gpu(Array_gpu<U, N>(array))
+        {
         }
         #endif
 
@@ -576,7 +644,26 @@ class Array_gpu
         inline int dim(const int i) const { return dims[i-1]; }
 
         #ifdef __CUDACC__
-        inline Array_gpu<T, N> subset(
+        template <typename U=T>
+        inline void subset_copy(Array_gpu<U, N>& a_sub,
+                const std::array<int, N>& block_corners) const
+        {
+            Subset_data<N> subset_data;
+
+            for (int i=0; i<N; ++i)
+            {
+                subset_data.sub_strides[i] = a_sub.strides[i];
+                subset_data.strides[i] = strides[i];
+                subset_data.starts[i] = block_corners[i];
+                subset_data.offsets[i] = offsets[i];
+                subset_data.do_spread[i] = (dims[i] == 1);
+            }
+
+            launch_subset_kernel(a_sub.data_ptr, data_ptr, subset_data, a_sub.ncells);
+        }
+
+        template <typename U=T>
+        inline Array_gpu<U, N> subset(
                 const std::array<std::pair<int, int>, N> ranges) const
         {
             // Calculate the dimension sizes based on the range.
@@ -591,34 +678,19 @@ class Array_gpu
             }
 
             // Create the array and fill it with the subset.
-            Array_gpu<T, N> a_sub(subdims);
-
-            return subset_copy(a_sub, block_corners);
+            Array_gpu<U, N> a_sub(subdims);
+            subset_copy(a_sub, block_corners);
+            return a_sub;
         }
 
-        inline Array_gpu<T, N> subset_copy(Array_gpu<T, N>& a_sub,
-                const std::array<int, N>& block_corners) const
+        template <typename U=T>
+        inline void copy_to(Array_gpu<U, N>& target) const
         {
-            Subset_data<N> subset_data;
-
-            for (int i=0; i<N; ++i)
-            {
-                subset_data.sub_strides[i] = a_sub.strides[i];
-                subset_data.strides[i] = strides[i];
-                subset_data.starts[i] = block_corners[i];
-                subset_data.offsets[i] = offsets[i];
-                subset_data.do_spread[i] = (dims[i] == 1);
+            std::array<int, N> block_corners;
+            for (int i=0; i<N; i++) {
+                block_corners[i] = 1;
             }
-
-            constexpr int block_ncells = 64;
-            const int grid_ncells = a_sub.ncells/block_ncells + (a_sub.ncells%block_ncells > 0);
-
-            dim3 block_gpu(block_ncells);
-            dim3 grid_gpu(grid_ncells);
-
-            subset_kernel<<<grid_gpu, block_gpu>>>(a_sub.data_ptr, data_ptr, subset_data, a_sub.ncells);
-
-            return a_sub;
+            subset_copy(target, block_corners);
         }
         #endif
 
@@ -646,7 +718,8 @@ class Array_gpu
         std::array<int, N> offsets;
         bool is_view;
 
-        friend class Array<T, N>;
+        template <typename, int> friend class Array_gpu;
+        template <typename, int> friend class Array;
 };
 
 template<typename T, int N>

@@ -32,26 +32,26 @@ namespace Optical_props_kernels_cuda
 {
     void increment_1scalar_by_1scalar(
             int ncol, int nlay, int ngpt,
-            Float* tau_inout, const Float* tau_in);
+            ATMOS_TYPE* tau_inout, const ATMOS_TYPE* tau_in);
 
     void increment_2stream_by_2stream(
             int ncol, int nlay, int ngpt,
-            Float* tau_inout, Float* ssa_inout, Float* g_inout,
-            const Float* tau_in, const Float* ssa_in, const Float* g_in);
+            ATMOS_TYPE* tau_inout, Float* ssa_inout, Float* g_inout,
+            const ATMOS_TYPE* tau_in, const Float* ssa_in, const Float* g_in);
 
     void inc_1scalar_by_1scalar_bybnd(
             int ncol, int nlay, int ngpt,
-            Float* tau_inout, const Float* tau_in,
+            ATMOS_TYPE* tau_inout, const ATMOS_TYPE* tau_in,
             int nbnd, const int* band_lims_gpoint);
 
     void inc_2stream_by_2stream_bybnd(
             int ncol, int nlay, int ngpt,
-            Float* tau_inout, Float* ssa_inout, Float* g_inout,
-            const Float* tau_in, const Float* ssa_in, const Float* g_in,
+            ATMOS_TYPE* tau_inout, Float* ssa_inout, Float* g_inout,
+            const ATMOS_TYPE* tau_in, const Float* ssa_in, const Float* g_in,
             int nbnd, const int* band_lims_gpoint);
 
     void delta_scale_2str_k(
             int ncol, int nlay, int ngpt,
-            Float* tau_inout, Float* ssa_inout, Float* g_inout);
+            ATMOS_TYPE* tau_inout, Float* ssa_inout, Float* g_inout);
 }
 #endif

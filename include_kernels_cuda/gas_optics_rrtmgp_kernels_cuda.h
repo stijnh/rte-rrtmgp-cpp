@@ -39,6 +39,10 @@ namespace Gas_optics_rrtmgp_kernels_cuda
     void zero_array(const int ni, const int nj, Float* arr);
     void zero_array(const int ni, const int nj, const int nk, Float* arr);
 
+    void zero_array(const int ni, half* arr);
+    void zero_array(const int ni, const int nj, half* arr);
+    void zero_array(const int ni, const int nj, const int nk, half* arr);
+
     void interpolation(
             const int ncol, const int nlay,
             const int ngas, const int nflav, const int neta, const int npres, const int ntemp,
@@ -62,8 +66,8 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
     void combine_abs_and_rayleigh(
             const int ncol, const int nlay, const int ngpt,
-            const Float* tau_local, const Float* tau_rayleigh,
-            Float* tau, Float* ssa, Float* g);
+            const ATMOS_TYPE* tau_local, const ATMOS_TYPE* tau_rayleigh,
+            ATMOS_TYPE* tau, Float* ssa, Float* g);
 
     void compute_tau_rayleigh(
             const int ncol, const int nlay, const int nband, const int ngpt,
@@ -75,7 +79,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             int idx_h2o, const Float* col_dry, const Float* col_gas,
             const Float* fminor, const int* jeta,
             const Bool* tropo, const int* jtemp,
-            Float* tau_rayleigh);
+            ATMOS_TYPE* tau_rayleigh);
 
     void compute_tau_absorption(
             const int ncol, const int nlay, const int nband, const int ngpt,
@@ -105,7 +109,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const Float* fminor, const Float* play,
             const Float* tlay, const Float* col_gas,
             const int* jeta, const int* jtemp,
-            const int* jpress, Float* tau);
+            const int* jpress, ATMOS_TYPE* tau);
 
     void compute_planck_source(
             const int ncol, const int nlay, const int nbnd, const int ngpt,
@@ -127,8 +131,8 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const Float* totplnk,
             const int* gpoint_flavor,
             Float* sfc_src,
-            Float* lay_src,
-            Float* lev_src,
+            ATMOS_TYPE* lay_src,
+            ATMOS_TYPE* lev_src,
             Float* sfc_src_jac);
 }
 #endif

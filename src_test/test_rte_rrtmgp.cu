@@ -374,9 +374,9 @@ void solve_radiation(int argc, char** argv)
         Array<Float,1> t_sfc(input_nc.get_variable<Float>("t_sfc", {n_col_y, n_col_x}), {n_col});
 
         // Create output arrays.
-        Array_gpu<Float,3> lw_tau;
-        Array_gpu<Float,3> lay_source;
-        Array_gpu<Float,3> lev_source;
+        Array_gpu<ATMOS_TYPE,3> lw_tau;
+        Array_gpu<ATMOS_TYPE,3> lay_source;
+        Array_gpu<ATMOS_TYPE,3> lev_source;
         Array_gpu<Float,2> sfc_source;
 
         if (switch_output_optical)
@@ -579,7 +579,7 @@ void solve_radiation(int argc, char** argv)
         }
 
         // Create output arrays.
-        Array_gpu<Float,3> sw_tau;
+        Array_gpu<ATMOS_TYPE,3> sw_tau;
         Array_gpu<Float,3> ssa;
         Array_gpu<Float,3> g;
         Array_gpu<Float,2> toa_source;

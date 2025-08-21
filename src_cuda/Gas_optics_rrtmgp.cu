@@ -1064,8 +1064,8 @@ void Gas_optics_rrtmgp_gpu::compute_gas_taus(
 
     if (has_rayleigh)
     {
-        Array_gpu<Float,3> tau({ncol, nlay, ngpt});
-        Array_gpu<Float,3> tau_rayleigh({ncol, nlay, ngpt});
+        Array_gpu<ATMOS_TYPE,3> tau({ncol, nlay, ngpt});
+        Array_gpu<ATMOS_TYPE,3> tau_rayleigh({ncol, nlay, ngpt});
         Gas_optics_rrtmgp_kernels_cuda::zero_array(ngpt, nlay, ncol, tau.ptr());
 
         Gas_optics_rrtmgp_kernels_cuda::zero_array(ncol, nlay, ngpt, tau.ptr());
@@ -1149,8 +1149,8 @@ void Gas_optics_rrtmgp_gpu::compute_gas_taus(
 
 
 void Gas_optics_rrtmgp_gpu::combine_abs_and_rayleigh(
-        const Array_gpu<Float,3>& tau,
-        const Array_gpu<Float,3>& tau_rayleigh,
+        const Array_gpu<ATMOS_TYPE,3>& tau,
+        const Array_gpu<ATMOS_TYPE,3>& tau_rayleigh,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props)
 {
     int ncol = tau.dim(1);

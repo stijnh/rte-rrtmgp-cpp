@@ -71,7 +71,7 @@ namespace
 
     template<typename TF>__global__
     void combine_and_store_kernel(const int ncol, const int nlay, const int nbnd, const TF tmin,
-                  TF* __restrict__ tau,
+                  ATMOS_TYPE* __restrict__ tau,
                   const TF* __restrict__ ltau, const TF* __restrict__ ltaussa,
                   const TF* __restrict__ itau, const TF* __restrict__ itaussa)
     {
@@ -84,13 +84,13 @@ namespace
             const int idx = icol + ilay*ncol + ibnd*nlay*ncol;
             const TF tau_t = (ltau[idx] - ltaussa[idx]) + (itau[idx] - itaussa[idx]);
 
-            tau[idx] = tau_t;
+            tau[idx] = ATMOS_TYPE(tau_t);
         }
     }
 
     template<typename TF>__global__
     void combine_and_store_kernel(const int ncol, const int nlay, const int nbnd, const TF tmin,
-                  TF* __restrict__ tau, TF* __restrict__ ssa, TF* __restrict__ g,
+                  ATMOS_TYPE* __restrict__ tau, TF* __restrict__ ssa, TF* __restrict__ g,
                   const TF* __restrict__ ltau, const TF* __restrict__ ltaussa, const TF* __restrict__ ltaussag,
                   const TF* __restrict__ itau, const TF* __restrict__ itaussa, const TF* __restrict__ itaussag)
     {
@@ -105,7 +105,7 @@ namespace
             const TF taussa = ltaussa[idx] + itaussa[idx];
             const TF taussag = ltaussag[idx] + itaussag[idx];
 
-            tau[idx] = tau_t;
+            tau[idx] = ATMOS_TYPE(tau_t);
             ssa[idx] = taussa / max(tau_t, tmin);
             g[idx]   = taussag/ max(taussa, tmin);
         }

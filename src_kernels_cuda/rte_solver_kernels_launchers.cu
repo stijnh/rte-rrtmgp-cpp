@@ -62,8 +62,8 @@ namespace Rte_solver_kernels_cuda
     void lw_solver_noscat_impl(
             const int ncol, const int nlay, const int ngpt, const int nmus,
             const Float* secants, const Float* weights,
-            const Float* tau, const Float* lay_source,
-            const Float* lev_source,
+            const ATMOS_TYPE* tau, const ATMOS_TYPE* lay_source,
+            const ATMOS_TYPE* lev_source,
             const Float* sfc_emis, const Float* sfc_src,
             const Float* inc_flux,
             Float* flux_up, Float* flux_dn,
@@ -157,8 +157,8 @@ namespace Rte_solver_kernels_cuda
     void lw_solver_noscat(
             const int ncol, const int nlay, const int ngpt, const Bool top_at_1, const int nmus,
             const Float* secants, const Float* weights,
-            const Float* tau, const Float* lay_source,
-            const Float* lev_source,
+            const ATMOS_TYPE* tau, const ATMOS_TYPE* lay_source,
+            const ATMOS_TYPE* lev_source,
             const Float* sfc_emis, const Float* sfc_src,
             const Float* inc_flux,
             Float* flux_up, Float* flux_dn,

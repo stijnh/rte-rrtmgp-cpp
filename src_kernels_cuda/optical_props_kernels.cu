@@ -30,7 +30,7 @@ const int loop_unroll_factor_nbnd = 2;
 __global__
 void increment_1scalar_by_1scalar_kernel(
             const int ncol, const int nlay, const int ngpt,
-            Float* __restrict__ tau1, const Float* __restrict__ tau2)
+            ATMOS_TYPE* __restrict__ tau1, const ATMOS_TYPE* __restrict__ tau2)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
@@ -47,8 +47,8 @@ void increment_1scalar_by_1scalar_kernel(
 __global__
 void increment_2stream_by_2stream_kernel(
             const int ncol, const int nlay, const int ngpt, const Float eps,
-            Float* __restrict__ tau1, Float* __restrict__ ssa1, Float* __restrict__ g1,
-            const Float* __restrict__ tau2, const Float* __restrict__ ssa2, const Float* __restrict__ g2)
+            ATMOS_TYPE* __restrict__ tau1, Float* __restrict__ ssa1, Float* __restrict__ g1,
+            const ATMOS_TYPE* __restrict__ tau2, const Float* __restrict__ ssa2, const Float* __restrict__ g2)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
@@ -66,7 +66,7 @@ void increment_2stream_by_2stream_kernel(
 
         g1[idx] = ((tau1_value * ssa1_value * g1[idx]) + (tau2_value * ssa2[idx] * g2[idx])) / max(tauscat12, eps);
         ssa1[idx] = tauscat12 / max(eps, tau12);
-        tau1[idx] = tau12;
+        tau1[idx] = ATMOS_TYPE(tau12);
     }
 }
 
@@ -74,7 +74,7 @@ void increment_2stream_by_2stream_kernel(
 __global__
 void inc_1scalar_by_1scalar_bybnd_kernel(
             const int ncol, const int nlay, const int ngpt,
-            Float* __restrict__ tau1, const Float* __restrict__ tau2,
+            ATMOS_TYPE* __restrict__ tau1, const ATMOS_TYPE* __restrict__ tau2,
             const int nbnd, const int* __restrict__ band_lims_gpt)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -102,8 +102,8 @@ void inc_1scalar_by_1scalar_bybnd_kernel(
 __global__
 void inc_2stream_by_2stream_bybnd_kernel(
             const int ncol, const int nlay, const int ngpt, const Float eps,
-            Float* __restrict__ tau1, Float* __restrict__ ssa1, Float* __restrict__ g1,
-            const Float* __restrict__ tau2, const Float* __restrict__ ssa2, const Float* __restrict__ g2,
+            ATMOS_TYPE* __restrict__ tau1, Float* __restrict__ ssa1, Float* __restrict__ g1,
+            const ATMOS_TYPE* __restrict__ tau2, const Float* __restrict__ ssa2, const Float* __restrict__ g2,
             const int nbnd, const int* __restrict__ band_lims_gpt)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -129,7 +129,7 @@ void inc_2stream_by_2stream_bybnd_kernel(
 
                 g1[idx_gpt] = ((tau1_value * ssa1_value * g1[idx_gpt]) + (tau2_value * ssa2_value * g2[idx_bnd])) / max(tauscat12, eps);
                 ssa1[idx_gpt] = tauscat12 / max(eps, tau12);
-                tau1[idx_gpt] = tau12;
+                tau1[idx_gpt] = ATMOS_TYPE(tau12);
             }
         }
     }
@@ -139,7 +139,7 @@ void inc_2stream_by_2stream_bybnd_kernel(
 __global__
 void delta_scale_2str_k_kernel(
             const int ncol, const int nlay, const int ngpt, const Float eps,
-            Float* __restrict__ tau, Float* __restrict__ ssa, Float* __restrict__ g)
+            ATMOS_TYPE* __restrict__ tau, Float* __restrict__ ssa, Float* __restrict__ g)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
@@ -153,7 +153,7 @@ void delta_scale_2str_k_kernel(
         const Float f = g_value * g_value;
         const Float wf = ssa_value * f;
 
-        tau[idx] *= (Float(1.) - wf);
+        tau[idx] = ATMOS_TYPE(Float(tau[idx]) * (Float(1.) - wf));
         ssa[idx] = (ssa_value - wf) / max(eps,(Float(1.)-wf));
         g[idx] = (g_value - f) / max(eps,(Float(1.)-f));
 

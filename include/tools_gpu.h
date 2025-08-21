@@ -98,6 +98,12 @@ namespace Tools_gpu
         data_ptr = nullptr;
     }
 
+    template <typename T>
+    void memcpy_gpu(T* dst_ptr, const T* src_ptr, int n)
+    {
+        cuda_safe_call(cudaMemcpy(dst_ptr, n*sizeof(T), cudaMemcpyDeviceToDevice));
+    }
+
     inline dim3 calc_grid_size(const dim3 block, const dim3 total)
     {
         const int grid_x = total.x/block.x + (total.x%block.x > 0);

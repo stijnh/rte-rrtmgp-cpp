@@ -1,6 +1,7 @@
 #ifndef TYPES_H
 #define TYPES_H
 
+#include <cuda_fp16.h>
 #include <map>
 #include <float.h>
 
@@ -26,5 +27,7 @@ const Float Float_epsilon = DBL_EPSILON;
 
 using Int = unsigned long long;
 const Int Atomic_reduce_const = (Int)(-1LL);
+
+using ATMOS_TYPE = half;
 
 #endif

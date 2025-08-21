@@ -160,7 +160,7 @@ namespace
 
     __global__
     void combine_and_store_kernel(const int ncol, const int nlay, const int nbnd, const Float tmin,
-                  Float* __restrict__ tau, Float* __restrict__ ssa, Float* __restrict__ g,
+                  ATMOS_TYPE* __restrict__ tau, Float* __restrict__ ssa, Float* __restrict__ g,
                   const Float* __restrict__ ltau, const Float* __restrict__ ltaussa, const Float* __restrict__ ltaussag)
     {
         const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -170,8 +170,8 @@ namespace
         if ( (icol < ncol) && (ilay < nlay) && (ibnd < nbnd) )
         {
             const int idx = icol + ilay*ncol + ibnd*nlay*ncol;
-            tau[idx] = ltau[idx];
-            ssa[idx] = ltaussa[idx] / max(tau[idx], tmin);
+            tau[idx] = ATMOS_TYPE(ltau[idx]);
+            ssa[idx] = ltaussa[idx] / max(ltau[idx], tmin);
             g[idx]   = ltaussag[idx] / max(ltaussa[idx], tmin);
         }
     }

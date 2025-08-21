@@ -530,8 +530,8 @@ void Radiation_solver_longwave::solve_gpu(
         if (!switch_fluxes)
             return;
 
-        Array_gpu<Float,3> gpt_flux_up({n_col_in, n_lev, n_gpt});
-        Array_gpu<Float,3> gpt_flux_dn({n_col_in, n_lev, n_gpt});
+        Array_gpu<FLUX_TYPE,3> gpt_flux_up({n_col_in, n_lev, n_gpt});
+        Array_gpu<FLUX_TYPE,3> gpt_flux_dn({n_col_in, n_lev, n_gpt});
 
 
         // CvH The structure below is valid if broadband flux solvers are implemented

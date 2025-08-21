@@ -32,7 +32,7 @@ namespace Fluxes_kernels_cuda
 {
     void sum_broadband(
             int ncol, int nlev, int ngpt,
-            const Float* gpt_flux, Float* flux);
+            const FLUX_TYPE* gpt_flux, Float* flux);
 
     void net_broadband_precalc(
             int ncol, int nlev,
@@ -42,7 +42,7 @@ namespace Fluxes_kernels_cuda
     void sum_byband(
             int ncol, int nlev, int ngpt, int nbnd,
             const int* band_lims,
-            const Float* gpt_flux,
+            const FLUX_TYPE* gpt_flux,
             Float* bnd_flux);
 
     void net_byband_full(

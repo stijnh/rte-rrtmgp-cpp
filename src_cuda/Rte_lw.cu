@@ -62,9 +62,9 @@ void Rte_lw_gpu::rte_lw(
         const Bool top_at_1,
         const Source_func_lw_gpu& sources,
         const Array_gpu<Float,2>& sfc_emis,
-        const Array_gpu<Float,2>& inc_flux,
-        Array_gpu<Float,3>& gpt_flux_up,
-        Array_gpu<Float,3>& gpt_flux_dn,
+        const Array_gpu<FLUX_TYPE,2>& inc_flux,
+        Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
+        Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
         const int n_gauss_angles)
 {
     const int max_gauss_pts = 4;
@@ -117,7 +117,7 @@ void Rte_lw_gpu::rte_lw(
     const Bool do_jacobians = false;
 
     // pass null ptr if size of inc_flux is zero
-    const Float* inc_flux_ptr = (inc_flux.size() == 0) ? nullptr : inc_flux.ptr();
+    const FLUX_TYPE* inc_flux_ptr = (inc_flux.size() == 0) ? nullptr : inc_flux.ptr();
 
     Rte_solver_kernels_cuda::lw_solver_noscat(
             ncol, nlay, ngpt, top_at_1, n_quad_angs,

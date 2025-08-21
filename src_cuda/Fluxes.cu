@@ -37,7 +37,7 @@ Fluxes_broadband_gpu::Fluxes_broadband_gpu(const int ncol, const int nlev) :
 
 
 void Fluxes_broadband_gpu::reduce(
-    const Array_gpu<Float,3>& gpt_flux_up, const Array_gpu<Float,3>& gpt_flux_dn,
+    const Array_gpu<FLUX_TYPE,3>& gpt_flux_up, const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
     const std::unique_ptr<Optical_props_arry_gpu>& spectral_disc,
     const Bool top_at_1)
 {
@@ -55,7 +55,7 @@ void Fluxes_broadband_gpu::reduce(
 
 //// CvH: unnecessary code duplication.
 void Fluxes_broadband_gpu::reduce(
-    const Array_gpu<Float,3>& gpt_flux_up, const Array_gpu<Float,3>& gpt_flux_dn, const Array_gpu<Float,3>& gpt_flux_dn_dir,
+    const Array_gpu<FLUX_TYPE,3>& gpt_flux_up, const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn, const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn_dir,
     const std::unique_ptr<Optical_props_arry_gpu>& spectral_disc,
     const Bool top_at_1)
 {
@@ -79,8 +79,8 @@ Fluxes_byband_gpu::Fluxes_byband_gpu(const int ncol, const int nlev, const int n
 
 
 void Fluxes_byband_gpu::reduce(
-    const Array_gpu<Float,3>& gpt_flux_up,
-    const Array_gpu<Float,3>& gpt_flux_dn,
+    const Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
+    const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
     const std::unique_ptr<Optical_props_arry_gpu>& spectral_disc,
     const Bool top_at_1)
 {
@@ -111,9 +111,9 @@ void Fluxes_byband_gpu::reduce(
 
 // CvH: a lot of code duplication.
 void Fluxes_byband_gpu::reduce(
-    const Array_gpu<Float,3>& gpt_flux_up,
-    const Array_gpu<Float,3>& gpt_flux_dn,
-    const Array_gpu<Float,3>& gpt_flux_dn_dir,
+    const Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
+    const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
+    const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn_dir,
     const std::unique_ptr<Optical_props_arry_gpu>& spectral_disc,
     const Bool top_at_1)
 {

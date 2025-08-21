@@ -26,7 +26,7 @@
 __global__
 void sum_broadband_kernel(
             const int ncol, const int nlev, const int ngpt,
-            const Float* __restrict__ spectral_flux, Float* __restrict__ broadband_flux)
+            const FLUX_TYPE* __restrict__ spectral_flux, Float* __restrict__ broadband_flux)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int ilev = blockIdx.y*blockDim.y + threadIdx.y;
@@ -38,7 +38,7 @@ void sum_broadband_kernel(
         for (int igpt=0; igpt < ngpt; ++igpt)
         {
             const int idx_in = icol + ilev*ncol + igpt*nlev*ncol;
-            bb_flux_s += spectral_flux[idx_in];
+            bb_flux_s += static_cast<Float>(spectral_flux[idx_in]);
         }
         broadband_flux[idx_out] = bb_flux_s;
     }
@@ -65,7 +65,7 @@ void net_broadband_precalc_kernel(
 __global__
 void sum_byband_kernel(
             const int ncol, const int nlev, const int ngpt, const int nbnd,
-            const int* __restrict__ band_lims, const Float* __restrict__ spectral_flux,
+            const int* __restrict__ band_lims, const FLUX_TYPE* __restrict__ spectral_flux,
             Float* __restrict__ byband_flux)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -83,7 +83,7 @@ void sum_byband_kernel(
         for (int igpt = gpt_start; igpt < gpt_end; ++igpt)
         {
             const int idx_gpt = icol + ilev*ncol + igpt*ncol*nlev;
-            byband_flux[idx_bnd] += spectral_flux[idx_gpt];
+            byband_flux[idx_bnd] += static_cast<Float>(spectral_flux[idx_gpt]);
         }
     }
 }

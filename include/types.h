@@ -1,9 +1,14 @@
 #ifndef TYPES_H
 #define TYPES_H
 
-#include <cuda_fp16.h>
 #include <map>
 #include <float.h>
+
+#ifdef __CUDACC__
+#include <cuda_fp16.h>
+#else
+struct half;
+#endif
 
 // CvH Temporary, crash on this flag to avoid trouble.
 #ifdef RTE_RRTMGP_USE_CBOOL
@@ -29,6 +34,7 @@ using Int = unsigned long long;
 const Int Atomic_reduce_const = (Int)(-1LL);
 
 using ATMOS_TYPE = float;
-using INTERMEDIATE_TYPE = half;
+using INTERMEDIATE_TYPE = float;
+using FLUX_TYPE = half;
 
 #endif

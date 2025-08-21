@@ -128,15 +128,15 @@ class Fluxes_gpu
 {
     public:
         virtual void reduce(
-                const Array_gpu<Float,3>& gpt_flux_up,
-                const Array_gpu<Float,3>& gpt_flux_dn,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
                 const std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 const Bool top_at_1) = 0;
 
         virtual void reduce(
-                const Array_gpu<Float,3>& gpt_flux_up,
-                const Array_gpu<Float,3>& gpt_flux_dn,
-                const Array_gpu<Float,3>& gpt_flux_dn_dir,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn_dir,
                 const std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 const Bool top_at_1) = 0;
 };
@@ -149,15 +149,15 @@ class Fluxes_broadband_gpu : public Fluxes_gpu
         virtual ~Fluxes_broadband_gpu() {};
 
         virtual void reduce(
-                const Array_gpu<Float,3>& gpt_flux_up,
-                const Array_gpu<Float,3>& gpt_flux_dn,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
                 const std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 const Bool top_at_1);
 
         virtual void reduce(
-                const Array_gpu<Float,3>& gpt_flux_up,
-                const Array_gpu<Float,3>& gpt_flux_dn,
-                const Array_gpu<Float,3>& gpt_flux_dn_dir,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn_dir,
                 const std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 const Bool top_at_1);
 
@@ -186,15 +186,15 @@ class Fluxes_byband_gpu : public Fluxes_broadband_gpu
         virtual ~Fluxes_byband_gpu() {};
 
         virtual void reduce(
-                const Array_gpu<Float,3>& gpt_flux_up,
-                const Array_gpu<Float,3>& gpt_flux_dn,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
                 const std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 const Bool top_at_1);
 
         virtual void reduce(
-                const Array_gpu<Float,3>& gpt_flux_up,
-                const Array_gpu<Float,3>& gpt_flux_dn,
-                const Array_gpu<Float,3>& gpt_flux_dn_dir,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
+                const Array_gpu<FLUX_TYPE,3>& gpt_flux_dn_dir,
                 const std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 const Bool top_at_1);
 

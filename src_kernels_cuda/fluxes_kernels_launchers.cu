@@ -14,7 +14,7 @@ namespace Fluxes_kernels_cuda
 {
     void sum_broadband(
             int ncol, int nlev, int ngpt,
-            const Float* gpt_flux, Float* flux)
+            const FLUX_TYPE* gpt_flux, Float* flux)
     {
         dim3 block_gpu(16, 16);
         dim3 grid_gpu = calc_grid_size(block_gpu, dim3(ncol, nlev));
@@ -38,7 +38,7 @@ namespace Fluxes_kernels_cuda
     void sum_byband(
             int ncol, int nlev, int ngpt, int nbnd,
             const int* band_lims,
-            const Float* gpt_flux,
+            const FLUX_TYPE* gpt_flux,
             Float* bnd_flux)
     {
         dim3 block_gpu(16, 16, 1);

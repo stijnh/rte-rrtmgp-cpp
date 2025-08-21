@@ -53,9 +53,9 @@ namespace Rte_solver_kernels_cuda
             const ATMOS_TYPE* tau, const ATMOS_TYPE* lay_source,
             const ATMOS_TYPE* lev_source,
             const Float* sfc_emis, const Float* sfc_src,
-            const Float* inc_flux,
-            Float* flux_up, Float* flux_dn,
-            const Bool do_broadband, Float* flux_up_loc, Float* flux_dn_loc,
+            const FLUX_TYPE* inc_flux,
+            FLUX_TYPE* flux_up, FLUX_TYPE* flux_dn,
+            const Bool do_broadband, FLUX_TYPE* flux_up_loc, FLUX_TYPE* flux_dn_loc,
             const Bool do_jacobians, const Float* sfc_src_jac, Float* flux_up_jac);
 
 

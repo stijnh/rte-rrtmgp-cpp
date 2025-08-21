@@ -377,7 +377,7 @@ void solve_radiation(int argc, char** argv)
         Array_gpu<ATMOS_TYPE,3> lw_tau;
         Array_gpu<ATMOS_TYPE,3> lay_source;
         Array_gpu<ATMOS_TYPE,3> lev_source;
-        Array_gpu<Float,2> sfc_source;
+        Array_gpu<SURFACE_TYPE,2> sfc_source;
 
         if (switch_output_optical)
         {

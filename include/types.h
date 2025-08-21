@@ -35,6 +35,7 @@ const Int Atomic_reduce_const = (Int)(-1LL);
 
 using ATMOS_TYPE = float;
 using INTERMEDIATE_TYPE = float;
-using FLUX_TYPE = half;
+using FLUX_TYPE = float;
+using SURFACE_TYPE = half;
 
 #endif

@@ -33,10 +33,10 @@
 
 namespace
 {
-    template<typename Float>__global__
+    template<typename TF>__global__
     void expand_and_transpose_kernel(
         const int ncol, const int nbnd, const int* __restrict__ limits,
-        Float* __restrict__ arr_out, const Float* __restrict__ arr_in)
+        TF* __restrict__ arr_out, const TF* __restrict__ arr_in)
     {
         const int icol = blockIdx.x*blockDim.x + threadIdx.x;
         const int ibnd = blockIdx.y*blockDim.y + threadIdx.y;
@@ -61,7 +61,7 @@ void Rte_lw_gpu::rte_lw(
         const std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         const Bool top_at_1,
         const Source_func_lw_gpu& sources,
-        const Array_gpu<Float,2>& sfc_emis,
+        const Array_gpu<SURFACE_TYPE,2>& sfc_emis,
         const Array_gpu<FLUX_TYPE,2>& inc_flux,
         Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
         Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
@@ -91,7 +91,7 @@ void Rte_lw_gpu::rte_lw(
     const int nlay = optical_props->get_nlay();
     const int ngpt = optical_props->get_ngpt();
 
-    Array_gpu<Float,2> sfc_emis_gpt({ncol, ngpt});
+    Array_gpu<SURFACE_TYPE,2> sfc_emis_gpt({ncol, ngpt});
     expand_and_transpose(optical_props, sfc_emis, sfc_emis_gpt);
 
     // Run the radiative transfer solver.
@@ -138,8 +138,8 @@ void Rte_lw_gpu::rte_lw(
 
 void Rte_lw_gpu::expand_and_transpose(
         const std::unique_ptr<Optical_props_arry_gpu>& ops,
-        const Array_gpu<Float,2> arr_in,
-        Array_gpu<Float,2>& arr_out)
+        const Array_gpu<SURFACE_TYPE,2> arr_in,
+        Array_gpu<SURFACE_TYPE,2>& arr_out)
 {
     const int ncol = arr_in.dim(2);
     const int nbnd = ops->get_nband();

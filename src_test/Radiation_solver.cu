@@ -425,11 +425,11 @@ void Radiation_solver_longwave::solve_gpu(
         const Array_gpu<Float,2>& p_lay, const Array_gpu<Float,2>& p_lev,
         const Array_gpu<Float,2>& t_lay, const Array_gpu<Float,2>& t_lev,
         const Array_gpu<Float,2>& col_dry,
-        const Array_gpu<Float,1>& t_sfc, const Array_gpu<Float,2>& emis_sfc,
+        const Array_gpu<Float,1>& t_sfc, const Array_gpu<SURFACE_TYPE,2>& emis_sfc,
         const Array_gpu<Float,2>& lwp, const Array_gpu<Float,2>& iwp,
         const Array_gpu<Float,2>& rel, const Array_gpu<Float,2>& dei,
         Array_gpu<ATMOS_TYPE,3>& tau, Array_gpu<ATMOS_TYPE,3>& lay_source,
-        Array_gpu<ATMOS_TYPE,3>& lev_source, Array_gpu<Float,2>& sfc_source,
+        Array_gpu<ATMOS_TYPE,3>& lev_source, Array_gpu<SURFACE_TYPE,2>& sfc_source,
         Array_gpu<Float,2>& lw_flux_up, Array_gpu<Float,2>& lw_flux_dn, Array_gpu<Float,2>& lw_flux_net,
         Array_gpu<Float,3>& lw_bnd_flux_up, Array_gpu<Float,3>& lw_bnd_flux_dn, Array_gpu<Float,3>& lw_bnd_flux_net)
 {

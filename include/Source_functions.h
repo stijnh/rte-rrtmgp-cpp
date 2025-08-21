@@ -75,18 +75,18 @@ class Source_func_lw_gpu : public Optical_props_gpu
                 const int n_lay,
                 const Optical_props_gpu& optical_props);
 
-        Array_gpu<Float,2>& get_sfc_source()     { return sfc_source;     }
+        Array_gpu<SURFACE_TYPE,2>& get_sfc_source()     { return sfc_source;     }
         Array_gpu<Float,2>& get_sfc_source_jac() { return sfc_source_jac; }
         Array_gpu<ATMOS_TYPE,3>& get_lay_source()     { return lay_source;     }
         Array_gpu<ATMOS_TYPE,3>& get_lev_source()     { return lev_source;     }
 
-        const Array_gpu<Float,2>& get_sfc_source()     const { return sfc_source;     }
+        const Array_gpu<SURFACE_TYPE,2>& get_sfc_source()     const { return sfc_source;     }
         const Array_gpu<Float,2>& get_sfc_source_jac() const { return sfc_source_jac; }
         const Array_gpu<ATMOS_TYPE,3>& get_lay_source()     const { return lay_source;     }
         const Array_gpu<ATMOS_TYPE,3>& get_lev_source()     const { return lev_source;     }
 
     private:
-        Array_gpu<Float,2> sfc_source;
+        Array_gpu<SURFACE_TYPE,2> sfc_source;
         Array_gpu<Float,2> sfc_source_jac;
         Array_gpu<ATMOS_TYPE,3> lay_source;
         Array_gpu<ATMOS_TYPE,3> lev_source;

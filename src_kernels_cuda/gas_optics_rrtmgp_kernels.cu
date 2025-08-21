@@ -231,7 +231,7 @@ void Planck_source_kernel(
         const Float* __restrict__ totplnk_ptr,
         const int* __restrict__ gpoint_flavor_ptr,
         const Float delta_Tsurf,
-        Float* __restrict__ sfc_src_ptr,
+        SURFACE_TYPE* __restrict__ sfc_src_ptr,
         ATMOS_TYPE* __restrict__ lay_src_ptr,
         ATMOS_TYPE* __restrict__ lev_src_ptr,
         Float* __restrict__ sfc_src_jac_ptr)
@@ -257,7 +257,7 @@ void Planck_source_kernel(
     const Index_2d<const int> gpoint_flavor (gpoint_flavor_ptr, 2, ngpt);
 
     // Output arrays
-    Index_2d<Float> sfc_src(sfc_src_ptr, ncol, ngpt);
+    Index_2d<SURFACE_TYPE> sfc_src(sfc_src_ptr, ncol, ngpt);
     Index_3d<ATMOS_TYPE> lay_src(lay_src_ptr, ncol, nlay, ngpt);
     Index_3d<ATMOS_TYPE> lev_src(lev_src_ptr, ncol, nlay+1, ngpt);
     Index_2d<Float> sfc_src_jac(sfc_src_jac_ptr, ncol, ngpt);

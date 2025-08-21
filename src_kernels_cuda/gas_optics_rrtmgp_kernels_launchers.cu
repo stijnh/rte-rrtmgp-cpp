@@ -444,7 +444,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const Float totplnk_delta,
             const Float* totplnk,
             const int* gpoint_flavor,
-            Float* sfc_src,
+            SURFACE_TYPE* sfc_src,
             ATMOS_TYPE* lay_src,
             ATMOS_TYPE* lev_src,
             Float* sfc_src_jac)

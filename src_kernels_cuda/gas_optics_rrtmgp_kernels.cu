@@ -338,10 +338,10 @@ void interpolation_kernel(
         const Float* __restrict__ vmr_ref,
         const PRESSURE_TYPE* __restrict__ play,
         const TEMPERATURE_TYPE* __restrict__ tlay,
-        Float* __restrict__ col_gas,
+        GAS_COL_TYPE* __restrict__ col_gas,
         int* __restrict__ jtemp,
         FMAJOR_TYPE* __restrict__ fmajor, FMINOR_TYPE* __restrict__ fminor,
-        Float* __restrict__ col_mix,
+        MIX_COL_TYPE* __restrict__ col_mix,
         Bool* __restrict__ tropo,
         int* __restrict__ jeta,
         int* __restrict__ jpress)
@@ -376,11 +376,12 @@ void interpolation_kernel(
             const int colgas2_idx = icol + ilay*ncol + gas2*nlay*ncol;
             const Float ratio_eta_half = vmr_ref[vmr_base_idx + 2*gas1] /
                                       vmr_ref[vmr_base_idx + 2*gas2];
-            col_mix[colmix_idx] = col_gas[colgas1_idx] + ratio_eta_half * col_gas[colgas2_idx];
+            Float col_mix_res = Float(col_gas[colgas1_idx]) + ratio_eta_half * Float(col_gas[colgas2_idx]);
+            col_mix[colmix_idx] = MIX_COL_TYPE(col_mix_res);
 
             Float eta;
-            if (col_mix[colmix_idx] > Float(2.)*Float(tmin))
-                eta = col_gas[colgas1_idx] / col_mix[colmix_idx];
+            if (col_mix_res > Float(2.)*Float(tmin))
+                eta = Float(col_gas[colgas1_idx]) / col_mix_res;
             else
                 eta = Float(0.5);
 
@@ -415,7 +416,7 @@ void gas_optical_depths_major_kernel(
         const int* __restrict__ gpoint_flavor,
         const int* __restrict__ band_lims_gpt,
         const KMAJOR_TYPE* __restrict__ kmajor,
-        const Float* __restrict__ col_mix, const FMAJOR_TYPE* __restrict__ fmajor,
+        const MIX_COL_TYPE* __restrict__ col_mix, const FMAJOR_TYPE* __restrict__ fmajor,
         const int* __restrict__ jeta, const Bool* __restrict__ tropo,
         const int* __restrict__ jtemp, const int* __restrict__ jpress,
         ATMOS_TYPE* __restrict__ tau)
@@ -446,7 +447,7 @@ void gas_optical_depths_major_kernel(
         #pragma unroll 1
         for (int i=0; i<2; ++i)
         {
-            auto result = col_mix[idx_fcl1+i] *
+            auto result = Float(col_mix[idx_fcl1+i]) *
                 (Float(ifmajor[i*4+0]) * Float(kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress]) +
                  Float(ifmajor[i*4+1]) * Float(kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress]) +
                  Float(ifmajor[i*4+2]) * Float(kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]) +
@@ -487,7 +488,7 @@ void gas_optical_depths_minor_kernel(
         const int* __restrict__ kminor_start,
         const PRESSURE_TYPE* __restrict__ play,
         const TEMPERATURE_TYPE * __restrict__ tlay,
-        const Float* __restrict__ col_gas,
+        const GAS_COL_TYPE* __restrict__ col_gas,
         const FMINOR_TYPE* __restrict__ fminor,
         const int* __restrict__ jeta,
         const int* __restrict__ jtemp,
@@ -679,7 +680,7 @@ void compute_tau_rayleigh_kernel(
         const int* __restrict__ gpoint_flavor,
         const int* __restrict__ band_lims_gpt,
         const Float* __restrict__ krayl,
-        int idx_h2o, const Float* __restrict__ col_dry, const Float* __restrict__ col_gas,
+        int idx_h2o, const DRY_COL_TYPE* __restrict__ col_dry, const GAS_COL_TYPE* __restrict__ col_gas,
         const FMINOR_TYPE* __restrict__ fminor, const int* __restrict__ jeta,
         const Bool* __restrict__ tropo, const int* __restrict__ jtemp,
         ATMOS_TYPE* __restrict__ tau_rayleigh)
@@ -713,7 +714,7 @@ void compute_tau_rayleigh_kernel(
                                Float(fminor[idx_fcl2+3]) * krayl[idx_krayl + (jtempl  ) +  j1   *ntemp + igpt*ntemp*neta];
 
             const int idx_out = icol + ilay*ncol + igpt*ncol*nlay;
-            auto result = kloc * (col_gas[idx_collaywv] + col_dry[idx_collay]);
+            auto result = kloc * (Float(col_gas[idx_collaywv]) + Float(col_dry[idx_collay]));
             tau_rayleigh[idx_out] = ATMOS_TYPE(result);
         }
     }

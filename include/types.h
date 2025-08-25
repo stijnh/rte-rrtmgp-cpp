@@ -39,9 +39,16 @@ using FLUX_TYPE = float;
 using SURFACE_TYPE = float;
 using TEMPERATURE_TYPE = float;
 using PRESSURE_TYPE = float;
-using FMINOR_TYPE = float;
-using FMAJOR_TYPE = float;
-using KMINOR_TYPE = half;
-using KMAJOR_TYPE = half;
+using WEIGHT_TYPE = float;
+using COL_TYPE = float;
+
+using DRY_COL_TYPE = COL_TYPE;
+using MIX_COL_TYPE = COL_TYPE;
+using GAS_COL_TYPE = COL_TYPE;
+
+using FMINOR_TYPE = WEIGHT_TYPE;
+using FMAJOR_TYPE = WEIGHT_TYPE;
+using KMINOR_TYPE = WEIGHT_TYPE;
+using KMAJOR_TYPE = WEIGHT_TYPE;
 
 #endif

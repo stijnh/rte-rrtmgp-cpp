@@ -393,7 +393,7 @@ namespace
     void fill_gases_kernel(
             const int ncol, const int nlay, const int dim1, const int dim2, const int ngas, const int igas,
             Float* __restrict__ vmr_out, const Float* __restrict__ vmr_in,
-            Float* __restrict__ col_gas, const Float* __restrict__ col_dry)
+            DRY_COL_TYPE* __restrict__ col_gas, const DRY_COL_TYPE* __restrict__ col_dry)
     {
         const int icol = blockIdx.x*blockDim.x + threadIdx.x;
         const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
@@ -848,7 +848,7 @@ template<typename Float> __global__
 void compute_col_dry(
         const int ncol, const int nlay,
         const Float* __restrict__ delta_plev, const Float* __restrict__ m_air, const Float* __restrict__ vmr_h2o,
-        Float* __restrict__ col_dry)
+        DRY_COL_TYPE* __restrict__ col_dry)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
@@ -868,7 +868,7 @@ void compute_col_dry(
 
 // Calculate the molecules of dry air.
 void Gas_optics_rrtmgp_gpu::get_col_dry(
-        Array_gpu<Float,2>& col_dry, const Array_gpu<Float,2>& vmr_h2o,
+        Array_gpu<DRY_COL_TYPE,2>& col_dry, const Array_gpu<Float,2>& vmr_h2o,
         const Array_gpu<PRESSURE_TYPE,2>& plev)
 {
     Array_gpu<Float,2> delta_plev({col_dry.dim(1), col_dry.dim(2)});
@@ -912,7 +912,7 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
         const Gas_concs_gpu& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         Source_func_lw_gpu& sources,
-        const Array_gpu<Float,2>& col_dry,
+        const Array_gpu<DRY_COL_TYPE,2>& col_dry,
         const Array_gpu<TEMPERATURE_TYPE,2>& tlev)
 {
     const int ncol = play.dim(1);
@@ -951,7 +951,7 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
         const Gas_concs_gpu& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         Array_gpu<Float,2>& toa_src,
-        const Array_gpu<Float,2>& col_dry)
+        const Array_gpu<DRY_COL_TYPE,2>& col_dry)
 {
     const int ncol = play.dim(1);
     const int nlay = play.dim(2);
@@ -988,14 +988,14 @@ void Gas_optics_rrtmgp_gpu::compute_gas_taus(
         Array_gpu<int,4>& jeta,
         Array_gpu<Bool,2>& tropo,
         Array_gpu<FMAJOR_TYPE,6>& fmajor,
-        const Array_gpu<Float,2>& col_dry)
+        const Array_gpu<DRY_COL_TYPE,2>& col_dry)
 {
     Array_gpu<Float,3> tau({ngpt, nlay, ncol});
     Array_gpu<Float,3> tau_rayleigh({ngpt, nlay, ncol});
     Array_gpu<Float,3> vmr({ncol, nlay, this->get_ngas()});
-    Array_gpu<Float,3> col_gas({ncol, nlay, this->get_ngas()+1});
+    Array_gpu<GAS_COL_TYPE,3> col_gas({ncol, nlay, this->get_ngas()+1});
     col_gas.set_offsets({0, 0, -1});
-    Array_gpu<Float,4> col_mix({2, ncol, nlay, this->get_nflav()});
+    Array_gpu<MIX_COL_TYPE,4> col_mix({2, ncol, nlay, this->get_nflav()});
     Array_gpu<FMINOR_TYPE,5> fminor({2, 2, ncol, nlay, this->get_nflav()});
 
 

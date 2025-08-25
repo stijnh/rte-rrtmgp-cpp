@@ -364,7 +364,7 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
                 const Array<Float,3>& rayl_upper);
 
         static void get_col_dry(
-                Array_gpu<Float,2>& col_dry,
+                Array_gpu<DRY_COL_TYPE,2>& col_dry,
                 const Array_gpu<Float,2>& vmr_h2o,
                 const Array_gpu<PRESSURE_TYPE,2>& plev);
 
@@ -394,7 +394,7 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Source_func_lw_gpu& sources,
-                const Array_gpu<Float,2>& col_dry,
+                const Array_gpu<DRY_COL_TYPE,2>& col_dry,
                 const Array_gpu<TEMPERATURE_TYPE,2>& tlev);
 
         // shortwave variant
@@ -405,7 +405,7 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Array_gpu<Float,2>& toa_src,
-                const Array_gpu<Float,2>& col_dry);
+                const Array_gpu<DRY_COL_TYPE,2>& col_dry);
 
     private:
         Array<Float,2> totplnk;
@@ -533,7 +533,7 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
                 Array_gpu<int,4>& jeta,
                 Array_gpu<Bool,2>& tropo,
                 Array_gpu<FMAJOR_TYPE,6>& fmajor,
-                const Array_gpu<Float,2>& col_dry);
+                const Array_gpu<DRY_COL_TYPE,2>& col_dry);
 
         void combine_abs_and_rayleigh(
                 const Array_gpu<ATMOS_TYPE,3>& tau,

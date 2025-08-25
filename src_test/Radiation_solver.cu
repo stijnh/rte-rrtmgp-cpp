@@ -480,11 +480,11 @@ void Radiation_solver_longwave::solve_gpu(
 
         auto p_lev_subset = p_lev.subset({{ {col_s_in, col_e_in}, {1, n_lev} }});
 
-        Array_gpu<Float,2> col_dry_subset({n_col_in, n_lay});
+        Array_gpu<DRY_COL_TYPE,2> col_dry_subset({n_col_in, n_lay});
         if (col_dry.size() == 0)
             Gas_optics_rrtmgp_gpu::get_col_dry(col_dry_subset, gas_concs_subset.get_vmr("h2o"), p_lev_subset);
         else
-            col_dry_subset = col_dry.subset({{ {col_s_in, col_e_in}, {1, n_lay} }});
+            col_dry_subset = col_dry.subset<DRY_COL_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }});
 
         kdist_gpu->gas_optics(
                 p_lay.subset<PRESSURE_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
@@ -756,17 +756,17 @@ void Radiation_solver_shortwave::solve_gpu(
 
         auto p_lev_subset = p_lev.subset({{ {col_s_in, col_e_in}, {1, n_lev} }});
 
-        Array_gpu<Float,2> col_dry_subset({n_col_in, n_lay});
+        Array_gpu<DRY_COL_TYPE,2> col_dry_subset({n_col_in, n_lay});
         if (col_dry.size() == 0)
             Gas_optics_rrtmgp_gpu::get_col_dry(col_dry_subset, gas_concs_subset.get_vmr("h2o"), p_lev_subset);
         else
-            col_dry_subset = col_dry.subset({{ {col_s_in, col_e_in}, {1, n_lay} }});
+            col_dry_subset = col_dry.subset<DRY_COL_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }});
 
         Array_gpu<Float,2> toa_src_subset({n_col_in, n_gpt});
         kdist_gpu->gas_optics(
-                  p_lay.subset({{ {col_s_in, col_e_in}, {1, n_lay} }}),
+                  p_lay.subset<PRESSURE_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
                   p_lev_subset,
-                  t_lay.subset({{ {col_s_in, col_e_in}, {1, n_lay} }}),
+                  t_lay.subset<TEMPERATURE_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
                   gas_concs_subset,
                   optical_props_subset_in,
                   toa_src_subset,

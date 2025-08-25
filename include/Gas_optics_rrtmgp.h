@@ -536,8 +536,8 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
                 const Array_gpu<DRY_COL_TYPE,2>& col_dry);
 
         void combine_abs_and_rayleigh(
-                const Array_gpu<ATMOS_TYPE,3>& tau,
-                const Array_gpu<ATMOS_TYPE,3>& tau_rayleigh,
+                const Array_gpu<TAU_TYPE,3>& tau,
+                const Array_gpu<TAU_TYPE,3>& tau_rayleigh,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props);
 
         void source(

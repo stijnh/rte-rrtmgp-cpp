@@ -62,8 +62,8 @@ namespace Rte_solver_kernels_cuda
     void lw_solver_noscat_impl(
             const int ncol, const int nlay, const int ngpt, const int nmus,
             const Float* secants, const Float* weights,
-            const ATMOS_TYPE* tau, const ATMOS_TYPE* lay_source,
-            const ATMOS_TYPE* lev_source,
+            const TAU_TYPE* tau, const SOURCE_TYPE* lay_source,
+            const SOURCE_TYPE* lev_source,
             const SURFACE_TYPE* sfc_emis, const SURFACE_TYPE* sfc_src,
             const FLUX_TYPE* inc_flux,
             FLUX_TYPE* flux_up, FLUX_TYPE* flux_dn,
@@ -156,8 +156,8 @@ namespace Rte_solver_kernels_cuda
     void lw_solver_noscat(
             const int ncol, const int nlay, const int ngpt, const Bool top_at_1, const int nmus,
             const Float* secants, const Float* weights,
-            const ATMOS_TYPE* tau, const ATMOS_TYPE* lay_source,
-            const ATMOS_TYPE* lev_source,
+            const TAU_TYPE* tau, const SOURCE_TYPE* lay_source,
+            const SOURCE_TYPE* lev_source,
             const SURFACE_TYPE* sfc_emis, const SURFACE_TYPE* sfc_src,
             const FLUX_TYPE* inc_flux,
             FLUX_TYPE* flux_up, FLUX_TYPE* flux_dn,
@@ -191,7 +191,7 @@ namespace Rte_solver_kernels_cuda
 
     void sw_solver_2stream(
             const int ncol, const int nlay, const int ngpt, const Bool top_at_1,
-            const ATMOS_TYPE* tau, const Float* ssa, const Float* g,
+            const TAU_TYPE* tau, const Float* ssa, const Float* g,
             const Float* mu0,
             const SURFACE_TYPE* sfc_alb_dir, const SURFACE_TYPE* sfc_alb_dif,
             const FLUX_TYPE* inc_flux_dir,

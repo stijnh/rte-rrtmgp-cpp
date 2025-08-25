@@ -107,8 +107,8 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
     void combine_abs_and_rayleigh(
             const int ncol, const int nlay, const int ngpt,
-            const ATMOS_TYPE* tau_abs, const ATMOS_TYPE* tau_rayleigh,
-            ATMOS_TYPE* tau, Float* ssa, Float* g)
+            const TAU_TYPE* tau_abs, const TAU_TYPE* tau_rayleigh,
+            TAU_TYPE* tau, Float* ssa, Float* g)
     {
         Tuner_map& tunings = Tuner::get_map();
 
@@ -154,7 +154,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             int idx_h2o, const DRY_COL_TYPE* col_dry, const GAS_COL_TYPE* col_gas,
             const FMINOR_TYPE* fminor, const int* jeta,
             const Bool* tropo, const int* jtemp,
-            ATMOS_TYPE* tau_rayleigh)
+            TAU_TYPE* tau_rayleigh)
     {
         Tuner_map& tunings = Tuner::get_map();
 
@@ -240,7 +240,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const TEMPERATURE_TYPE * tlay, const GAS_COL_TYPE* col_gas,
             const int* jeta, const int* jtemp,
             const int* jpress,
-            ATMOS_TYPE* tau)
+            TAU_TYPE* tau)
     {
         Tuner_map& tunings = Tuner::get_map();
 
@@ -249,7 +249,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
         if (tunings.count("gas_optical_depths_major_kernel") == 0)
         {
-            ATMOS_TYPE* tau_tmp = Tools_gpu::allocate_gpu<ATMOS_TYPE>(ngpt*nlay*ncol);
+            TAU_TYPE* tau_tmp = Tools_gpu::allocate_gpu<TAU_TYPE>(ngpt*nlay*ncol);
 
             std::tie(grid_gpu_maj, block_gpu_maj) = tune_kernel(
                     "gas_optical_depths_major_kernel",
@@ -291,7 +291,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
         if (tunings.count("gas_optical_depths_minor_kernel_lower") == 0)
         {
-            ATMOS_TYPE* tau_tmp = Tools_gpu::allocate_gpu<ATMOS_TYPE>(ngpt*nlay*ncol);
+            TAU_TYPE* tau_tmp = Tools_gpu::allocate_gpu<TAU_TYPE>(ngpt*nlay*ncol);
             std::tie(grid_gpu_min_1, block_gpu_min_1) =
                 tune_kernel_compile_time<Gas_optical_depths_minor_kernel>(
                         "gas_optical_depths_minor_kernel_lower",
@@ -358,7 +358,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
         if (tunings.count("gas_optical_depths_minor_kernel_upper") == 0)
         {
-            ATMOS_TYPE* tau_tmp = Tools_gpu::allocate_gpu<ATMOS_TYPE>(ngpt*nlay*ncol);
+            TAU_TYPE* tau_tmp = Tools_gpu::allocate_gpu<TAU_TYPE>(ngpt*nlay*ncol);
             std::tie(grid_gpu_min_2, block_gpu_min_2) =
                 tune_kernel_compile_time<Gas_optical_depths_minor_kernel>(
                         "gas_optical_depths_minor_kernel_upper",
@@ -445,8 +445,8 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const Float* totplnk,
             const int* gpoint_flavor,
             SURFACE_TYPE* sfc_src,
-            ATMOS_TYPE* lay_src,
-            ATMOS_TYPE* lev_src,
+            SOURCE_TYPE* lay_src,
+            SOURCE_TYPE* lev_src,
             Float* sfc_src_jac)
     {
         Tuner_map& tunings = Tuner::get_map();

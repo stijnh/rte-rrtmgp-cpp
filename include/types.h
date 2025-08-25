@@ -33,7 +33,6 @@ const Float Float_epsilon = DBL_EPSILON;
 using Int = unsigned long long;
 const Int Atomic_reduce_const = (Int)(-1LL);
 
-using ATMOS_TYPE = float;
 using INTERMEDIATE_TYPE = float;
 using FLUX_TYPE = float;
 using SURFACE_TYPE = float;
@@ -41,6 +40,8 @@ using TEMPERATURE_TYPE = float;
 using PRESSURE_TYPE = float;
 using WEIGHT_TYPE = float;
 using COL_TYPE = float;
+using TAU_TYPE = float;
+using SOURCE_TYPE = float;
 
 using DRY_COL_TYPE = COL_TYPE;
 using MIX_COL_TYPE = COL_TYPE;

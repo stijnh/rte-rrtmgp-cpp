@@ -50,7 +50,7 @@ void interpolate3D_byflav_kernel(
         const int ngpt,
         const int neta,
         const int npress,
-        ATMOS_TYPE* __restrict__ tau_major)
+        TAU_TYPE* __restrict__ tau_major)
 {
     const int band_gpt = gpt_end-gpt_start;
     const int j0 = jeta[0];
@@ -70,7 +70,7 @@ void interpolate3D_byflav_kernel(
                             Float(fmajor[6]) * k[igpt + (j1-1)*ngpt + jpress*neta*ngpt     + jtemp*neta*ngpt*npress] +
                             Float(fmajor[7]) * k[igpt +  j1   *ngpt + jpress*neta*ngpt     + jtemp*neta*ngpt*npress]);
 
-        tau_major[igpt] = ATMOS_TYPE(result);
+        tau_major[igpt] = TAU_TYPE(result);
     }
 }
 
@@ -232,8 +232,8 @@ void Planck_source_kernel(
         const int* __restrict__ gpoint_flavor_ptr,
         const Float delta_Tsurf,
         SURFACE_TYPE* __restrict__ sfc_src_ptr,
-        ATMOS_TYPE* __restrict__ lay_src_ptr,
-        ATMOS_TYPE* __restrict__ lev_src_ptr,
+        SOURCE_TYPE* __restrict__ lay_src_ptr,
+        SOURCE_TYPE* __restrict__ lev_src_ptr,
         Float* __restrict__ sfc_src_jac_ptr)
 {
     // THIS KERNEL USES FORTRAN INDEXING TO AVOID MISTAKES.
@@ -258,8 +258,8 @@ void Planck_source_kernel(
 
     // Output arrays
     Index_2d<SURFACE_TYPE> sfc_src(sfc_src_ptr, ncol, ngpt);
-    Index_3d<ATMOS_TYPE> lay_src(lay_src_ptr, ncol, nlay, ngpt);
-    Index_3d<ATMOS_TYPE> lev_src(lev_src_ptr, ncol, nlay+1, ngpt);
+    Index_3d<SOURCE_TYPE> lay_src(lay_src_ptr, ncol, nlay, ngpt);
+    Index_3d<SOURCE_TYPE> lev_src(lev_src_ptr, ncol, nlay+1, ngpt);
     Index_2d<Float> sfc_src_jac(sfc_src_jac_ptr, ncol, ngpt);
 
     if ( (icol <= ncol) && (ilay <= nlay) && (igpt <= ngpt) )
@@ -419,7 +419,7 @@ void gas_optical_depths_major_kernel(
         const MIX_COL_TYPE* __restrict__ col_mix, const FMAJOR_TYPE* __restrict__ fmajor,
         const int* __restrict__ jeta, const Bool* __restrict__ tropo,
         const int* __restrict__ jtemp, const int* __restrict__ jpress,
-        ATMOS_TYPE* __restrict__ tau)
+        TAU_TYPE* __restrict__ tau)
 {
     const int icol = blockIdx.x * blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y * blockDim.y + threadIdx.y;
@@ -453,7 +453,7 @@ void gas_optical_depths_major_kernel(
                  Float(ifmajor[i*4+2]) * Float(kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]) +
                  Float(ifmajor[i*4+3]) * Float(kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]));
 
-            tau[idx_out] += ATMOS_TYPE(result);
+            tau[idx_out] += TAU_TYPE(result);
         }
     }
 }
@@ -493,8 +493,8 @@ void gas_optical_depths_minor_kernel(
         const int* __restrict__ jeta,
         const int* __restrict__ jtemp,
         const Bool* __restrict__ tropo,
-        ATMOS_TYPE* __restrict__ tau,
-        ATMOS_TYPE* __restrict__ tau_minor)
+        TAU_TYPE* __restrict__ tau,
+        TAU_TYPE* __restrict__ tau_minor)
 {
     const int icol = blockIdx.x * block_size_x + threadIdx.x;
     const int ilay = blockIdx.y * block_size_y + threadIdx.y;
@@ -572,7 +572,7 @@ void gas_optical_depths_minor_kernel(
                                         Float(kfminor[3]) * Float(kin[kjtemp     +  j1   *ntemp + (igpt+gpt_offset)*ntemp*neta]);
 
                     const int idx_out = icol + ilay*ncol + (igpt+gpt_start)*ncol*nlay;
-                    tau[idx_out] += ATMOS_TYPE(ltau_minor * scaling);
+                    tau[idx_out] += TAU_TYPE(ltau_minor * scaling);
                 }
             }
         }
@@ -683,7 +683,7 @@ void compute_tau_rayleigh_kernel(
         int idx_h2o, const DRY_COL_TYPE* __restrict__ col_dry, const GAS_COL_TYPE* __restrict__ col_gas,
         const FMINOR_TYPE* __restrict__ fminor, const int* __restrict__ jeta,
         const Bool* __restrict__ tropo, const int* __restrict__ jtemp,
-        ATMOS_TYPE* __restrict__ tau_rayleigh)
+        TAU_TYPE* __restrict__ tau_rayleigh)
 {
     // Fetch the three coordinates.
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -715,7 +715,7 @@ void compute_tau_rayleigh_kernel(
 
             const int idx_out = icol + ilay*ncol + igpt*ncol*nlay;
             auto result = kloc * (Float(col_gas[idx_collaywv]) + Float(col_dry[idx_collay]));
-            tau_rayleigh[idx_out] = ATMOS_TYPE(result);
+            tau_rayleigh[idx_out] = TAU_TYPE(result);
         }
     }
 }
@@ -724,8 +724,8 @@ void compute_tau_rayleigh_kernel(
 __global__
 void combine_abs_and_rayleigh_kernel(
         const int ncol, const int nlay, const int ngpt, const Float tmin,
-        const ATMOS_TYPE* __restrict__ tau_abs, const ATMOS_TYPE* __restrict__ tau_rayleigh,
-        ATMOS_TYPE* __restrict__ tau, Float* __restrict__ ssa, Float* __restrict__ g)
+        const TAU_TYPE* __restrict__ tau_abs, const TAU_TYPE* __restrict__ tau_rayleigh,
+        TAU_TYPE* __restrict__ tau, Float* __restrict__ ssa, Float* __restrict__ g)
 {
     // Fetch the three coordinates.
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -736,9 +736,9 @@ void combine_abs_and_rayleigh_kernel(
     {
         const int idx = icol + ilay*ncol + igpt*ncol*nlay;
 
-        const ATMOS_TYPE tau_tot = tau_abs[idx] + tau_rayleigh[idx];
+        const TAU_TYPE tau_tot = tau_abs[idx] + tau_rayleigh[idx];
 
-        tau[idx] = ATMOS_TYPE(tau_tot);
+        tau[idx] = TAU_TYPE(tau_tot);
         g  [idx] = Float(0.);
 
         if (Float(tau_tot)>(Float(2.)*tmin))

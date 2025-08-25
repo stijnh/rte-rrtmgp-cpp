@@ -75,8 +75,8 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
     void combine_abs_and_rayleigh(
             const int ncol, const int nlay, const int ngpt,
-            const ATMOS_TYPE* tau_local, const ATMOS_TYPE* tau_rayleigh,
-            ATMOS_TYPE* tau, Float* ssa, Float* g);
+            const TAU_TYPE* tau_local, const TAU_TYPE* tau_rayleigh,
+            TAU_TYPE* tau, Float* ssa, Float* g);
 
     void compute_tau_rayleigh(
             const int ncol, const int nlay, const int nband, const int ngpt,
@@ -88,7 +88,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             int idx_h2o, const DRY_COL_TYPE* col_dry, const GAS_COL_TYPE* col_gas,
             const FMINOR_TYPE* fminor, const int* jeta,
             const Bool* tropo, const int* jtemp,
-            ATMOS_TYPE* tau_rayleigh);
+            TAU_TYPE* tau_rayleigh);
 
     void compute_tau_absorption(
             const int ncol, const int nlay, const int nband, const int ngpt,
@@ -118,7 +118,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const FMINOR_TYPE* fminor, const PRESSURE_TYPE* play,
             const TEMPERATURE_TYPE* tlay, const GAS_COL_TYPE* col_gas,
             const int* jeta, const int* jtemp,
-            const int* jpress, ATMOS_TYPE* tau);
+            const int* jpress, TAU_TYPE* tau);
 
     void compute_planck_source(
             const int ncol, const int nlay, const int nbnd, const int ngpt,
@@ -141,8 +141,8 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const Float* totplnk,
             const int* gpoint_flavor,
             SURFACE_TYPE* sfc_src,
-            ATMOS_TYPE* lay_src,
-            ATMOS_TYPE* lev_src,
+            SOURCE_TYPE* lay_src,
+            SOURCE_TYPE* lev_src,
             Float* sfc_src_jac);
 }
 #endif

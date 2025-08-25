@@ -580,8 +580,8 @@ void solve_radiation(int argc, char** argv)
 
         // Create output arrays.
         Array_gpu<TAU_TYPE,3> sw_tau;
-        Array_gpu<Float,3> ssa;
-        Array_gpu<Float,3> g;
+        Array_gpu<OPTICAL_TYPE,3> ssa;
+        Array_gpu<OPTICAL_TYPE,3> g;
         Array_gpu<Float,2> toa_source;
 
         if (switch_output_optical)

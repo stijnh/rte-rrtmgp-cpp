@@ -63,8 +63,8 @@ namespace Optical_props_kernels_cuda
 
     void increment_2stream_by_2stream(
             int ncol, int nlay, int ngpt,
-            TAU_TYPE* tau_inout, Float* ssa_inout, Float* g_inout,
-            const TAU_TYPE* tau_in, const Float* ssa_in, const Float* g_in)
+            TAU_TYPE* tau_inout, OPTICAL_TYPE* ssa_inout, OPTICAL_TYPE* g_inout,
+            const TAU_TYPE* tau_in, const OPTICAL_TYPE* ssa_in, const OPTICAL_TYPE* g_in)
     {
         const int block_gpt = 32;
         const int block_lay = 16;
@@ -112,8 +112,8 @@ namespace Optical_props_kernels_cuda
 
     void inc_2stream_by_2stream_bybnd(
             int ncol, int nlay, int ngpt,
-            TAU_TYPE* tau_inout, Float* ssa_inout, Float* g_inout,
-            const TAU_TYPE* tau_in, const Float* ssa_in, const Float* g_in,
+            TAU_TYPE* tau_inout, OPTICAL_TYPE* ssa_inout, OPTICAL_TYPE* g_inout,
+            const TAU_TYPE* tau_in, const OPTICAL_TYPE* ssa_in, const OPTICAL_TYPE* g_in,
             int nbnd, const int* band_lims_gpoint)
     {
         Tuner_map& tunings = Tuner::get_map();
@@ -125,8 +125,8 @@ namespace Optical_props_kernels_cuda
         if (tunings.count("inc_2stream_by_2stream_bybnd_kernel") == 0)
         {
             TAU_TYPE* tau_inout_tmp = Tools_gpu::allocate_gpu<TAU_TYPE>(ngpt*nlay*ncol);
-            Float* ssa_inout_tmp = Tools_gpu::allocate_gpu<Float>(ngpt*nlay*ncol);
-            Float* g_inout_tmp   = Tools_gpu::allocate_gpu<Float>(ngpt*nlay*ncol);
+            OPTICAL_TYPE* ssa_inout_tmp = Tools_gpu::allocate_gpu<OPTICAL_TYPE>(ngpt*nlay*ncol);
+            OPTICAL_TYPE* g_inout_tmp   = Tools_gpu::allocate_gpu<OPTICAL_TYPE>(ngpt*nlay*ncol);
 
             std::tie(grid, block) = tune_kernel(
                     "inc_2stream_by_2stream_bybnd_kernel",
@@ -164,7 +164,7 @@ namespace Optical_props_kernels_cuda
 
     void delta_scale_2str_k(
             int ncol, int nlay, int ngpt,
-            TAU_TYPE* tau_inout, Float* ssa_inout, Float* g_inout)
+            TAU_TYPE* tau_inout, OPTICAL_TYPE* ssa_inout, OPTICAL_TYPE* g_inout)
     {
         const int block_gpt = 32;
         const int block_lay = 16;

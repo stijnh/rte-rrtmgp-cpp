@@ -36,8 +36,8 @@ namespace Optical_props_kernels_cuda
 
     void increment_2stream_by_2stream(
             int ncol, int nlay, int ngpt,
-            TAU_TYPE* tau_inout, Float* ssa_inout, Float* g_inout,
-            const TAU_TYPE* tau_in, const Float* ssa_in, const Float* g_in);
+            TAU_TYPE* tau_inout, OPTICAL_TYPE* ssa_inout, OPTICAL_TYPE* g_inout,
+            const TAU_TYPE* tau_in, const OPTICAL_TYPE* ssa_in, const OPTICAL_TYPE* g_in);
 
     void inc_1scalar_by_1scalar_bybnd(
             int ncol, int nlay, int ngpt,
@@ -46,12 +46,12 @@ namespace Optical_props_kernels_cuda
 
     void inc_2stream_by_2stream_bybnd(
             int ncol, int nlay, int ngpt,
-            TAU_TYPE* tau_inout, Float* ssa_inout, Float* g_inout,
-            const TAU_TYPE* tau_in, const Float* ssa_in, const Float* g_in,
+            TAU_TYPE* tau_inout, OPTICAL_TYPE* ssa_inout, OPTICAL_TYPE* g_inout,
+            const TAU_TYPE* tau_in, const OPTICAL_TYPE* ssa_in, const OPTICAL_TYPE* g_in,
             int nbnd, const int* band_lims_gpoint);
 
     void delta_scale_2str_k(
             int ncol, int nlay, int ngpt,
-            TAU_TYPE* tau_inout, Float* ssa_inout, Float* g_inout);
+            TAU_TYPE* tau_inout, OPTICAL_TYPE* ssa_inout, OPTICAL_TYPE* g_inout);
 }
 #endif

@@ -76,7 +76,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
     void combine_abs_and_rayleigh(
             const int ncol, const int nlay, const int ngpt,
             const TAU_TYPE* tau_local, const TAU_TYPE* tau_rayleigh,
-            TAU_TYPE* tau, Float* ssa, Float* g);
+            TAU_TYPE* tau, OPTICAL_TYPE* ssa, OPTICAL_TYPE* g);
 
     void compute_tau_rayleigh(
             const int ncol, const int nlay, const int nband, const int ngpt,

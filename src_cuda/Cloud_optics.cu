@@ -90,7 +90,7 @@ namespace
 
     template<typename TF>__global__
     void combine_and_store_kernel(const int ncol, const int nlay, const int nbnd, const TF tmin,
-                  TAU_TYPE* __restrict__ tau, TF* __restrict__ ssa, TF* __restrict__ g,
+                  TAU_TYPE* __restrict__ tau, OPTICAL_TYPE* __restrict__ ssa, OPTICAL_TYPE* __restrict__ g,
                   const TF* __restrict__ ltau, const TF* __restrict__ ltaussa, const TF* __restrict__ ltaussag,
                   const TF* __restrict__ itau, const TF* __restrict__ itaussa, const TF* __restrict__ itaussag)
     {
@@ -106,8 +106,8 @@ namespace
             const TF taussag = ltaussag[idx] + itaussag[idx];
 
             tau[idx] = TAU_TYPE(tau_t);
-            ssa[idx] = taussa / max(tau_t, tmin);
-            g[idx]   = taussag/ max(taussa, tmin);
+            ssa[idx] = OPTICAL_TYPE(taussa / max(tau_t, tmin));
+            g[idx]   = OPTICAL_TYPE(taussag/ max(taussa, tmin));
         }
     }
 

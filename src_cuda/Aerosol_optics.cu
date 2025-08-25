@@ -160,7 +160,7 @@ namespace
 
     __global__
     void combine_and_store_kernel(const int ncol, const int nlay, const int nbnd, const Float tmin,
-                  TAU_TYPE* __restrict__ tau, Float* __restrict__ ssa, Float* __restrict__ g,
+                  TAU_TYPE* __restrict__ tau, OPTICAL_TYPE* __restrict__ ssa, OPTICAL_TYPE* __restrict__ g,
                   const Float* __restrict__ ltau, const Float* __restrict__ ltaussa, const Float* __restrict__ ltaussag)
     {
         const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -171,8 +171,8 @@ namespace
         {
             const int idx = icol + ilay*ncol + ibnd*nlay*ncol;
             tau[idx] = TAU_TYPE(ltau[idx]);
-            ssa[idx] = ltaussa[idx] / max(ltau[idx], tmin);
-            g[idx]   = ltaussag[idx] / max(ltaussa[idx], tmin);
+            ssa[idx] = OPTICAL_TYPE(ltaussa[idx] / max(ltau[idx], tmin));
+            g[idx]   = OPTICAL_TYPE(ltaussag[idx] / max(ltaussa[idx], tmin));
         }
     }
 

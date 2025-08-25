@@ -191,7 +191,7 @@ class Radiation_solver_shortwave
                 const Array_gpu<Float,2>& rel, const Array_gpu<Float,2>& dei,
                 const Array_gpu<Float,2>& rh,
                 const Aerosol_concs_gpu& aerosol_concs,
-                Array_gpu<TAU_TYPE,3>& tau, Array_gpu<Float,3>& ssa, Array_gpu<Float,3>& g,
+                Array_gpu<TAU_TYPE,3>& tau, Array_gpu<OPTICAL_TYPE,3>& ssa, Array_gpu<OPTICAL_TYPE,3>& g,
                 Array_gpu<Float,2>& toa_src,
                 Array_gpu<Float,2>& sw_flux_up, Array_gpu<Float,2>& sw_flux_dn,
                 Array_gpu<Float,2>& sw_flux_dn_dir, Array_gpu<Float,2>& sw_flux_net,

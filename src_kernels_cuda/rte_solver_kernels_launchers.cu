@@ -191,7 +191,7 @@ namespace Rte_solver_kernels_cuda
 
     void sw_solver_2stream(
             const int ncol, const int nlay, const int ngpt, const Bool top_at_1,
-            const TAU_TYPE* tau, const Float* ssa, const Float* g,
+            const TAU_TYPE* tau, const OPTICAL_TYPE* ssa, const OPTICAL_TYPE* g,
             const Float* mu0,
             const SURFACE_TYPE* sfc_alb_dir, const SURFACE_TYPE* sfc_alb_dif,
             const FLUX_TYPE* inc_flux_dir,

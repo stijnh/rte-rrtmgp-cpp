@@ -42,6 +42,7 @@ using WEIGHT_TYPE = float;
 using COL_TYPE = float;
 using TAU_TYPE = float;
 using SOURCE_TYPE = float;
+using OPTICAL_TYPE = half;
 
 using DRY_COL_TYPE = COL_TYPE;
 using MIX_COL_TYPE = COL_TYPE;

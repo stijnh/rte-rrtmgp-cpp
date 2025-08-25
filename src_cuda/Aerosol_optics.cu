@@ -40,7 +40,7 @@ namespace
         const Float* aermr04, const Float* aermr05, const Float* aermr06,
         const Float* aermr07, const Float* aermr08, const Float* aermr09,
         const Float* aermr10, const Float* aermr11,
-        const Float* rh, const Float* plev, const Float* rh_classes,
+        const Float* rh, const PRESSURE_TYPE* plev, const Float* rh_classes,
         const Float* mext_phobic, const Float* ssa_phobic, const Float* g_phobic,
         const Float* mext_philic, const Float* ssa_philic, const Float* g_philic,
         Float* tau, Float* taussa, Float* taussag)
@@ -61,7 +61,7 @@ namespace
             const int idx_2d = icol + ilay * ncol;
             const int ihum = find_rh_class(rh[idx_2d], rh_classes);
 
-            const Float dpg = abs(plev[idx_2d] - plev[idx_2d + ncol]) / Float(9.81);
+            const Float dpg = abs(Float(plev[idx_2d]) - Float(plev[idx_2d + ncol])) / Float(9.81);
 
             // set to zero
             tau[idx_3d] = Float(0.);
@@ -220,7 +220,7 @@ Aerosol_optics_gpu::Aerosol_optics_gpu(
 
 void Aerosol_optics_gpu::aerosol_optics(
         Aerosol_concs_gpu& aerosol_concs,
-        const Array_gpu<Float,2>& rh, const Array_gpu<Float,2>& plev,
+        const Array_gpu<Float,2>& rh, const Array_gpu<PRESSURE_TYPE,2>& plev,
         Optical_props_2str_gpu& optical_props)
 {
     const int ncol = rh.dim(1);

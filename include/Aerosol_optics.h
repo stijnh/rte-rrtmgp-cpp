@@ -57,7 +57,7 @@ class Aerosol_optics_gpu : public Optical_props_gpu
 
         void aerosol_optics(
                 Aerosol_concs_gpu& aerosol_concs,
-                const Array_gpu<Float,2>& rh, const Array_gpu<Float,2>& plev,
+                const Array_gpu<Float,2>& rh, const Array_gpu<PRESSURE_TYPE,2>& plev,
                 Optical_props_2str_gpu& optical_props);
 
     private:

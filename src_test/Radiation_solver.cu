@@ -487,15 +487,15 @@ void Radiation_solver_longwave::solve_gpu(
             col_dry_subset = col_dry.subset({{ {col_s_in, col_e_in}, {1, n_lay} }});
 
         kdist_gpu->gas_optics(
-                p_lay.subset({{ {col_s_in, col_e_in}, {1, n_lay} }}),
+                p_lay.subset<PRESSURE_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
                 p_lev_subset,
-                t_lay.subset({{ {col_s_in, col_e_in}, {1, n_lay} }}),
-                t_sfc.subset({{ {col_s_in, col_e_in} }}),
+                t_lay.subset<TEMPERATURE_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
+                t_sfc.subset<TEMPERATURE_TYPE>({{ {col_s_in, col_e_in} }}),
                 gas_concs_subset,
                 optical_props_subset_in,
                 sources_subset_in,
                 col_dry_subset,
-                t_lev.subset({{ {col_s_in, col_e_in}, {1, n_lev} }}) );
+                t_lev.subset<TEMPERATURE_TYPE>({{ {col_s_in, col_e_in}, {1, n_lev} }}) );
 
         if (switch_cloud_optics)
         {

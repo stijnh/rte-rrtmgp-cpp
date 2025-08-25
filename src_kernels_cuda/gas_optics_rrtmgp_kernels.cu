@@ -214,9 +214,9 @@ void Planck_source_kernel(
         const int npres,
         const int ntemp,
         const int nPlanckTemp,
-        const Float* __restrict__ tlay_ptr,
-        const Float* __restrict__ tlev_ptr,
-        const Float* __restrict__ tsfc_ptr,
+        const TEMPERATURE_TYPE* __restrict__ tlay_ptr,
+        const TEMPERATURE_TYPE* __restrict__ tlev_ptr,
+        const TEMPERATURE_TYPE* __restrict__ tsfc_ptr,
         const int sfc_lay,
         const Float* __restrict__ fmajor_ptr,
         const int* __restrict__ jeta_ptr,
@@ -242,9 +242,9 @@ void Planck_source_kernel(
     const int igpt = blockIdx.z*blockDim.z + threadIdx.z + 1;
 
     // Input arrays, use Index functor to simplify index porting from Fortran to CUDA
-    const Index_2d<const Float> tlay        (tlay_ptr, ncol, nlay);
-    const Index_2d<const Float> tlev        (tlev_ptr, ncol, nlay+1);
-    const Index_1d<const Float> tsfc        (tsfc_ptr, ncol);
+    const Index_2d<const TEMPERATURE_TYPE> tlay        (tlay_ptr, ncol, nlay);
+    const Index_2d<const TEMPERATURE_TYPE> tlev        (tlev_ptr, ncol, nlay+1);
+    const Index_1d<const TEMPERATURE_TYPE> tsfc        (tsfc_ptr, ncol);
     const Index_3d<const vector<Float, 8>> fmajor (reinterpret_cast<const vector<Float, 8>*>(fmajor_ptr), ncol, nlay, nflav);
     const Index_4d<const int> jeta          (jeta_ptr, 2, ncol, nlay, nflav);
     const Index_2d<const Bool> tropo        (tropo_ptr, ncol, nlay);
@@ -315,8 +315,8 @@ void Planck_source_kernel(
 
         if (ilay == sfc_lay)
         {
-                        planck_function_1 = interpolate1D(tsfc(icol)              , temp_ref_min, totplnk_delta, nPlanckTemp, &totplnk(1, ibnd));
-            const Float planck_function_2 = interpolate1D(tsfc(icol) + delta_Tsurf, temp_ref_min, totplnk_delta, nPlanckTemp, &totplnk(1, ibnd));
+                        planck_function_1 = interpolate1D(Float(tsfc(icol))              , temp_ref_min, totplnk_delta, nPlanckTemp, &totplnk(1, ibnd));
+            const Float planck_function_2 = interpolate1D(Float(tsfc(icol)) + delta_Tsurf, temp_ref_min, totplnk_delta, nPlanckTemp, &totplnk(1, ibnd));
             sfc_src    (icol, igpt) = pfrac * planck_function_1;
             sfc_src_jac(icol, igpt) = pfrac * (planck_function_2 - planck_function_1);
         }
@@ -327,17 +327,17 @@ void Planck_source_kernel(
 __global__
 void interpolation_kernel(
         const int ncol, const int nlay, const int ngas, const int nflav,
-        const int neta, const int npres, const int ntemp, const Float tmin,
+        const int neta, const int npres, const int ntemp, const TEMPERATURE_TYPE tmin,
         const int* __restrict__ flavor,
-        const Float* __restrict__ press_ref_log,
-        const Float* __restrict__ temp_ref,
-        Float press_ref_log_delta,
-        Float temp_ref_min,
-        Float temp_ref_delta,
-        Float press_ref_trop_log,
+        const PRESSURE_TYPE* __restrict__ press_ref_log,
+        const TEMPERATURE_TYPE* __restrict__ temp_ref,
+        PRESSURE_TYPE press_ref_log_delta,
+        TEMPERATURE_TYPE temp_ref_min,
+        TEMPERATURE_TYPE temp_ref_delta,
+        PRESSURE_TYPE press_ref_trop_log,
         const Float* __restrict__ vmr_ref,
-        const Float* __restrict__ play,
-        const Float* __restrict__ tlay,
+        const PRESSURE_TYPE* __restrict__ play,
+        const TEMPERATURE_TYPE* __restrict__ tlay,
         Float* __restrict__ col_gas,
         int* __restrict__ jtemp,
         Float* __restrict__ fmajor, Float* __restrict__ fminor,
@@ -354,15 +354,15 @@ void interpolation_kernel(
     {
         const int idx = icol + ilay*ncol;
 
-        jtemp[idx] = int((tlay[idx] - (temp_ref_min-temp_ref_delta)) / temp_ref_delta);
+        jtemp[idx] = int(Float(Float(tlay[idx]) - Float(temp_ref_min-temp_ref_delta)) / Float(temp_ref_delta));
         jtemp[idx] = min(ntemp-1, max(1, jtemp[idx]));
-        const Float ftemp = (tlay[idx] - temp_ref[jtemp[idx]-1]) / temp_ref_delta;
+        const Float ftemp = Float(tlay[idx] - temp_ref[jtemp[idx]-1]) / Float(temp_ref_delta);
 
-        const Float locpress = Float(1.) + (log(play[idx]) - press_ref_log[0]) / press_ref_log_delta;
+        const Float locpress = Float(1.) + (log(Float(play[idx])) - Float(press_ref_log[0])) / Float(press_ref_log_delta);
         jpress[idx] = min(npres-1, max(1, int(locpress)));
         const Float fpress = locpress - Float(jpress[idx]);
 
-        tropo[idx] = log(play[idx]) > press_ref_trop_log;
+        tropo[idx] = log(Float(play[idx])) > Float(press_ref_trop_log);
         const int itropo = !tropo[idx];
 
         const int gas1 = flavor[2*iflav  ];
@@ -379,7 +379,7 @@ void interpolation_kernel(
             col_mix[colmix_idx] = col_gas[colgas1_idx] + ratio_eta_half * col_gas[colgas2_idx];
 
             Float eta;
-            if (col_mix[colmix_idx] > Float(2.)*tmin)
+            if (col_mix[colmix_idx] > Float(2.)*Float(tmin))
                 eta = col_gas[colgas1_idx] / col_mix[colmix_idx];
             else
                 eta = Float(0.5);
@@ -482,8 +482,8 @@ void gas_optical_depths_minor_kernel(
         const int* __restrict__ idx_minor,
         const int* __restrict__ idx_minor_scaling,
         const int* __restrict__ kminor_start,
-        const Float* __restrict__ play,
-        const Float* __restrict__ tlay,
+        const PRESSURE_TYPE* __restrict__ play,
+        const TEMPERATURE_TYPE * __restrict__ tlay,
         const Float* __restrict__ col_gas,
         const Float* __restrict__ fminor,
         const int* __restrict__ jeta,
@@ -515,7 +515,7 @@ void gas_optical_depths_minor_kernel(
                     if (minor_scales_with_density[imnr])
                     {
                         const Float PaTohPa = 0.01;
-                        scaling *= PaTohPa * play[idx_collay] / tlay[idx_collay];
+                        scaling *= PaTohPa * Float(play[idx_collay]) / Float(tlay[idx_collay]);
 
                         if (idx_minor_scaling[imnr] > 0)
                         {

@@ -106,21 +106,21 @@ class Gas_optics_gpu : public Optical_props_gpu
 
         // Longwave variant.
         virtual void gas_optics(
-                const Array_gpu<Float,2>& play,
-                const Array_gpu<Float,2>& plev,
-                const Array_gpu<Float,2>& tlay,
-                const Array_gpu<Float,1>& tsfc,
+                const Array_gpu<PRESSURE_TYPE,2>& play,
+                const Array_gpu<PRESSURE_TYPE,2>& plev,
+                const Array_gpu<TEMPERATURE_TYPE,2>& tlay,
+                const Array_gpu<TEMPERATURE_TYPE,1>& tsfc,
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Source_func_lw_gpu& sources,
                 const Array_gpu<Float,2>& col_dry,
-                const Array_gpu<Float,2>& tlev) = 0;
+                const Array_gpu<TEMPERATURE_TYPE,2>& tlev) = 0;
 
         // Shortwave variant.
         virtual void gas_optics(
-                const Array_gpu<Float,2>& play,
-                const Array_gpu<Float,2>& plev,
-                const Array_gpu<Float,2>& tlay,
+                const Array_gpu<PRESSURE_TYPE,2>& play,
+                const Array_gpu<PRESSURE_TYPE,2>& plev,
+                const Array_gpu<TEMPERATURE_TYPE,2>& tlay,
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Array_gpu<Float,2>& toa_src,

@@ -806,7 +806,7 @@ void Gas_optics_rrtmgp_gpu::init_abs_coeffs(
 template<typename Float> __global__
 void compute_delta_plev(
         const int ncol, const int nlay,
-        const Float* __restrict__ plev,
+        const PRESSURE_TYPE* __restrict__ plev,
         Float* __restrict__ delta_plev)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -816,7 +816,7 @@ void compute_delta_plev(
     {
         const int idx = icol + ilay*ncol;
 
-        delta_plev[idx] = abs(plev[idx] - plev[idx + ncol]);
+        delta_plev[idx] = Float(abs(Float(plev[idx]) - Float(plev[idx + ncol])));
 
         // delta_plev({icol, ilay}) = std::abs(plev({icol, ilay}) - plev({icol, ilay+1}));
     }
@@ -869,7 +869,7 @@ void compute_col_dry(
 // Calculate the molecules of dry air.
 void Gas_optics_rrtmgp_gpu::get_col_dry(
         Array_gpu<Float,2>& col_dry, const Array_gpu<Float,2>& vmr_h2o,
-        const Array_gpu<Float,2>& plev)
+        const Array_gpu<PRESSURE_TYPE,2>& plev)
 {
     Array_gpu<Float,2> delta_plev({col_dry.dim(1), col_dry.dim(2)});
     Array_gpu<Float,2> m_air     ({col_dry.dim(1), col_dry.dim(2)});
@@ -905,15 +905,15 @@ void Gas_optics_rrtmgp_gpu::get_col_dry(
 
 // Gas optics solver longwave variant.
 void Gas_optics_rrtmgp_gpu::gas_optics(
-        const Array_gpu<Float,2>& play,
-        const Array_gpu<Float,2>& plev,
-        const Array_gpu<Float,2>& tlay,
-        const Array_gpu<Float,1>& tsfc,
+        const Array_gpu<PRESSURE_TYPE,2>& play,
+        const Array_gpu<PRESSURE_TYPE,2>& plev,
+        const Array_gpu<TEMPERATURE_TYPE,2>& tlay,
+        const Array_gpu<TEMPERATURE_TYPE,1>& tsfc,
         const Gas_concs_gpu& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         Source_func_lw_gpu& sources,
         const Array_gpu<Float,2>& col_dry,
-        const Array_gpu<Float,2>& tlev)
+        const Array_gpu<TEMPERATURE_TYPE,2>& tlev)
 {
     const int ncol = play.dim(1);
     const int nlay = play.dim(2);
@@ -945,9 +945,9 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
 
 // Gas optics solver shortwave variant.
 void Gas_optics_rrtmgp_gpu::gas_optics(
-        const Array_gpu<Float,2>& play,
-        const Array_gpu<Float,2>& plev,
-        const Array_gpu<Float,2>& tlay,
+        const Array_gpu<PRESSURE_TYPE,2>& play,
+        const Array_gpu<PRESSURE_TYPE,2>& plev,
+        const Array_gpu<TEMPERATURE_TYPE,2>& tlay,
         const Gas_concs_gpu& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         Array_gpu<Float,2>& toa_src,
@@ -979,9 +979,9 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
 
 void Gas_optics_rrtmgp_gpu::compute_gas_taus(
         const int ncol, const int nlay, const int ngpt, const int nband,
-        const Array_gpu<Float,2>& play,
-        const Array_gpu<Float,2>& plev,
-        const Array_gpu<Float,2>& tlay,
+        const Array_gpu<PRESSURE_TYPE,2>& play,
+        const Array_gpu<PRESSURE_TYPE,2>& plev,
+        const Array_gpu<TEMPERATURE_TYPE,2>& tlay,
         const Gas_concs_gpu& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         Array_gpu<int,2>& jtemp, Array_gpu<int,2>& jpress,
@@ -1166,13 +1166,13 @@ void Gas_optics_rrtmgp_gpu::combine_abs_and_rayleigh(
 
 void Gas_optics_rrtmgp_gpu::source(
         const int ncol, const int nlay, const int nbnd, const int ngpt,
-        const Array_gpu<Float,2>& play, const Array_gpu<Float,2>& plev,
-        const Array_gpu<Float,2>& tlay, const Array_gpu<Float,1>& tsfc,
+        const Array_gpu<PRESSURE_TYPE,2>& play, const Array_gpu<PRESSURE_TYPE,2>& plev,
+        const Array_gpu<TEMPERATURE_TYPE,2>& tlay, const Array_gpu<TEMPERATURE_TYPE,1>& tsfc,
         const Array_gpu<int,2>& jtemp, const Array_gpu<int,2>& jpress,
         const Array_gpu<int,4>& jeta, const Array_gpu<Bool,2>& tropo,
         const Array_gpu<Float,6>& fmajor,
         Source_func_lw_gpu& sources,
-        const Array_gpu<Float,2>& tlev)
+        const Array_gpu<TEMPERATURE_TYPE,2>& tlev)
 {
     const int nflav = this->get_nflav();
     const int neta = this->get_neta();

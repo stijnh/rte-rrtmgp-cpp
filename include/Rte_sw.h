@@ -66,18 +66,18 @@ class Rte_sw_gpu
                 const std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 const Bool top_at_1,
                 const Array_gpu<Float,1>& mu0,
-                const Array_gpu<Float,2>& inc_flux_dir,
-                const Array_gpu<Float,2>& sfc_alb_dir,
-                const Array_gpu<Float,2>& sfc_alb_dif,
-                const Array_gpu<Float,2>& inc_flux_dif,
-                Array_gpu<Float,3>& gpt_flux_up,
-                Array_gpu<Float,3>& gpt_flux_dn,
-                Array_gpu<Float,3>& gpt_flux_dir);
+                const Array_gpu<FLUX_TYPE,2>& inc_flux_dir,
+                const Array_gpu<SURFACE_TYPE,2>& sfc_alb_dir,
+                const Array_gpu<SURFACE_TYPE,2>& sfc_alb_dif,
+                const Array_gpu<FLUX_TYPE,2>& inc_flux_dif,
+                Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
+                Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
+                Array_gpu<FLUX_TYPE,3>& gpt_flux_dir);
 
         void expand_and_transpose(
                 const std::unique_ptr<Optical_props_arry_gpu>& ops,
-                const Array_gpu<Float,2> arr_in,
-                Array_gpu<Float,2>& arr_out);
+                const Array_gpu<SURFACE_TYPE,2> arr_in,
+                Array_gpu<SURFACE_TYPE,2>& arr_out);
 };
 #endif
 

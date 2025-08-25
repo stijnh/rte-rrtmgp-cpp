@@ -117,20 +117,20 @@ void Rte_sw_gpu::rte_sw(
         const std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         const Bool top_at_1,
         const Array_gpu<Float,1>& mu0,
-        const Array_gpu<Float,2>& inc_flux_dir,
-        const Array_gpu<Float,2>& sfc_alb_dir,
-        const Array_gpu<Float,2>& sfc_alb_dif,
-        const Array_gpu<Float,2>& inc_flux_dif,
-        Array_gpu<Float,3>& gpt_flux_up,
-        Array_gpu<Float,3>& gpt_flux_dn,
-        Array_gpu<Float,3>& gpt_flux_dir)
+        const Array_gpu<FLUX_TYPE,2>& inc_flux_dir,
+        const Array_gpu<SURFACE_TYPE ,2>& sfc_alb_dir,
+        const Array_gpu<SURFACE_TYPE,2>& sfc_alb_dif,
+        const Array_gpu<FLUX_TYPE,2>& inc_flux_dif,
+        Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
+        Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
+        Array_gpu<FLUX_TYPE,3>& gpt_flux_dir)
 {
     const int ncol = optical_props->get_ncol();
     const int nlay = optical_props->get_nlay();
     const int ngpt = optical_props->get_ngpt();
 
-    Array_gpu<Float,2> sfc_alb_dir_gpt({ncol, ngpt});
-    Array_gpu<Float,2> sfc_alb_dif_gpt({ncol, ngpt});
+    Array_gpu<SURFACE_TYPE,2> sfc_alb_dir_gpt({ncol, ngpt});
+    Array_gpu<SURFACE_TYPE,2> sfc_alb_dif_gpt({ncol, ngpt});
 
     expand_and_transpose(optical_props, sfc_alb_dir, sfc_alb_dir_gpt);
     expand_and_transpose(optical_props, sfc_alb_dif, sfc_alb_dif_gpt);
@@ -142,7 +142,7 @@ void Rte_sw_gpu::rte_sw(
         throw std::runtime_error("Broadband fluxes not implemented, performance gain on GPU is negligible");
     
     // pass null ptr if size of inc_flux is zero
-    const Float* inc_flux_dif_ptr = (inc_flux_dif.size() == 0) ? nullptr : inc_flux_dif.ptr();
+    const FLUX_TYPE* inc_flux_dif_ptr = (inc_flux_dif.size() == 0) ? nullptr : inc_flux_dif.ptr();
 
     // Run the radiative transfer solver
     // CvH: only two-stream solutions, I skipped the sw_solver_noscat.
@@ -163,8 +163,8 @@ void Rte_sw_gpu::rte_sw(
 
 void Rte_sw_gpu::expand_and_transpose(
         const std::unique_ptr<Optical_props_arry_gpu>& ops,
-        const Array_gpu<Float,2> arr_in,
-        Array_gpu<Float,2>& arr_out)
+        const Array_gpu<SURFACE_TYPE,2> arr_in,
+        Array_gpu<SURFACE_TYPE,2>& arr_out)
 {
     const int ncol = arr_in.dim(2);
     const int nbnd = ops->get_nband();

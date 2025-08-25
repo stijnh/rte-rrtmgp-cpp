@@ -422,7 +422,7 @@ void solve_radiation(int argc, char** argv)
             Array_gpu<Float,2> t_lev_gpu(t_lev);
             Array_gpu<Float,2> col_dry_gpu(col_dry);
             Array_gpu<Float,1> t_sfc_gpu(t_sfc);
-            Array_gpu<Float,2> emis_sfc_gpu(emis_sfc);
+            Array_gpu<SURFACE_TYPE,2> emis_sfc_gpu(emis_sfc);
             Array_gpu<Float,2> lwp_gpu(lwp);
             Array_gpu<Float,2> iwp_gpu(iwp);
             Array_gpu<Float,2> rel_gpu(rel);

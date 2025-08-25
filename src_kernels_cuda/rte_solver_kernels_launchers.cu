@@ -191,13 +191,13 @@ namespace Rte_solver_kernels_cuda
 
     void sw_solver_2stream(
             const int ncol, const int nlay, const int ngpt, const Bool top_at_1,
-            const Float* tau, const Float* ssa, const Float* g,
+            const ATMOS_TYPE* tau, const Float* ssa, const Float* g,
             const Float* mu0,
-            const Float* sfc_alb_dir, const Float* sfc_alb_dif,
-            const Float* inc_flux_dir,
-            Float* flux_up, Float* flux_dn, Float* flux_dir,
-            const Bool has_dif_bc, const Float* inc_flux_dif,
-            const Bool do_broadband, Float* flux_up_loc, Float* flux_dn_loc, Float* flux_dir_loc)
+            const SURFACE_TYPE* sfc_alb_dir, const SURFACE_TYPE* sfc_alb_dif,
+            const FLUX_TYPE* inc_flux_dir,
+            FLUX_TYPE* flux_up, FLUX_TYPE* flux_dn, FLUX_TYPE* flux_dir,
+            const Bool has_dif_bc, const FLUX_TYPE* inc_flux_dif,
+            const Bool do_broadband, FLUX_TYPE* flux_up_loc, FLUX_TYPE* flux_dn_loc, FLUX_TYPE* flux_dir_loc)
     {
         const int opt_size = ncol*nlay*ngpt;
         const int alb_size = ncol*ngpt;

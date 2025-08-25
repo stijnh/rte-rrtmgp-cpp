@@ -467,9 +467,9 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
         Array_gpu<Float,3> vmr_ref_gpu;
         Array_gpu<int,2> flavor_gpu;
         Array_gpu<int,2> gpoint_flavor_gpu;
-        Array_gpu<Float,4> kmajor_gpu;
-        Array_gpu<Float,3> kminor_lower_gpu;
-        Array_gpu<Float,3> kminor_upper_gpu;
+        Array_gpu<KMAJOR_TYPE,4> kmajor_gpu;
+        Array_gpu<KMINOR_TYPE,3> kminor_lower_gpu;
+        Array_gpu<KMINOR_TYPE,3> kminor_upper_gpu;
         Array_gpu<int,2> minor_limits_gpt_lower_gpu;
         Array_gpu<int,2> minor_limits_gpt_upper_gpu;
         Array_gpu<Bool,1> minor_scales_with_density_lower_gpu;

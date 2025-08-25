@@ -414,7 +414,7 @@ void gas_optical_depths_major_kernel(
         const int nflav, const int neta, const int npres, const int ntemp,
         const int* __restrict__ gpoint_flavor,
         const int* __restrict__ band_lims_gpt,
-        const Float* __restrict__ kmajor,
+        const KMAJOR_TYPE* __restrict__ kmajor,
         const Float* __restrict__ col_mix, const FMAJOR_TYPE* __restrict__ fmajor,
         const int* __restrict__ jeta, const Bool* __restrict__ tropo,
         const int* __restrict__ jtemp, const int* __restrict__ jpress,
@@ -447,10 +447,10 @@ void gas_optical_depths_major_kernel(
         for (int i=0; i<2; ++i)
         {
             auto result = col_mix[idx_fcl1+i] *
-                (Float(ifmajor[i*4+0]) * kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress] +
-                 Float(ifmajor[i*4+1]) * kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress] +
-                 Float(ifmajor[i*4+2]) * kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress] +
-                 Float(ifmajor[i*4+3]) * kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]);
+                (Float(ifmajor[i*4+0]) * Float(kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress]) +
+                 Float(ifmajor[i*4+1]) * Float(kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress]) +
+                 Float(ifmajor[i*4+2]) * Float(kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]) +
+                 Float(ifmajor[i*4+3]) * Float(kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]));
 
             tau[idx_out] += ATMOS_TYPE(result);
         }
@@ -478,7 +478,7 @@ void gas_optical_depths_minor_kernel(
         const int nminork,
         const int idx_h2o, const int idx_tropo,
         const int* __restrict__ gpoint_flavor,
-        const Float* __restrict__ kminor,
+        const KMINOR_TYPE* __restrict__ kminor,
         const int* __restrict__ minor_limits_gpt,
         const Bool* __restrict__ minor_scales_with_density,
         const Bool* __restrict__ scale_by_complement,
@@ -555,7 +555,7 @@ void gas_optical_depths_minor_kernel(
                 const int idx_fcl1 = 2 * (icol + ilay*ncol + iflav*ncol*nlay);
 
                 const FMINOR_TYPE* kfminor = &fminor[idx_fcl2];
-                const Float* kin = &kminor[0];
+                const KMINOR_TYPE* kin = &kminor[0];
 
                 const int j0 = jeta[idx_fcl1];
                 const int j1 = jeta[idx_fcl1+1];
@@ -565,10 +565,10 @@ void gas_optical_depths_minor_kernel(
 
                 for (int igpt=threadIdx.z; igpt<band_gpt; igpt+=block_size_z)
                 {
-                    auto ltau_minor = Float(kfminor[0]) * kin[(kjtemp-1) + (j0-1)*ntemp + (igpt+gpt_offset)*ntemp*neta] +
-                                        Float(kfminor[1]) * kin[(kjtemp-1) +  j0   *ntemp + (igpt+gpt_offset)*ntemp*neta] +
-                                        Float(kfminor[2]) * kin[kjtemp     + (j1-1)*ntemp + (igpt+gpt_offset)*ntemp*neta] +
-                                        Float(kfminor[3]) * kin[kjtemp     +  j1   *ntemp + (igpt+gpt_offset)*ntemp*neta];
+                    auto ltau_minor = Float(kfminor[0]) * Float(kin[(kjtemp-1) + (j0-1)*ntemp + (igpt+gpt_offset)*ntemp*neta]) +
+                                        Float(kfminor[1]) * Float(kin[(kjtemp-1) +  j0   *ntemp + (igpt+gpt_offset)*ntemp*neta]) +
+                                        Float(kfminor[2]) * Float(kin[kjtemp     + (j1-1)*ntemp + (igpt+gpt_offset)*ntemp*neta]) +
+                                        Float(kfminor[3]) * Float(kin[kjtemp     +  j1   *ntemp + (igpt+gpt_offset)*ntemp*neta]);
 
                     const int idx_out = icol + ilay*ncol + (igpt+gpt_start)*ncol*nlay;
                     tau[idx_out] += ATMOS_TYPE(ltau_minor * scaling);

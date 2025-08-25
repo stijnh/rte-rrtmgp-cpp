@@ -39,7 +39,9 @@ using FLUX_TYPE = float;
 using SURFACE_TYPE = float;
 using TEMPERATURE_TYPE = float;
 using PRESSURE_TYPE = float;
-using FMINOR_TYPE = half;
-using FMAJOR_TYPE = half;
+using FMINOR_TYPE = float;
+using FMAJOR_TYPE = float;
+using KMINOR_TYPE = half;
+using KMAJOR_TYPE = half;
 
 #endif

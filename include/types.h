@@ -37,7 +37,9 @@ using ATMOS_TYPE = float;
 using INTERMEDIATE_TYPE = float;
 using FLUX_TYPE = float;
 using SURFACE_TYPE = float;
-using TEMPERATURE_TYPE = half;
-using PRESSURE_TYPE = half;
+using TEMPERATURE_TYPE = float;
+using PRESSURE_TYPE = float;
+using FMINOR_TYPE = half;
+using FMAJOR_TYPE = half;
 
 #endif

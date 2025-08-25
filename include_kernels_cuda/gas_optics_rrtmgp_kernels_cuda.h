@@ -67,7 +67,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const TEMPERATURE_TYPE* tlay,
             Float* col_gas,
             int* jtemp,
-            Float* fmajor, Float* fminor,
+            FMAJOR_TYPE* fmajor, FMINOR_TYPE* fminor,
             Float* col_mix,
             Bool* tropo,
             int* jeta,
@@ -86,7 +86,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int* band_lims_gpt,
             const Float* krayl,
             int idx_h2o, const Float* col_dry, const Float* col_gas,
-            const Float* fminor, const int* jeta,
+            const FMINOR_TYPE* fminor, const int* jeta,
             const Bool* tropo, const int* jtemp,
             ATMOS_TYPE* tau_rayleigh);
 
@@ -114,8 +114,8 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int* kminor_start_lower,
             const int* kminor_start_upper,
             const Bool* tropo,
-            const Float* col_mix, const Float* fmajor,
-            const Float* fminor, const PRESSURE_TYPE* play,
+            const Float* col_mix, const FMAJOR_TYPE* fmajor,
+            const FMINOR_TYPE* fminor, const PRESSURE_TYPE* play,
             const TEMPERATURE_TYPE* tlay, const Float* col_gas,
             const int* jeta, const int* jtemp,
             const int* jpress, ATMOS_TYPE* tau);
@@ -128,7 +128,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const TEMPERATURE_TYPE* tlev,
             const TEMPERATURE_TYPE* tsfc,
             const int sfc_lay,
-            const Float* fmajor,
+            const FMAJOR_TYPE* fmajor,
             const int* jeta,
             const Bool* tropo,
             const int* jtemp,

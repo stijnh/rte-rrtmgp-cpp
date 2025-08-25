@@ -14,7 +14,7 @@ Float interpolate1D(
 
 
 __device__ __forceinline__
-void interpolate2D_byflav_kernel(const Float* __restrict__ fminor,
+void interpolate2D_byflav_kernel(const FMINOR_TYPE* __restrict__ fminor,
                                  const Float* __restrict__ kin,
                                  const int gpt_start, const int gpt_end,
                                  Float* __restrict__ k,
@@ -30,10 +30,10 @@ void interpolate2D_byflav_kernel(const Float* __restrict__ fminor,
     #pragma unroll
     for (int igpt=0; igpt<band_gpt; ++igpt)
     {
-        k[igpt] = fminor[0] * kin[igpt + (j0-1)*ngpt + (jtemp-1)*neta*ngpt] +
-                  fminor[1] * kin[igpt +  j0   *ngpt + (jtemp-1)*neta*ngpt] +
-                  fminor[2] * kin[igpt + (j1-1)*ngpt + jtemp    *neta*ngpt] +
-                  fminor[3] * kin[igpt +  j1   *ngpt + jtemp    *neta*ngpt];
+        k[igpt] = Float(fminor[0]) * kin[igpt + (j0-1)*ngpt + (jtemp-1)*neta*ngpt] +
+                  Float(fminor[1]) * kin[igpt +  j0   *ngpt + (jtemp-1)*neta*ngpt] +
+                  Float(fminor[2]) * kin[igpt + (j1-1)*ngpt + jtemp    *neta*ngpt] +
+                  Float(fminor[3]) * kin[igpt +  j1   *ngpt + jtemp    *neta*ngpt];
     }
 }
 
@@ -41,7 +41,7 @@ void interpolate2D_byflav_kernel(const Float* __restrict__ fminor,
 __device__
 void interpolate3D_byflav_kernel(
         const Float* __restrict__ scaling,
-        const Float* __restrict__ fmajor,
+        const FMAJOR_TYPE* __restrict__ fmajor,
         const Float* __restrict__ k,
         const int gpt_start, const int gpt_end,
         const int* __restrict__ jeta,
@@ -60,15 +60,15 @@ void interpolate3D_byflav_kernel(
     for (int igpt=0; igpt<band_gpt; ++igpt)
     {
         auto result = scaling[0]*
-                          (fmajor[0] * k[igpt + (j0-1)*ngpt + (jpress-1)*neta*ngpt + (jtemp-1)*neta*ngpt*npress] +
-                           fmajor[1] * k[igpt +  j0   *ngpt + (jpress-1)*neta*ngpt + (jtemp-1)*neta*ngpt*npress] +
-                           fmajor[2] * k[igpt + (j0-1)*ngpt + jpress*neta*ngpt     + (jtemp-1)*neta*ngpt*npress] +
-                           fmajor[3] * k[igpt +  j0   *ngpt + jpress*neta*ngpt     + (jtemp-1)*neta*ngpt*npress])
+                          (Float(fmajor[0]) * k[igpt + (j0-1)*ngpt + (jpress-1)*neta*ngpt + (jtemp-1)*neta*ngpt*npress] +
+                           Float(fmajor[1]) * k[igpt +  j0   *ngpt + (jpress-1)*neta*ngpt + (jtemp-1)*neta*ngpt*npress] +
+                           Float(fmajor[2]) * k[igpt + (j0-1)*ngpt + jpress*neta*ngpt     + (jtemp-1)*neta*ngpt*npress] +
+                           Float(fmajor[3]) * k[igpt +  j0   *ngpt + jpress*neta*ngpt     + (jtemp-1)*neta*ngpt*npress])
                         + scaling[1]*
-                          (fmajor[4] * k[igpt + (j1-1)*ngpt + (jpress-1)*neta*ngpt + jtemp*neta*ngpt*npress] +
-                           fmajor[5] * k[igpt +  j1   *ngpt + (jpress-1)*neta*ngpt + jtemp*neta*ngpt*npress] +
-                           fmajor[6] * k[igpt + (j1-1)*ngpt + jpress*neta*ngpt     + jtemp*neta*ngpt*npress] +
-                           fmajor[7] * k[igpt +  j1   *ngpt + jpress*neta*ngpt     + jtemp*neta*ngpt*npress]);
+                          (Float(fmajor[4]) * k[igpt + (j1-1)*ngpt + (jpress-1)*neta*ngpt + jtemp*neta*ngpt*npress] +
+                            Float(fmajor[5]) * k[igpt +  j1   *ngpt + (jpress-1)*neta*ngpt + jtemp*neta*ngpt*npress] +
+                            Float(fmajor[6]) * k[igpt + (j1-1)*ngpt + jpress*neta*ngpt     + jtemp*neta*ngpt*npress] +
+                            Float(fmajor[7]) * k[igpt +  j1   *ngpt + jpress*neta*ngpt     + jtemp*neta*ngpt*npress]);
 
         tau_major[igpt] = ATMOS_TYPE(result);
     }
@@ -218,7 +218,7 @@ void Planck_source_kernel(
         const TEMPERATURE_TYPE* __restrict__ tlev_ptr,
         const TEMPERATURE_TYPE* __restrict__ tsfc_ptr,
         const int sfc_lay,
-        const Float* __restrict__ fmajor_ptr,
+        const FMAJOR_TYPE* __restrict__ fmajor_ptr,
         const int* __restrict__ jeta_ptr,
         const Bool* __restrict__ tropo_ptr,
         const int* __restrict__ jtemp_ptr,
@@ -340,7 +340,7 @@ void interpolation_kernel(
         const TEMPERATURE_TYPE* __restrict__ tlay,
         Float* __restrict__ col_gas,
         int* __restrict__ jtemp,
-        Float* __restrict__ fmajor, Float* __restrict__ fminor,
+        FMAJOR_TYPE* __restrict__ fmajor, FMINOR_TYPE* __restrict__ fminor,
         Float* __restrict__ col_mix,
         Bool* __restrict__ tropo,
         int* __restrict__ jeta,
@@ -391,15 +391,18 @@ void interpolation_kernel(
 
             // Compute interpolation fractions needed for minor species.
             const int fminor_idx = 2*(itemp + 2*(icol + ilay*ncol + iflav*ncol*nlay));
-            fminor[fminor_idx  ] = (Float(1.)-feta) * ftemp_term;
-            fminor[fminor_idx+1] = feta * ftemp_term;
+            Float fminor_p = (Float(1.)-feta) * ftemp_term;
+            Float fminor_n = feta * ftemp_term;
+
+            fminor[fminor_idx  ] = FMINOR_TYPE(fminor_p);
+            fminor[fminor_idx+1] = FMINOR_TYPE(fminor_n);
 
             // Compute interpolation fractions needed for major species.
             const int fmajor_idx = 2*2*(itemp + 2*(icol + ilay*ncol + iflav*ncol*nlay));
-            fmajor[fmajor_idx  ] = (Float(1.)-fpress) * fminor[fminor_idx  ];
-            fmajor[fmajor_idx+1] = (Float(1.)-fpress) * fminor[fminor_idx+1];
-            fmajor[fmajor_idx+2] = fpress * fminor[fminor_idx  ];
-            fmajor[fmajor_idx+3] = fpress * fminor[fminor_idx+1];
+            fmajor[fmajor_idx  ] = FMAJOR_TYPE((Float(1.)-fpress) * fminor_p);
+            fmajor[fmajor_idx+1] = FMAJOR_TYPE((Float(1.)-fpress) * fminor_n);
+            fmajor[fmajor_idx+2] = FMAJOR_TYPE(fpress * fminor_p);
+            fmajor[fmajor_idx+3] = FMAJOR_TYPE(fpress * fminor_n);
         }
     }
 }
@@ -412,7 +415,7 @@ void gas_optical_depths_major_kernel(
         const int* __restrict__ gpoint_flavor,
         const int* __restrict__ band_lims_gpt,
         const Float* __restrict__ kmajor,
-        const Float* __restrict__ col_mix, const Float* __restrict__ fmajor,
+        const Float* __restrict__ col_mix, const FMAJOR_TYPE* __restrict__ fmajor,
         const int* __restrict__ jeta, const Bool* __restrict__ tropo,
         const int* __restrict__ jtemp, const int* __restrict__ jpress,
         ATMOS_TYPE* __restrict__ tau)
@@ -435,7 +438,7 @@ void gas_optical_depths_major_kernel(
         const int idx_fcl3 = 2 * 2 * 2 * (icol + ilay*ncol + iflav*ncol*nlay);
         const int idx_fcl1 = 2 *         (icol + ilay*ncol + iflav*ncol*nlay);
 
-        const Float* __restrict__ ifmajor = &fmajor[idx_fcl3];
+        const FMAJOR_TYPE* __restrict__ ifmajor = &fmajor[idx_fcl3];
 
         const int idx_out = icol + ilay*ncol + igpt*ncol*nlay;
 
@@ -444,10 +447,10 @@ void gas_optical_depths_major_kernel(
         for (int i=0; i<2; ++i)
         {
             auto result = col_mix[idx_fcl1+i] *
-                (ifmajor[i*4+0] * kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress] +
-                 ifmajor[i*4+1] * kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress] +
-                 ifmajor[i*4+2] * kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress] +
-                 ifmajor[i*4+3] * kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]);
+                (Float(ifmajor[i*4+0]) * kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress] +
+                 Float(ifmajor[i*4+1]) * kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress] +
+                 Float(ifmajor[i*4+2]) * kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress] +
+                 Float(ifmajor[i*4+3]) * kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]);
 
             tau[idx_out] += ATMOS_TYPE(result);
         }
@@ -485,7 +488,7 @@ void gas_optical_depths_minor_kernel(
         const PRESSURE_TYPE* __restrict__ play,
         const TEMPERATURE_TYPE * __restrict__ tlay,
         const Float* __restrict__ col_gas,
-        const Float* __restrict__ fminor,
+        const FMINOR_TYPE* __restrict__ fminor,
         const int* __restrict__ jeta,
         const int* __restrict__ jtemp,
         const Bool* __restrict__ tropo,
@@ -551,7 +554,7 @@ void gas_optical_depths_minor_kernel(
                 const int idx_fcl2 = 2 * 2 * (icol + ilay*ncol + iflav*ncol*nlay);
                 const int idx_fcl1 = 2 * (icol + ilay*ncol + iflav*ncol*nlay);
 
-                const Float* kfminor = &fminor[idx_fcl2];
+                const FMINOR_TYPE* kfminor = &fminor[idx_fcl2];
                 const Float* kin = &kminor[0];
 
                 const int j0 = jeta[idx_fcl1];
@@ -562,10 +565,10 @@ void gas_optical_depths_minor_kernel(
 
                 for (int igpt=threadIdx.z; igpt<band_gpt; igpt+=block_size_z)
                 {
-                    auto ltau_minor = kfminor[0] * kin[(kjtemp-1) + (j0-1)*ntemp + (igpt+gpt_offset)*ntemp*neta] +
-                                       kfminor[1] * kin[(kjtemp-1) +  j0   *ntemp + (igpt+gpt_offset)*ntemp*neta] +
-                                       kfminor[2] * kin[kjtemp     + (j1-1)*ntemp + (igpt+gpt_offset)*ntemp*neta] +
-                                       kfminor[3] * kin[kjtemp     +  j1   *ntemp + (igpt+gpt_offset)*ntemp*neta];
+                    auto ltau_minor = Float(kfminor[0]) * kin[(kjtemp-1) + (j0-1)*ntemp + (igpt+gpt_offset)*ntemp*neta] +
+                                        Float(kfminor[1]) * kin[(kjtemp-1) +  j0   *ntemp + (igpt+gpt_offset)*ntemp*neta] +
+                                        Float(kfminor[2]) * kin[kjtemp     + (j1-1)*ntemp + (igpt+gpt_offset)*ntemp*neta] +
+                                        Float(kfminor[3]) * kin[kjtemp     +  j1   *ntemp + (igpt+gpt_offset)*ntemp*neta];
 
                     const int idx_out = icol + ilay*ncol + (igpt+gpt_start)*ncol*nlay;
                     tau[idx_out] += ATMOS_TYPE(ltau_minor * scaling);
@@ -597,7 +600,7 @@ void gas_optical_depths_minor_reference_kernel(
         const Float* __restrict__ play,
         const Float* __restrict__ tlay,
         const Float* __restrict__ col_gas,
-        const Float* __restrict__ fminor,
+        const FMINOR_TYPE* __restrict__ fminor,
         const int* __restrict__ jeta,
         const int* __restrict__ jtemp,
         const Bool* __restrict__ tropo,
@@ -677,7 +680,7 @@ void compute_tau_rayleigh_kernel(
         const int* __restrict__ band_lims_gpt,
         const Float* __restrict__ krayl,
         int idx_h2o, const Float* __restrict__ col_dry, const Float* __restrict__ col_gas,
-        const Float* __restrict__ fminor, const int* __restrict__ jeta,
+        const FMINOR_TYPE* __restrict__ fminor, const int* __restrict__ jeta,
         const Bool* __restrict__ tropo, const int* __restrict__ jtemp,
         ATMOS_TYPE* __restrict__ tau_rayleigh)
 {
@@ -704,10 +707,10 @@ void compute_tau_rayleigh_kernel(
             const int j0 = jeta[idx_fcl1  ];
             const int j1 = jeta[idx_fcl1+1];
 
-            const Float kloc = fminor[idx_fcl2+0] * krayl[idx_krayl + (jtempl-1) + (j0-1)*ntemp + igpt*ntemp*neta] +
-                               fminor[idx_fcl2+1] * krayl[idx_krayl + (jtempl-1) +  j0   *ntemp + igpt*ntemp*neta] +
-                               fminor[idx_fcl2+2] * krayl[idx_krayl + (jtempl  ) + (j1-1)*ntemp + igpt*ntemp*neta] +
-                               fminor[idx_fcl2+3] * krayl[idx_krayl + (jtempl  ) +  j1   *ntemp + igpt*ntemp*neta];
+            const Float kloc = Float(fminor[idx_fcl2+0]) * krayl[idx_krayl + (jtempl-1) + (j0-1)*ntemp + igpt*ntemp*neta] +
+                               Float(fminor[idx_fcl2+1]) * krayl[idx_krayl + (jtempl-1) +  j0   *ntemp + igpt*ntemp*neta] +
+                               Float(fminor[idx_fcl2+2]) * krayl[idx_krayl + (jtempl  ) + (j1-1)*ntemp + igpt*ntemp*neta] +
+                               Float(fminor[idx_fcl2+3]) * krayl[idx_krayl + (jtempl  ) +  j1   *ntemp + igpt*ntemp*neta];
 
             const int idx_out = icol + ilay*ncol + igpt*ncol*nlay;
             auto result = kloc * (col_gas[idx_collaywv] + col_dry[idx_collay]);

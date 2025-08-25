@@ -923,7 +923,7 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
     Array_gpu<int,2> jtemp({play.dim(1), play.dim(2)});
     Array_gpu<int,2> jpress({play.dim(1), play.dim(2)});
     Array_gpu<Bool,2> tropo({play.dim(1), play.dim(2)});
-    Array_gpu<Float,6> fmajor({2, 2, 2, play.dim(1), play.dim(2), this->get_nflav()});
+    Array_gpu<FMAJOR_TYPE,6> fmajor({2, 2, 2, play.dim(1), play.dim(2), this->get_nflav()});
     Array_gpu<int,4> jeta({2, play.dim(1), play.dim(2), this->get_nflav()});
 
     // Gas optics.
@@ -961,7 +961,7 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
     Array_gpu<int,2> jtemp({play.dim(1), play.dim(2)});
     Array_gpu<int,2> jpress({play.dim(1), play.dim(2)});
     Array_gpu<Bool,2> tropo({play.dim(1), play.dim(2)});
-    Array_gpu<Float,6> fmajor({2, 2, 2, play.dim(1), play.dim(2), this->get_nflav()});
+    Array_gpu<FMAJOR_TYPE,6> fmajor({2, 2, 2, play.dim(1), play.dim(2), this->get_nflav()});
     Array_gpu<int,4> jeta({2, play.dim(1), play.dim(2), this->get_nflav()});
 
     // Gas optics.
@@ -987,7 +987,7 @@ void Gas_optics_rrtmgp_gpu::compute_gas_taus(
         Array_gpu<int,2>& jtemp, Array_gpu<int,2>& jpress,
         Array_gpu<int,4>& jeta,
         Array_gpu<Bool,2>& tropo,
-        Array_gpu<Float,6>& fmajor,
+        Array_gpu<FMAJOR_TYPE,6>& fmajor,
         const Array_gpu<Float,2>& col_dry)
 {
     Array_gpu<Float,3> tau({ngpt, nlay, ncol});
@@ -996,7 +996,7 @@ void Gas_optics_rrtmgp_gpu::compute_gas_taus(
     Array_gpu<Float,3> col_gas({ncol, nlay, this->get_ngas()+1});
     col_gas.set_offsets({0, 0, -1});
     Array_gpu<Float,4> col_mix({2, ncol, nlay, this->get_nflav()});
-    Array_gpu<Float,5> fminor({2, 2, ncol, nlay, this->get_nflav()});
+    Array_gpu<FMINOR_TYPE,5> fminor({2, 2, ncol, nlay, this->get_nflav()});
 
 
     // CvH add all the checking...
@@ -1170,7 +1170,7 @@ void Gas_optics_rrtmgp_gpu::source(
         const Array_gpu<TEMPERATURE_TYPE,2>& tlay, const Array_gpu<TEMPERATURE_TYPE,1>& tsfc,
         const Array_gpu<int,2>& jtemp, const Array_gpu<int,2>& jpress,
         const Array_gpu<int,4>& jeta, const Array_gpu<Bool,2>& tropo,
-        const Array_gpu<Float,6>& fmajor,
+        const Array_gpu<FMAJOR_TYPE,6>& fmajor,
         Source_func_lw_gpu& sources,
         const Array_gpu<TEMPERATURE_TYPE,2>& tlev)
 {

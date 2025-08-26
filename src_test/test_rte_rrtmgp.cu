@@ -374,10 +374,10 @@ void solve_radiation(int argc, char** argv)
         Array<Float,1> t_sfc(input_nc.get_variable<Float>("t_sfc", {n_col_y, n_col_x}), {n_col});
 
         // Create output arrays.
-        Array_gpu<TAU_TYPE,3> lw_tau;
-        Array_gpu<SOURCE_TYPE,3> lay_source;
-        Array_gpu<SOURCE_TYPE,3> lev_source;
-        Array_gpu<SURFACE_TYPE,2> sfc_source;
+        Array_gpu<FloatTau,3> lw_tau;
+        Array_gpu<FloatSource,3> lay_source;
+        Array_gpu<FloatSource,3> lev_source;
+        Array_gpu<FloatSurface,2> sfc_source;
 
         if (switch_output_optical)
         {
@@ -422,7 +422,7 @@ void solve_radiation(int argc, char** argv)
             Array_gpu<Float,2> t_lev_gpu(t_lev);
             Array_gpu<Float,2> col_dry_gpu(col_dry);
             Array_gpu<Float,1> t_sfc_gpu(t_sfc);
-            Array_gpu<SURFACE_TYPE,2> emis_sfc_gpu(emis_sfc);
+            Array_gpu<FloatSurface,2> emis_sfc_gpu(emis_sfc);
             Array_gpu<Float,2> lwp_gpu(lwp);
             Array_gpu<Float,2> iwp_gpu(iwp);
             Array_gpu<Float,2> rel_gpu(rel);
@@ -579,9 +579,9 @@ void solve_radiation(int argc, char** argv)
         }
 
         // Create output arrays.
-        Array_gpu<TAU_TYPE,3> sw_tau;
-        Array_gpu<OPTICAL_TYPE,3> ssa;
-        Array_gpu<OPTICAL_TYPE,3> g;
+        Array_gpu<FloatTau,3> sw_tau;
+        Array_gpu<FloatOptical,3> ssa;
+        Array_gpu<FloatOptical,3> g;
         Array_gpu<Float,2> toa_source;
 
         if (switch_output_optical)

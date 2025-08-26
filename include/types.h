@@ -33,24 +33,24 @@ const Float Float_epsilon = DBL_EPSILON;
 using Int = unsigned long long;
 const Int Atomic_reduce_const = (Int)(-1LL);
 
-using INTERMEDIATE_TYPE = float;
-using FLUX_TYPE = float;
-using SURFACE_TYPE = float;
-using TEMPERATURE_TYPE = float;
-using PRESSURE_TYPE = float;
-using WEIGHT_TYPE = float;
-using COL_TYPE = float;
-using TAU_TYPE = float;
-using SOURCE_TYPE = float;
-using OPTICAL_TYPE = half;
+using FloatIntermediate = Float;
+using FloatFlux = Float;
+using FloatSurface = Float;
+using FloatTemperature = Float;
+using FloatPressure = Float;
+using FloatWeight = Float;
+using FloatCol = Float;
+using FloatTau = Float;
+using FloatSource = Float;
+using FloatOptical = Float;
 
-using DRY_COL_TYPE = COL_TYPE;
-using MIX_COL_TYPE = COL_TYPE;
-using GAS_COL_TYPE = COL_TYPE;
+using FloatColDry = FloatCol;
+using FloatColMix = FloatCol;
+using FloatColGas = FloatCol;
 
-using FMINOR_TYPE = WEIGHT_TYPE;
-using FMAJOR_TYPE = WEIGHT_TYPE;
-using KMINOR_TYPE = WEIGHT_TYPE;
-using KMAJOR_TYPE = WEIGHT_TYPE;
+using FloatFMinor = FloatWeight;
+using FloatFMajor = FloatWeight;
+using FloatKMinor = FloatWeight;
+using FloatKMajor = FloatWeight;
 
 #endif

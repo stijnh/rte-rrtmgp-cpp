@@ -393,7 +393,7 @@ namespace
     void fill_gases_kernel(
             const int ncol, const int nlay, const int dim1, const int dim2, const int ngas, const int igas,
             Float* __restrict__ vmr_out, const Float* __restrict__ vmr_in,
-            DRY_COL_TYPE* __restrict__ col_gas, const DRY_COL_TYPE* __restrict__ col_dry)
+            FloatColDry* __restrict__ col_gas, const FloatColDry* __restrict__ col_dry)
     {
         const int icol = blockIdx.x*blockDim.x + threadIdx.x;
         const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
@@ -806,7 +806,7 @@ void Gas_optics_rrtmgp_gpu::init_abs_coeffs(
 template<typename Float> __global__
 void compute_delta_plev(
         const int ncol, const int nlay,
-        const PRESSURE_TYPE* __restrict__ plev,
+        const FloatPressure* __restrict__ plev,
         Float* __restrict__ delta_plev)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -848,7 +848,7 @@ template<typename Float> __global__
 void compute_col_dry(
         const int ncol, const int nlay,
         const Float* __restrict__ delta_plev, const Float* __restrict__ m_air, const Float* __restrict__ vmr_h2o,
-        DRY_COL_TYPE* __restrict__ col_dry)
+        FloatColDry* __restrict__ col_dry)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
@@ -868,8 +868,8 @@ void compute_col_dry(
 
 // Calculate the molecules of dry air.
 void Gas_optics_rrtmgp_gpu::get_col_dry(
-        Array_gpu<DRY_COL_TYPE,2>& col_dry, const Array_gpu<Float,2>& vmr_h2o,
-        const Array_gpu<PRESSURE_TYPE,2>& plev)
+        Array_gpu<FloatColDry,2>& col_dry, const Array_gpu<Float,2>& vmr_h2o,
+        const Array_gpu<FloatPressure,2>& plev)
 {
     Array_gpu<Float,2> delta_plev({col_dry.dim(1), col_dry.dim(2)});
     Array_gpu<Float,2> m_air     ({col_dry.dim(1), col_dry.dim(2)});
@@ -905,15 +905,15 @@ void Gas_optics_rrtmgp_gpu::get_col_dry(
 
 // Gas optics solver longwave variant.
 void Gas_optics_rrtmgp_gpu::gas_optics(
-        const Array_gpu<PRESSURE_TYPE,2>& play,
-        const Array_gpu<PRESSURE_TYPE,2>& plev,
-        const Array_gpu<TEMPERATURE_TYPE,2>& tlay,
-        const Array_gpu<TEMPERATURE_TYPE,1>& tsfc,
+        const Array_gpu<FloatPressure,2>& play,
+        const Array_gpu<FloatPressure,2>& plev,
+        const Array_gpu<FloatTemperature,2>& tlay,
+        const Array_gpu<FloatTemperature,1>& tsfc,
         const Gas_concs_gpu& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         Source_func_lw_gpu& sources,
-        const Array_gpu<DRY_COL_TYPE,2>& col_dry,
-        const Array_gpu<TEMPERATURE_TYPE,2>& tlev)
+        const Array_gpu<FloatColDry,2>& col_dry,
+        const Array_gpu<FloatTemperature,2>& tlev)
 {
     const int ncol = play.dim(1);
     const int nlay = play.dim(2);
@@ -923,7 +923,7 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
     Array_gpu<int,2> jtemp({play.dim(1), play.dim(2)});
     Array_gpu<int,2> jpress({play.dim(1), play.dim(2)});
     Array_gpu<Bool,2> tropo({play.dim(1), play.dim(2)});
-    Array_gpu<FMAJOR_TYPE,6> fmajor({2, 2, 2, play.dim(1), play.dim(2), this->get_nflav()});
+    Array_gpu<FloatFMajor,6> fmajor({2, 2, 2, play.dim(1), play.dim(2), this->get_nflav()});
     Array_gpu<int,4> jeta({2, play.dim(1), play.dim(2), this->get_nflav()});
 
     // Gas optics.
@@ -945,13 +945,13 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
 
 // Gas optics solver shortwave variant.
 void Gas_optics_rrtmgp_gpu::gas_optics(
-        const Array_gpu<PRESSURE_TYPE,2>& play,
-        const Array_gpu<PRESSURE_TYPE,2>& plev,
-        const Array_gpu<TEMPERATURE_TYPE,2>& tlay,
+        const Array_gpu<FloatPressure,2>& play,
+        const Array_gpu<FloatPressure,2>& plev,
+        const Array_gpu<FloatTemperature,2>& tlay,
         const Gas_concs_gpu& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         Array_gpu<Float,2>& toa_src,
-        const Array_gpu<DRY_COL_TYPE,2>& col_dry)
+        const Array_gpu<FloatColDry,2>& col_dry)
 {
     const int ncol = play.dim(1);
     const int nlay = play.dim(2);
@@ -961,7 +961,7 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
     Array_gpu<int,2> jtemp({play.dim(1), play.dim(2)});
     Array_gpu<int,2> jpress({play.dim(1), play.dim(2)});
     Array_gpu<Bool,2> tropo({play.dim(1), play.dim(2)});
-    Array_gpu<FMAJOR_TYPE,6> fmajor({2, 2, 2, play.dim(1), play.dim(2), this->get_nflav()});
+    Array_gpu<FloatFMajor,6> fmajor({2, 2, 2, play.dim(1), play.dim(2), this->get_nflav()});
     Array_gpu<int,4> jeta({2, play.dim(1), play.dim(2), this->get_nflav()});
 
     // Gas optics.
@@ -979,24 +979,24 @@ void Gas_optics_rrtmgp_gpu::gas_optics(
 
 void Gas_optics_rrtmgp_gpu::compute_gas_taus(
         const int ncol, const int nlay, const int ngpt, const int nband,
-        const Array_gpu<PRESSURE_TYPE,2>& play,
-        const Array_gpu<PRESSURE_TYPE,2>& plev,
-        const Array_gpu<TEMPERATURE_TYPE,2>& tlay,
+        const Array_gpu<FloatPressure,2>& play,
+        const Array_gpu<FloatPressure,2>& plev,
+        const Array_gpu<FloatTemperature,2>& tlay,
         const Gas_concs_gpu& gas_desc,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         Array_gpu<int,2>& jtemp, Array_gpu<int,2>& jpress,
         Array_gpu<int,4>& jeta,
         Array_gpu<Bool,2>& tropo,
-        Array_gpu<FMAJOR_TYPE,6>& fmajor,
-        const Array_gpu<DRY_COL_TYPE,2>& col_dry)
+        Array_gpu<FloatFMajor,6>& fmajor,
+        const Array_gpu<FloatColDry,2>& col_dry)
 {
     Array_gpu<Float,3> tau({ngpt, nlay, ncol});
     Array_gpu<Float,3> tau_rayleigh({ngpt, nlay, ncol});
     Array_gpu<Float,3> vmr({ncol, nlay, this->get_ngas()});
-    Array_gpu<GAS_COL_TYPE,3> col_gas({ncol, nlay, this->get_ngas()+1});
+    Array_gpu<FloatColGas,3> col_gas({ncol, nlay, this->get_ngas()+1});
     col_gas.set_offsets({0, 0, -1});
-    Array_gpu<MIX_COL_TYPE,4> col_mix({2, ncol, nlay, this->get_nflav()});
-    Array_gpu<FMINOR_TYPE,5> fminor({2, 2, ncol, nlay, this->get_nflav()});
+    Array_gpu<FloatColMix,4> col_mix({2, ncol, nlay, this->get_nflav()});
+    Array_gpu<FloatFMinor,5> fminor({2, 2, ncol, nlay, this->get_nflav()});
 
 
     // CvH add all the checking...
@@ -1064,8 +1064,8 @@ void Gas_optics_rrtmgp_gpu::compute_gas_taus(
 
     if (has_rayleigh)
     {
-        Array_gpu<TAU_TYPE,3> tau({ncol, nlay, ngpt});
-        Array_gpu<TAU_TYPE,3> tau_rayleigh({ncol, nlay, ngpt});
+        Array_gpu<FloatTau,3> tau({ncol, nlay, ngpt});
+        Array_gpu<FloatTau,3> tau_rayleigh({ncol, nlay, ngpt});
         Gas_optics_rrtmgp_kernels_cuda::zero_array(ngpt, nlay, ncol, tau.ptr());
 
         Gas_optics_rrtmgp_kernels_cuda::zero_array(ncol, nlay, ngpt, tau.ptr());
@@ -1149,8 +1149,8 @@ void Gas_optics_rrtmgp_gpu::compute_gas_taus(
 
 
 void Gas_optics_rrtmgp_gpu::combine_abs_and_rayleigh(
-        const Array_gpu<TAU_TYPE,3>& tau,
-        const Array_gpu<TAU_TYPE,3>& tau_rayleigh,
+        const Array_gpu<FloatTau,3>& tau,
+        const Array_gpu<FloatTau,3>& tau_rayleigh,
         std::unique_ptr<Optical_props_arry_gpu>& optical_props)
 {
     int ncol = tau.dim(1);
@@ -1166,13 +1166,13 @@ void Gas_optics_rrtmgp_gpu::combine_abs_and_rayleigh(
 
 void Gas_optics_rrtmgp_gpu::source(
         const int ncol, const int nlay, const int nbnd, const int ngpt,
-        const Array_gpu<PRESSURE_TYPE,2>& play, const Array_gpu<PRESSURE_TYPE,2>& plev,
-        const Array_gpu<TEMPERATURE_TYPE,2>& tlay, const Array_gpu<TEMPERATURE_TYPE,1>& tsfc,
+        const Array_gpu<FloatPressure,2>& play, const Array_gpu<FloatPressure,2>& plev,
+        const Array_gpu<FloatTemperature,2>& tlay, const Array_gpu<FloatTemperature,1>& tsfc,
         const Array_gpu<int,2>& jtemp, const Array_gpu<int,2>& jpress,
         const Array_gpu<int,4>& jeta, const Array_gpu<Bool,2>& tropo,
-        const Array_gpu<FMAJOR_TYPE,6>& fmajor,
+        const Array_gpu<FloatFMajor,6>& fmajor,
         Source_func_lw_gpu& sources,
-        const Array_gpu<TEMPERATURE_TYPE,2>& tlev)
+        const Array_gpu<FloatTemperature,2>& tlev)
 {
     const int nflav = this->get_nflav();
     const int neta = this->get_neta();

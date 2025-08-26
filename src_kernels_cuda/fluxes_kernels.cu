@@ -26,7 +26,7 @@
 __global__
 void sum_broadband_kernel(
             const int ncol, const int nlev, const int ngpt,
-            const FLUX_TYPE* __restrict__ spectral_flux, Float* __restrict__ broadband_flux)
+            const FloatFlux* __restrict__ spectral_flux, Float* __restrict__ broadband_flux)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int ilev = blockIdx.y*blockDim.y + threadIdx.y;
@@ -65,7 +65,7 @@ void net_broadband_precalc_kernel(
 __global__
 void sum_byband_kernel(
             const int ncol, const int nlev, const int ngpt, const int nbnd,
-            const int* __restrict__ band_lims, const FLUX_TYPE* __restrict__ spectral_flux,
+            const int* __restrict__ band_lims, const FloatFlux* __restrict__ spectral_flux,
             Float* __restrict__ byband_flux)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;

@@ -72,19 +72,19 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int ncol, const int nlay,
             const int ngas, const int nflav, const int neta, const int npres, const int ntemp,
             const int* flavor,
-            const PRESSURE_TYPE* press_ref_log,
-            const TEMPERATURE_TYPE * temp_ref,
-            PRESSURE_TYPE press_ref_log_delta,
-            TEMPERATURE_TYPE temp_ref_min,
-            TEMPERATURE_TYPE temp_ref_delta,
-            PRESSURE_TYPE press_ref_trop_log,
+            const FloatPressure* press_ref_log,
+            const FloatTemperature * temp_ref,
+            FloatPressure press_ref_log_delta,
+            FloatTemperature temp_ref_min,
+            FloatTemperature temp_ref_delta,
+            FloatPressure press_ref_trop_log,
             const Float* vmr_ref,
-            const PRESSURE_TYPE* play,
-            const TEMPERATURE_TYPE* tlay,
-            GAS_COL_TYPE* col_gas,
+            const FloatPressure* play,
+            const FloatTemperature* tlay,
+            FloatColGas* col_gas,
             int* jtemp,
-            FMAJOR_TYPE* fmajor, FMINOR_TYPE* fminor,
-            MIX_COL_TYPE* col_mix,
+            FloatFMajor* fmajor, FloatFMinor* fminor,
+            FloatColMix* col_mix,
             Bool* tropo,
             int* jeta,
             int* jpress)
@@ -107,8 +107,8 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
     void combine_abs_and_rayleigh(
             const int ncol, const int nlay, const int ngpt,
-            const TAU_TYPE* tau_abs, const TAU_TYPE* tau_rayleigh,
-            TAU_TYPE* tau, Float* ssa, Float* g)
+            const FloatTau* tau_abs, const FloatTau* tau_rayleigh,
+            FloatTau* tau, Float* ssa, Float* g)
     {
         Tuner_map& tunings = Tuner::get_map();
 
@@ -151,10 +151,10 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int* gpoint_flavor,
             const int* band_lims_gpt,
             const Float* krayl,
-            int idx_h2o, const DRY_COL_TYPE* col_dry, const GAS_COL_TYPE* col_gas,
-            const FMINOR_TYPE* fminor, const int* jeta,
+            int idx_h2o, const FloatColDry* col_dry, const FloatColGas* col_gas,
+            const FloatFMinor* fminor, const int* jeta,
             const Bool* tropo, const int* jtemp,
-            TAU_TYPE* tau_rayleigh)
+            FloatTau* tau_rayleigh)
     {
         Tuner_map& tunings = Tuner::get_map();
 
@@ -219,9 +219,9 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int idx_h2o,
             const int* gpoint_flavor,
             const int* band_lims_gpt,
-            const KMAJOR_TYPE* kmajor,
-            const KMINOR_TYPE* kminor_lower,
-            const KMINOR_TYPE* kminor_upper,
+            const FloatKMajor* kmajor,
+            const FloatKMinor* kminor_lower,
+            const FloatKMinor* kminor_upper,
             const int* minor_limits_gpt_lower,
             const int* minor_limits_gpt_upper,
             const Bool* minor_scales_with_density_lower,
@@ -235,12 +235,12 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int* kminor_start_lower,
             const int* kminor_start_upper,
             const Bool* tropo,
-            const MIX_COL_TYPE* col_mix, const FMAJOR_TYPE* fmajor,
-            const FMINOR_TYPE* fminor, const PRESSURE_TYPE * play,
-            const TEMPERATURE_TYPE * tlay, const GAS_COL_TYPE* col_gas,
+            const FloatColMix* col_mix, const FloatFMajor* fmajor,
+            const FloatFMinor* fminor, const FloatPressure * play,
+            const FloatTemperature * tlay, const FloatColGas* col_gas,
             const int* jeta, const int* jtemp,
             const int* jpress,
-            TAU_TYPE* tau)
+            FloatTau* tau)
     {
         Tuner_map& tunings = Tuner::get_map();
 
@@ -249,7 +249,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
         if (tunings.count("gas_optical_depths_major_kernel") == 0)
         {
-            TAU_TYPE* tau_tmp = Tools_gpu::allocate_gpu<TAU_TYPE>(ngpt*nlay*ncol);
+            FloatTau* tau_tmp = Tools_gpu::allocate_gpu<FloatTau>(ngpt*nlay*ncol);
 
             std::tie(grid_gpu_maj, block_gpu_maj) = tune_kernel(
                     "gas_optical_depths_major_kernel",
@@ -291,7 +291,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
         if (tunings.count("gas_optical_depths_minor_kernel_lower") == 0)
         {
-            TAU_TYPE* tau_tmp = Tools_gpu::allocate_gpu<TAU_TYPE>(ngpt*nlay*ncol);
+            FloatTau* tau_tmp = Tools_gpu::allocate_gpu<FloatTau>(ngpt*nlay*ncol);
             std::tie(grid_gpu_min_1, block_gpu_min_1) =
                 tune_kernel_compile_time<Gas_optical_depths_minor_kernel>(
                         "gas_optical_depths_minor_kernel_lower",
@@ -358,7 +358,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
 
         if (tunings.count("gas_optical_depths_minor_kernel_upper") == 0)
         {
-            TAU_TYPE* tau_tmp = Tools_gpu::allocate_gpu<TAU_TYPE>(ngpt*nlay*ncol);
+            FloatTau* tau_tmp = Tools_gpu::allocate_gpu<FloatTau>(ngpt*nlay*ncol);
             std::tie(grid_gpu_min_2, block_gpu_min_2) =
                 tune_kernel_compile_time<Gas_optical_depths_minor_kernel>(
                         "gas_optical_depths_minor_kernel_upper",
@@ -428,11 +428,11 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int npres,
             const int ntemp,
             const int nPlanckTemp,
-            const TEMPERATURE_TYPE* tlay,
-            const TEMPERATURE_TYPE* tlev,
-            const TEMPERATURE_TYPE* tsfc,
+            const FloatTemperature* tlay,
+            const FloatTemperature* tlev,
+            const FloatTemperature* tsfc,
             const int sfc_lay,
-            const FMAJOR_TYPE* fmajor,
+            const FloatFMajor* fmajor,
             const int* jeta,
             const Bool* tropo,
             const int* jtemp,
@@ -440,13 +440,13 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int* gpoint_bands,
             const int* band_lims_gpt,
             const Float* pfracin,
-            const TEMPERATURE_TYPE temp_ref_min,
+            const FloatTemperature temp_ref_min,
             const Float totplnk_delta,
             const Float* totplnk,
             const int* gpoint_flavor,
-            SURFACE_TYPE* sfc_src,
-            SOURCE_TYPE* lay_src,
-            SOURCE_TYPE* lev_src,
+            FloatSurface* sfc_src,
+            FloatSource* lay_src,
+            FloatSource* lev_src,
             Float* sfc_src_jac)
     {
         Tuner_map& tunings = Tuner::get_map();

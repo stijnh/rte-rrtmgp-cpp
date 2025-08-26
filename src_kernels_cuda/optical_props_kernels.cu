@@ -30,7 +30,7 @@ const int loop_unroll_factor_nbnd = 2;
 __global__
 void increment_1scalar_by_1scalar_kernel(
             const int ncol, const int nlay, const int ngpt,
-            TAU_TYPE* __restrict__ tau1, const TAU_TYPE* __restrict__ tau2)
+            FloatTau* __restrict__ tau1, const FloatTau* __restrict__ tau2)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
@@ -47,8 +47,8 @@ void increment_1scalar_by_1scalar_kernel(
 __global__
 void increment_2stream_by_2stream_kernel(
             const int ncol, const int nlay, const int ngpt, const Float eps,
-            TAU_TYPE* __restrict__ tau1, OPTICAL_TYPE* __restrict__ ssa1, OPTICAL_TYPE* __restrict__ g1,
-            const TAU_TYPE* __restrict__ tau2, const OPTICAL_TYPE* __restrict__ ssa2, const OPTICAL_TYPE* __restrict__ g2)
+            FloatTau* __restrict__ tau1, FloatOptical* __restrict__ ssa1, FloatOptical* __restrict__ g1,
+            const FloatTau* __restrict__ tau2, const FloatOptical* __restrict__ ssa2, const FloatOptical* __restrict__ g2)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
@@ -64,10 +64,10 @@ void increment_2stream_by_2stream_kernel(
         const Float ssa2_value = ssa2[idx];
         const Float tauscat12 = (tau1_value * ssa1_value) + (tau2_value * ssa2_value);
 
-        g1[idx] = OPTICAL_TYPE(((tau1_value * ssa1_value * Float(g1[idx])) + (tau2_value * Float(ssa2[idx]) * Float(g2[idx])))
+        g1[idx] = FloatOptical(((tau1_value * ssa1_value * Float(g1[idx])) + (tau2_value * Float(ssa2[idx]) * Float(g2[idx])))
                 / max(tauscat12, eps));
-        ssa1[idx] = OPTICAL_TYPE(tauscat12 / max(eps, tau12));
-        tau1[idx] = TAU_TYPE(tau12);
+        ssa1[idx] = FloatOptical(tauscat12 / max(eps, tau12));
+        tau1[idx] = FloatTau(tau12);
     }
 }
 
@@ -75,7 +75,7 @@ void increment_2stream_by_2stream_kernel(
 __global__
 void inc_1scalar_by_1scalar_bybnd_kernel(
             const int ncol, const int nlay, const int ngpt,
-            TAU_TYPE* __restrict__ tau1, const TAU_TYPE* __restrict__ tau2,
+            FloatTau* __restrict__ tau1, const FloatTau* __restrict__ tau2,
             const int nbnd, const int* __restrict__ band_lims_gpt)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -103,8 +103,8 @@ void inc_1scalar_by_1scalar_bybnd_kernel(
 __global__
 void inc_2stream_by_2stream_bybnd_kernel(
             const int ncol, const int nlay, const int ngpt, const Float eps,
-            TAU_TYPE* __restrict__ tau1, OPTICAL_TYPE* __restrict__ ssa1, OPTICAL_TYPE* __restrict__ g1,
-            const TAU_TYPE* __restrict__ tau2, const OPTICAL_TYPE* __restrict__ ssa2, const OPTICAL_TYPE* __restrict__ g2,
+            FloatTau* __restrict__ tau1, FloatOptical* __restrict__ ssa1, FloatOptical* __restrict__ g1,
+            const FloatTau* __restrict__ tau2, const FloatOptical* __restrict__ ssa2, const FloatOptical* __restrict__ g2,
             const int nbnd, const int* __restrict__ band_lims_gpt)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -128,10 +128,10 @@ void inc_2stream_by_2stream_bybnd_kernel(
                 const Float tau12 = tau1_value + tau2_value;
                 const Float tauscat12 = (tau1_value * ssa1_value) + (tau2_value * ssa2_value);
 
-                g1[idx_gpt] = OPTICAL_TYPE(((tau1_value * ssa1_value * Float(g1[idx_gpt]))
+                g1[idx_gpt] = FloatOptical(((tau1_value * ssa1_value * Float(g1[idx_gpt]))
                         + (tau2_value * ssa2_value * Float(g2[idx_bnd]))) / max(tauscat12, eps));
-                ssa1[idx_gpt] = OPTICAL_TYPE(tauscat12 / max(eps, tau12));
-                tau1[idx_gpt] = TAU_TYPE(tau12);
+                ssa1[idx_gpt] = FloatOptical(tauscat12 / max(eps, tau12));
+                tau1[idx_gpt] = FloatTau(tau12);
             }
         }
     }
@@ -141,7 +141,7 @@ void inc_2stream_by_2stream_bybnd_kernel(
 __global__
 void delta_scale_2str_k_kernel(
             const int ncol, const int nlay, const int ngpt, const Float eps,
-            TAU_TYPE* __restrict__ tau, OPTICAL_TYPE* __restrict__ ssa, OPTICAL_TYPE* __restrict__ g)
+            FloatTau* __restrict__ tau, FloatOptical* __restrict__ ssa, FloatOptical* __restrict__ g)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y*blockDim.y + threadIdx.y;
@@ -155,9 +155,9 @@ void delta_scale_2str_k_kernel(
         const Float f = g_value * g_value;
         const Float wf = ssa_value * f;
 
-        tau[idx] = TAU_TYPE(Float(tau[idx]) * (Float(1.) - wf));
-        ssa[idx] = OPTICAL_TYPE((ssa_value - wf) / max(eps,(Float(1.)-wf)));
-        g[idx] = OPTICAL_TYPE((g_value - f) / max(eps,(Float(1.)-f)));
+        tau[idx] = FloatTau(Float(tau[idx]) * (Float(1.) - wf));
+        ssa[idx] = FloatOptical((ssa_value - wf) / max(eps,(Float(1.)-wf)));
+        g[idx] = FloatOptical((g_value - f) / max(eps,(Float(1.)-f)));
 
     }
 }

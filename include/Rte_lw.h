@@ -66,16 +66,16 @@ class Rte_lw_gpu
                 const std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 const Bool top_at_1,
                 const Source_func_lw_gpu& sources,
-                const Array_gpu<SURFACE_TYPE,2>& sfc_emis,
-                const Array_gpu<FLUX_TYPE,2>& inc_flux,
-                Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
-                Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
+                const Array_gpu<FloatSurface,2>& sfc_emis,
+                const Array_gpu<FloatFlux,2>& inc_flux,
+                Array_gpu<FloatFlux,3>& gpt_flux_up,
+                Array_gpu<FloatFlux,3>& gpt_flux_dn,
                 const int n_gauss_angles);
 
         void expand_and_transpose(
                 const std::unique_ptr<Optical_props_arry_gpu>& ops,
-                const Array_gpu<SURFACE_TYPE,2> arr_in,
-                Array_gpu<SURFACE_TYPE,2>& arr_out);
+                const Array_gpu<FloatSurface,2> arr_in,
+                Array_gpu<FloatSurface,2>& arr_out);
 
 };
 #endif

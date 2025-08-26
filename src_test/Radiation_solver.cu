@@ -425,11 +425,11 @@ void Radiation_solver_longwave::solve_gpu(
         const Array_gpu<Float,2>& p_lay, const Array_gpu<Float,2>& p_lev,
         const Array_gpu<Float,2>& t_lay, const Array_gpu<Float,2>& t_lev,
         const Array_gpu<Float,2>& col_dry,
-        const Array_gpu<Float,1>& t_sfc, const Array_gpu<SURFACE_TYPE,2>& emis_sfc,
+        const Array_gpu<Float,1>& t_sfc, const Array_gpu<FloatSurface,2>& emis_sfc,
         const Array_gpu<Float,2>& lwp, const Array_gpu<Float,2>& iwp,
         const Array_gpu<Float,2>& rel, const Array_gpu<Float,2>& dei,
-        Array_gpu<TAU_TYPE,3>& tau, Array_gpu<SOURCE_TYPE,3>& lay_source,
-        Array_gpu<SOURCE_TYPE,3>& lev_source, Array_gpu<SURFACE_TYPE,2>& sfc_source,
+        Array_gpu<FloatTau,3>& tau, Array_gpu<FloatSource,3>& lay_source,
+        Array_gpu<FloatSource,3>& lev_source, Array_gpu<FloatSurface,2>& sfc_source,
         Array_gpu<Float,2>& lw_flux_up, Array_gpu<Float,2>& lw_flux_dn, Array_gpu<Float,2>& lw_flux_net,
         Array_gpu<Float,3>& lw_bnd_flux_up, Array_gpu<Float,3>& lw_bnd_flux_dn, Array_gpu<Float,3>& lw_bnd_flux_net)
 {
@@ -480,22 +480,22 @@ void Radiation_solver_longwave::solve_gpu(
 
         auto p_lev_subset = p_lev.subset({{ {col_s_in, col_e_in}, {1, n_lev} }});
 
-        Array_gpu<DRY_COL_TYPE,2> col_dry_subset({n_col_in, n_lay});
+        Array_gpu<FloatColDry,2> col_dry_subset({n_col_in, n_lay});
         if (col_dry.size() == 0)
             Gas_optics_rrtmgp_gpu::get_col_dry(col_dry_subset, gas_concs_subset.get_vmr("h2o"), p_lev_subset);
         else
-            col_dry_subset = col_dry.subset<DRY_COL_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }});
+            col_dry_subset = col_dry.subset<FloatColDry>({{ {col_s_in, col_e_in}, {1, n_lay} }});
 
         kdist_gpu->gas_optics(
-                p_lay.subset<PRESSURE_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
+                p_lay.subset<FloatPressure>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
                 p_lev_subset,
-                t_lay.subset<TEMPERATURE_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
-                t_sfc.subset<TEMPERATURE_TYPE>({{ {col_s_in, col_e_in} }}),
+                t_lay.subset<FloatTemperature>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
+                t_sfc.subset<FloatTemperature>({{ {col_s_in, col_e_in} }}),
                 gas_concs_subset,
                 optical_props_subset_in,
                 sources_subset_in,
                 col_dry_subset,
-                t_lev.subset<TEMPERATURE_TYPE>({{ {col_s_in, col_e_in}, {1, n_lev} }}) );
+                t_lev.subset<FloatTemperature>({{ {col_s_in, col_e_in}, {1, n_lev} }}) );
 
         if (switch_cloud_optics)
         {
@@ -530,8 +530,8 @@ void Radiation_solver_longwave::solve_gpu(
         if (!switch_fluxes)
             return;
 
-        Array_gpu<FLUX_TYPE,3> gpt_flux_up({n_col_in, n_lev, n_gpt});
-        Array_gpu<FLUX_TYPE,3> gpt_flux_dn({n_col_in, n_lev, n_gpt});
+        Array_gpu<FloatFlux,3> gpt_flux_up({n_col_in, n_lev, n_gpt});
+        Array_gpu<FloatFlux,3> gpt_flux_dn({n_col_in, n_lev, n_gpt});
 
 
         // CvH The structure below is valid if broadband flux solvers are implemented
@@ -695,13 +695,13 @@ void Radiation_solver_shortwave::solve_gpu(
         const Array_gpu<Float,2>& p_lay, const Array_gpu<Float,2>& p_lev,
         const Array_gpu<Float,2>& t_lay, const Array_gpu<Float,2>& t_lev,
         const Array_gpu<Float,2>& col_dry,
-        const Array_gpu<SURFACE_TYPE,2>& sfc_alb_dir, const Array_gpu<SURFACE_TYPE,2>& sfc_alb_dif,
+        const Array_gpu<FloatSurface,2>& sfc_alb_dir, const Array_gpu<FloatSurface,2>& sfc_alb_dif,
         const Array_gpu<Float,1>& tsi_scaling, const Array_gpu<Float,1>& mu0,
         const Array_gpu<Float,2>& lwp, const Array_gpu<Float,2>& iwp,
         const Array_gpu<Float,2>& rel, const Array_gpu<Float,2>& dei,
         const Array_gpu<Float,2>& rh,
         const Aerosol_concs_gpu& aerosol_concs,
-        Array_gpu<TAU_TYPE,3>& tau, Array_gpu<OPTICAL_TYPE,3>& ssa, Array_gpu<OPTICAL_TYPE,3>& g,
+        Array_gpu<FloatTau,3>& tau, Array_gpu<FloatOptical,3>& ssa, Array_gpu<FloatOptical,3>& g,
         Array_gpu<Float,2>& toa_src,
         Array_gpu<Float,2>& sw_flux_up, Array_gpu<Float,2>& sw_flux_dn,
         Array_gpu<Float,2>& sw_flux_dn_dir, Array_gpu<Float,2>& sw_flux_net,
@@ -756,17 +756,17 @@ void Radiation_solver_shortwave::solve_gpu(
 
         auto p_lev_subset = p_lev.subset({{ {col_s_in, col_e_in}, {1, n_lev} }});
 
-        Array_gpu<DRY_COL_TYPE,2> col_dry_subset({n_col_in, n_lay});
+        Array_gpu<FloatColDry,2> col_dry_subset({n_col_in, n_lay});
         if (col_dry.size() == 0)
             Gas_optics_rrtmgp_gpu::get_col_dry(col_dry_subset, gas_concs_subset.get_vmr("h2o"), p_lev_subset);
         else
-            col_dry_subset = col_dry.subset<DRY_COL_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }});
+            col_dry_subset = col_dry.subset<FloatColDry>({{ {col_s_in, col_e_in}, {1, n_lay} }});
 
         Array_gpu<Float,2> toa_src_subset({n_col_in, n_gpt});
         kdist_gpu->gas_optics(
-                  p_lay.subset<PRESSURE_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
+                  p_lay.subset<FloatPressure>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
                   p_lev_subset,
-                  t_lay.subset<TEMPERATURE_TYPE>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
+                  t_lay.subset<FloatTemperature>({{ {col_s_in, col_e_in}, {1, n_lay} }}),
                   gas_concs_subset,
                   optical_props_subset_in,
                   toa_src_subset,
@@ -826,9 +826,9 @@ void Radiation_solver_shortwave::solve_gpu(
             return;
 
         // Save the output per gpt if postprocessing is desired.
-        Array_gpu<FLUX_TYPE,3> gpt_flux_up({n_col_in, n_lev, n_gpt});
-        Array_gpu<FLUX_TYPE,3> gpt_flux_dn({n_col_in, n_lev, n_gpt});
-        Array_gpu<FLUX_TYPE,3> gpt_flux_dn_dir({n_col_in, n_lev, n_gpt});
+        Array_gpu<FloatFlux,3> gpt_flux_up({n_col_in, n_lev, n_gpt});
+        Array_gpu<FloatFlux,3> gpt_flux_dn({n_col_in, n_lev, n_gpt});
+        Array_gpu<FloatFlux,3> gpt_flux_dn_dir({n_col_in, n_lev, n_gpt});
 
         // CvH The structure below is valid if broadband flux solvers are implemented
         /*

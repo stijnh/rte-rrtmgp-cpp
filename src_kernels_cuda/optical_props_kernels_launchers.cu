@@ -41,7 +41,7 @@ namespace Optical_props_kernels_cuda
 {
     void increment_1scalar_by_1scalar(
             int ncol, int nlay, int ngpt,
-            TAU_TYPE* tau_inout, const TAU_TYPE* tau_in)
+            FloatTau* tau_inout, const FloatTau* tau_in)
 
     {
         const int block_gpt = 32;
@@ -63,8 +63,8 @@ namespace Optical_props_kernels_cuda
 
     void increment_2stream_by_2stream(
             int ncol, int nlay, int ngpt,
-            TAU_TYPE* tau_inout, OPTICAL_TYPE* ssa_inout, OPTICAL_TYPE* g_inout,
-            const TAU_TYPE* tau_in, const OPTICAL_TYPE* ssa_in, const OPTICAL_TYPE* g_in)
+            FloatTau* tau_inout, FloatOptical* ssa_inout, FloatOptical* g_inout,
+            const FloatTau* tau_in, const FloatOptical* ssa_in, const FloatOptical* g_in)
     {
         const int block_gpt = 32;
         const int block_lay = 16;
@@ -88,7 +88,7 @@ namespace Optical_props_kernels_cuda
 
     void inc_1scalar_by_1scalar_bybnd(
             int ncol, int nlay, int ngpt,
-            TAU_TYPE* tau_inout, const TAU_TYPE* tau_in,
+            FloatTau* tau_inout, const FloatTau* tau_in,
             int nbnd, const int* band_lims_gpoint)
 
     {
@@ -112,8 +112,8 @@ namespace Optical_props_kernels_cuda
 
     void inc_2stream_by_2stream_bybnd(
             int ncol, int nlay, int ngpt,
-            TAU_TYPE* tau_inout, OPTICAL_TYPE* ssa_inout, OPTICAL_TYPE* g_inout,
-            const TAU_TYPE* tau_in, const OPTICAL_TYPE* ssa_in, const OPTICAL_TYPE* g_in,
+            FloatTau* tau_inout, FloatOptical* ssa_inout, FloatOptical* g_inout,
+            const FloatTau* tau_in, const FloatOptical* ssa_in, const FloatOptical* g_in,
             int nbnd, const int* band_lims_gpoint)
     {
         Tuner_map& tunings = Tuner::get_map();
@@ -124,9 +124,9 @@ namespace Optical_props_kernels_cuda
 
         if (tunings.count("inc_2stream_by_2stream_bybnd_kernel") == 0)
         {
-            TAU_TYPE* tau_inout_tmp = Tools_gpu::allocate_gpu<TAU_TYPE>(ngpt*nlay*ncol);
-            OPTICAL_TYPE* ssa_inout_tmp = Tools_gpu::allocate_gpu<OPTICAL_TYPE>(ngpt*nlay*ncol);
-            OPTICAL_TYPE* g_inout_tmp   = Tools_gpu::allocate_gpu<OPTICAL_TYPE>(ngpt*nlay*ncol);
+            FloatTau* tau_inout_tmp = Tools_gpu::allocate_gpu<FloatTau>(ngpt*nlay*ncol);
+            FloatOptical* ssa_inout_tmp = Tools_gpu::allocate_gpu<FloatOptical>(ngpt*nlay*ncol);
+            FloatOptical* g_inout_tmp   = Tools_gpu::allocate_gpu<FloatOptical>(ngpt*nlay*ncol);
 
             std::tie(grid, block) = tune_kernel(
                     "inc_2stream_by_2stream_bybnd_kernel",
@@ -164,7 +164,7 @@ namespace Optical_props_kernels_cuda
 
     void delta_scale_2str_k(
             int ncol, int nlay, int ngpt,
-            TAU_TYPE* tau_inout, OPTICAL_TYPE* ssa_inout, OPTICAL_TYPE* g_inout)
+            FloatTau* tau_inout, FloatOptical* ssa_inout, FloatOptical* g_inout)
     {
         const int block_gpt = 32;
         const int block_lay = 16;

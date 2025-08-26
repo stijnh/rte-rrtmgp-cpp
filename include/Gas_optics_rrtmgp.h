@@ -364,9 +364,9 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
                 const Array<Float,3>& rayl_upper);
 
         static void get_col_dry(
-                Array_gpu<DRY_COL_TYPE,2>& col_dry,
+                Array_gpu<FloatColDry,2>& col_dry,
                 const Array_gpu<Float,2>& vmr_h2o,
-                const Array_gpu<PRESSURE_TYPE,2>& plev);
+                const Array_gpu<FloatPressure,2>& plev);
 
         bool source_is_internal() const { return (totplnk.size() > 0) && (planck_frac.size() > 0); }
         bool source_is_external() const { return (solar_source.size() > 0); }
@@ -387,25 +387,25 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
 
         // Longwave variant.
         void gas_optics(
-                const Array_gpu<PRESSURE_TYPE,2>& play,
-                const Array_gpu<PRESSURE_TYPE,2>& plev,
-                const Array_gpu<TEMPERATURE_TYPE,2>& tlay,
-                const Array_gpu<TEMPERATURE_TYPE,1>& tsfc,
+                const Array_gpu<FloatPressure,2>& play,
+                const Array_gpu<FloatPressure,2>& plev,
+                const Array_gpu<FloatTemperature,2>& tlay,
+                const Array_gpu<FloatTemperature,1>& tsfc,
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Source_func_lw_gpu& sources,
-                const Array_gpu<DRY_COL_TYPE,2>& col_dry,
-                const Array_gpu<TEMPERATURE_TYPE,2>& tlev);
+                const Array_gpu<FloatColDry,2>& col_dry,
+                const Array_gpu<FloatTemperature,2>& tlev);
 
         // shortwave variant
         void gas_optics(
-                const Array_gpu<PRESSURE_TYPE,2>& play,
-                const Array_gpu<PRESSURE_TYPE,2>& plev,
-                const Array_gpu<TEMPERATURE_TYPE,2>& tlay,
+                const Array_gpu<FloatPressure,2>& play,
+                const Array_gpu<FloatPressure,2>& plev,
+                const Array_gpu<FloatTemperature,2>& tlay,
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Array_gpu<Float,2>& toa_src,
-                const Array_gpu<DRY_COL_TYPE,2>& col_dry);
+                const Array_gpu<FloatColDry,2>& col_dry);
 
     private:
         Array<Float,2> totplnk;
@@ -462,14 +462,14 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
         Array_gpu<Float,1> solar_source_g;
         Array_gpu<Float,2> totplnk_gpu;
         Array_gpu<Float,4> planck_frac_gpu;
-        Array_gpu<PRESSURE_TYPE,1> press_ref_gpu, press_ref_log_gpu;
-        Array_gpu<TEMPERATURE_TYPE,1> temp_ref_gpu;
+        Array_gpu<FloatPressure,1> press_ref_gpu, press_ref_log_gpu;
+        Array_gpu<FloatTemperature,1> temp_ref_gpu;
         Array_gpu<Float,3> vmr_ref_gpu;
         Array_gpu<int,2> flavor_gpu;
         Array_gpu<int,2> gpoint_flavor_gpu;
-        Array_gpu<KMAJOR_TYPE,4> kmajor_gpu;
-        Array_gpu<KMINOR_TYPE,3> kminor_lower_gpu;
-        Array_gpu<KMINOR_TYPE,3> kminor_upper_gpu;
+        Array_gpu<FloatKMajor,4> kmajor_gpu;
+        Array_gpu<FloatKMinor,3> kminor_lower_gpu;
+        Array_gpu<FloatKMinor,3> kminor_upper_gpu;
         Array_gpu<int,2> minor_limits_gpt_lower_gpu;
         Array_gpu<int,2> minor_limits_gpt_upper_gpu;
         Array_gpu<Bool,1> minor_scales_with_density_lower_gpu;
@@ -524,31 +524,31 @@ class Gas_optics_rrtmgp_gpu : public Gas_optics_gpu
 
         void compute_gas_taus(
                 const int ncol, const int nlay, const int ngpt, const int nband,
-                const Array_gpu<PRESSURE_TYPE,2>& play,
-                const Array_gpu<PRESSURE_TYPE,2>& plev,
-                const Array_gpu<TEMPERATURE_TYPE,2>& tlay,
+                const Array_gpu<FloatPressure,2>& play,
+                const Array_gpu<FloatPressure,2>& plev,
+                const Array_gpu<FloatTemperature,2>& tlay,
                 const Gas_concs_gpu& gas_desc,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props,
                 Array_gpu<int,2>& jtemp, Array_gpu<int,2>& jpress,
                 Array_gpu<int,4>& jeta,
                 Array_gpu<Bool,2>& tropo,
-                Array_gpu<FMAJOR_TYPE,6>& fmajor,
-                const Array_gpu<DRY_COL_TYPE,2>& col_dry);
+                Array_gpu<FloatFMajor,6>& fmajor,
+                const Array_gpu<FloatColDry,2>& col_dry);
 
         void combine_abs_and_rayleigh(
-                const Array_gpu<TAU_TYPE,3>& tau,
-                const Array_gpu<TAU_TYPE,3>& tau_rayleigh,
+                const Array_gpu<FloatTau,3>& tau,
+                const Array_gpu<FloatTau,3>& tau_rayleigh,
                 std::unique_ptr<Optical_props_arry_gpu>& optical_props);
 
         void source(
                 const int ncol, const int nlay, const int nband, const int ngpt,
-                const Array_gpu<PRESSURE_TYPE,2>& play, const Array_gpu<PRESSURE_TYPE,2>& plev,
-                const Array_gpu<TEMPERATURE_TYPE,2>& tlay, const Array_gpu<TEMPERATURE_TYPE,1>& tsfc,
+                const Array_gpu<FloatPressure,2>& play, const Array_gpu<FloatPressure,2>& plev,
+                const Array_gpu<FloatTemperature,2>& tlay, const Array_gpu<FloatTemperature,1>& tsfc,
                 const Array_gpu<int,2>& jtemp, const Array_gpu<int,2>& jpress,
                 const Array_gpu<int,4>& jeta, const Array_gpu<Bool,2>& tropo,
-                const Array_gpu<FMAJOR_TYPE,6>& fmajor,
+                const Array_gpu<FloatFMajor,6>& fmajor,
                 Source_func_lw_gpu& sources,
-                const Array_gpu<TEMPERATURE_TYPE,2>& tlev);
+                const Array_gpu<FloatTemperature,2>& tlev);
 };
 #endif
 

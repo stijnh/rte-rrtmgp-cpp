@@ -61,10 +61,10 @@ void Rte_lw_gpu::rte_lw(
         const std::unique_ptr<Optical_props_arry_gpu>& optical_props,
         const Bool top_at_1,
         const Source_func_lw_gpu& sources,
-        const Array_gpu<SURFACE_TYPE,2>& sfc_emis,
-        const Array_gpu<FLUX_TYPE,2>& inc_flux,
-        Array_gpu<FLUX_TYPE,3>& gpt_flux_up,
-        Array_gpu<FLUX_TYPE,3>& gpt_flux_dn,
+        const Array_gpu<FloatSurface,2>& sfc_emis,
+        const Array_gpu<FloatFlux,2>& inc_flux,
+        Array_gpu<FloatFlux,3>& gpt_flux_up,
+        Array_gpu<FloatFlux,3>& gpt_flux_dn,
         const int n_gauss_angles)
 {
     const int max_gauss_pts = 4;
@@ -91,7 +91,7 @@ void Rte_lw_gpu::rte_lw(
     const int nlay = optical_props->get_nlay();
     const int ngpt = optical_props->get_ngpt();
 
-    Array_gpu<SURFACE_TYPE,2> sfc_emis_gpt({ncol, ngpt});
+    Array_gpu<FloatSurface,2> sfc_emis_gpt({ncol, ngpt});
     expand_and_transpose(optical_props, sfc_emis, sfc_emis_gpt);
 
     // Run the radiative transfer solver.
@@ -117,7 +117,7 @@ void Rte_lw_gpu::rte_lw(
     const Bool do_jacobians = false;
 
     // pass null ptr if size of inc_flux is zero
-    const FLUX_TYPE* inc_flux_ptr = (inc_flux.size() == 0) ? nullptr : inc_flux.ptr();
+    const FloatFlux* inc_flux_ptr = (inc_flux.size() == 0) ? nullptr : inc_flux.ptr();
 
     Rte_solver_kernels_cuda::lw_solver_noscat(
             ncol, nlay, ngpt, top_at_1, n_quad_angs,
@@ -138,8 +138,8 @@ void Rte_lw_gpu::rte_lw(
 
 void Rte_lw_gpu::expand_and_transpose(
         const std::unique_ptr<Optical_props_arry_gpu>& ops,
-        const Array_gpu<SURFACE_TYPE,2> arr_in,
-        Array_gpu<SURFACE_TYPE,2>& arr_out)
+        const Array_gpu<FloatSurface,2> arr_in,
+        Array_gpu<FloatSurface,2>& arr_out)
 {
     const int ncol = arr_in.dim(2);
     const int nbnd = ops->get_nband();

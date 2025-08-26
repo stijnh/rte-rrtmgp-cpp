@@ -38,24 +38,24 @@ namespace Rte_solver_kernels_cuda
 
     void sw_solver_2stream(
             const int ncol, const int nlay, const int ngpt, const Bool top_at_1,
-            const TAU_TYPE* tau, const OPTICAL_TYPE* ssa, const OPTICAL_TYPE* g,
+            const FloatTau* tau, const FloatOptical* ssa, const FloatOptical* g,
             const Float* mu0,
-            const SURFACE_TYPE* sfc_alb_dir, const SURFACE_TYPE* sfc_alb_dif,
-            const FLUX_TYPE* inc_flux_dir,
-            FLUX_TYPE* flux_up, FLUX_TYPE* flux_dn, FLUX_TYPE* flux_dir,
-            const Bool has_dif_bc, const FLUX_TYPE* inc_flux_dif,
-            const Bool do_broadband, FLUX_TYPE* flux_up_loc, FLUX_TYPE* flux_dn_loc, FLUX_TYPE* flux_dir_loc);
+            const FloatSurface* sfc_alb_dir, const FloatSurface* sfc_alb_dif,
+            const FloatFlux* inc_flux_dir,
+            FloatFlux* flux_up, FloatFlux* flux_dn, FloatFlux* flux_dir,
+            const Bool has_dif_bc, const FloatFlux* inc_flux_dif,
+            const Bool do_broadband, FloatFlux* flux_up_loc, FloatFlux* flux_dn_loc, FloatFlux* flux_dir_loc);
 
 
     void lw_solver_noscat(
             const int ncol, const int nlay, const int ngpt, const Bool top_at_1, const int nmus,
             const Float* secants, const Float* weights,
-            const TAU_TYPE* tau, const SOURCE_TYPE* lay_source,
-            const SOURCE_TYPE* lev_source,
-            const SURFACE_TYPE* sfc_emis, const SURFACE_TYPE* sfc_src,
-            const FLUX_TYPE* inc_flux,
-            FLUX_TYPE* flux_up, FLUX_TYPE* flux_dn,
-            const Bool do_broadband, FLUX_TYPE* flux_up_loc, FLUX_TYPE* flux_dn_loc,
+            const FloatTau* tau, const FloatSource* lay_source,
+            const FloatSource* lev_source,
+            const FloatSurface* sfc_emis, const FloatSurface* sfc_src,
+            const FloatFlux* inc_flux,
+            FloatFlux* flux_up, FloatFlux* flux_dn,
+            const Bool do_broadband, FloatFlux* flux_up_loc, FloatFlux* flux_dn_loc,
             const Bool do_jacobians, const Float* sfc_src_jac, Float* flux_up_jac);
 
 

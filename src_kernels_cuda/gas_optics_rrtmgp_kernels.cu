@@ -14,7 +14,7 @@ Float interpolate1D(
 
 
 __device__ __forceinline__
-void interpolate2D_byflav_kernel(const FMINOR_TYPE* __restrict__ fminor,
+void interpolate2D_byflav_kernel(const FloatFMinor* __restrict__ fminor,
                                  const Float* __restrict__ kin,
                                  const int gpt_start, const int gpt_end,
                                  Float* __restrict__ k,
@@ -41,7 +41,7 @@ void interpolate2D_byflav_kernel(const FMINOR_TYPE* __restrict__ fminor,
 __device__
 void interpolate3D_byflav_kernel(
         const Float* __restrict__ scaling,
-        const FMAJOR_TYPE* __restrict__ fmajor,
+        const FloatFMajor* __restrict__ fmajor,
         const Float* __restrict__ k,
         const int gpt_start, const int gpt_end,
         const int* __restrict__ jeta,
@@ -50,7 +50,7 @@ void interpolate3D_byflav_kernel(
         const int ngpt,
         const int neta,
         const int npress,
-        TAU_TYPE* __restrict__ tau_major)
+        FloatTau* __restrict__ tau_major)
 {
     const int band_gpt = gpt_end-gpt_start;
     const int j0 = jeta[0];
@@ -70,7 +70,7 @@ void interpolate3D_byflav_kernel(
                             Float(fmajor[6]) * k[igpt + (j1-1)*ngpt + jpress*neta*ngpt     + jtemp*neta*ngpt*npress] +
                             Float(fmajor[7]) * k[igpt +  j1   *ngpt + jpress*neta*ngpt     + jtemp*neta*ngpt*npress]);
 
-        tau_major[igpt] = TAU_TYPE(result);
+        tau_major[igpt] = FloatTau(result);
     }
 }
 
@@ -214,11 +214,11 @@ void Planck_source_kernel(
         const int npres,
         const int ntemp,
         const int nPlanckTemp,
-        const TEMPERATURE_TYPE* __restrict__ tlay_ptr,
-        const TEMPERATURE_TYPE* __restrict__ tlev_ptr,
-        const TEMPERATURE_TYPE* __restrict__ tsfc_ptr,
+        const FloatTemperature* __restrict__ tlay_ptr,
+        const FloatTemperature* __restrict__ tlev_ptr,
+        const FloatTemperature* __restrict__ tsfc_ptr,
         const int sfc_lay,
-        const FMAJOR_TYPE* __restrict__ fmajor_ptr,
+        const FloatFMajor* __restrict__ fmajor_ptr,
         const int* __restrict__ jeta_ptr,
         const Bool* __restrict__ tropo_ptr,
         const int* __restrict__ jtemp_ptr,
@@ -231,9 +231,9 @@ void Planck_source_kernel(
         const Float* __restrict__ totplnk_ptr,
         const int* __restrict__ gpoint_flavor_ptr,
         const Float delta_Tsurf,
-        SURFACE_TYPE* __restrict__ sfc_src_ptr,
-        SOURCE_TYPE* __restrict__ lay_src_ptr,
-        SOURCE_TYPE* __restrict__ lev_src_ptr,
+        FloatSurface* __restrict__ sfc_src_ptr,
+        FloatSource* __restrict__ lay_src_ptr,
+        FloatSource* __restrict__ lev_src_ptr,
         Float* __restrict__ sfc_src_jac_ptr)
 {
     // THIS KERNEL USES FORTRAN INDEXING TO AVOID MISTAKES.
@@ -242,9 +242,9 @@ void Planck_source_kernel(
     const int igpt = blockIdx.z*blockDim.z + threadIdx.z + 1;
 
     // Input arrays, use Index functor to simplify index porting from Fortran to CUDA
-    const Index_2d<const TEMPERATURE_TYPE> tlay        (tlay_ptr, ncol, nlay);
-    const Index_2d<const TEMPERATURE_TYPE> tlev        (tlev_ptr, ncol, nlay+1);
-    const Index_1d<const TEMPERATURE_TYPE> tsfc        (tsfc_ptr, ncol);
+    const Index_2d<const FloatTemperature> tlay        (tlay_ptr, ncol, nlay);
+    const Index_2d<const FloatTemperature> tlev        (tlev_ptr, ncol, nlay+1);
+    const Index_1d<const FloatTemperature> tsfc        (tsfc_ptr, ncol);
     const Index_3d<const vector<Float, 8>> fmajor (reinterpret_cast<const vector<Float, 8>*>(fmajor_ptr), ncol, nlay, nflav);
     const Index_4d<const int> jeta          (jeta_ptr, 2, ncol, nlay, nflav);
     const Index_2d<const Bool> tropo        (tropo_ptr, ncol, nlay);
@@ -257,9 +257,9 @@ void Planck_source_kernel(
     const Index_2d<const int> gpoint_flavor (gpoint_flavor_ptr, 2, ngpt);
 
     // Output arrays
-    Index_2d<SURFACE_TYPE> sfc_src(sfc_src_ptr, ncol, ngpt);
-    Index_3d<SOURCE_TYPE> lay_src(lay_src_ptr, ncol, nlay, ngpt);
-    Index_3d<SOURCE_TYPE> lev_src(lev_src_ptr, ncol, nlay+1, ngpt);
+    Index_2d<FloatSurface> sfc_src(sfc_src_ptr, ncol, ngpt);
+    Index_3d<FloatSource> lay_src(lay_src_ptr, ncol, nlay, ngpt);
+    Index_3d<FloatSource> lev_src(lev_src_ptr, ncol, nlay+1, ngpt);
     Index_2d<Float> sfc_src_jac(sfc_src_jac_ptr, ncol, ngpt);
 
     if ( (icol <= ncol) && (ilay <= nlay) && (igpt <= ngpt) )
@@ -327,21 +327,21 @@ void Planck_source_kernel(
 __global__
 void interpolation_kernel(
         const int ncol, const int nlay, const int ngas, const int nflav,
-        const int neta, const int npres, const int ntemp, const TEMPERATURE_TYPE tmin,
+        const int neta, const int npres, const int ntemp, const FloatTemperature tmin,
         const int* __restrict__ flavor,
-        const PRESSURE_TYPE* __restrict__ press_ref_log,
-        const TEMPERATURE_TYPE* __restrict__ temp_ref,
-        PRESSURE_TYPE press_ref_log_delta,
-        TEMPERATURE_TYPE temp_ref_min,
-        TEMPERATURE_TYPE temp_ref_delta,
-        PRESSURE_TYPE press_ref_trop_log,
+        const FloatPressure* __restrict__ press_ref_log,
+        const FloatTemperature* __restrict__ temp_ref,
+        FloatPressure press_ref_log_delta,
+        FloatTemperature temp_ref_min,
+        FloatTemperature temp_ref_delta,
+        FloatPressure press_ref_trop_log,
         const Float* __restrict__ vmr_ref,
-        const PRESSURE_TYPE* __restrict__ play,
-        const TEMPERATURE_TYPE* __restrict__ tlay,
-        GAS_COL_TYPE* __restrict__ col_gas,
+        const FloatPressure* __restrict__ play,
+        const FloatTemperature* __restrict__ tlay,
+        FloatColGas* __restrict__ col_gas,
         int* __restrict__ jtemp,
-        FMAJOR_TYPE* __restrict__ fmajor, FMINOR_TYPE* __restrict__ fminor,
-        MIX_COL_TYPE* __restrict__ col_mix,
+        FloatFMajor* __restrict__ fmajor, FloatFMinor* __restrict__ fminor,
+        FloatColMix* __restrict__ col_mix,
         Bool* __restrict__ tropo,
         int* __restrict__ jeta,
         int* __restrict__ jpress)
@@ -377,7 +377,7 @@ void interpolation_kernel(
             const Float ratio_eta_half = vmr_ref[vmr_base_idx + 2*gas1] /
                                       vmr_ref[vmr_base_idx + 2*gas2];
             Float col_mix_res = Float(col_gas[colgas1_idx]) + ratio_eta_half * Float(col_gas[colgas2_idx]);
-            col_mix[colmix_idx] = MIX_COL_TYPE(col_mix_res);
+            col_mix[colmix_idx] = FloatColMix(col_mix_res);
 
             Float eta;
             if (col_mix_res > Float(2.)*Float(tmin))
@@ -395,15 +395,15 @@ void interpolation_kernel(
             Float fminor_p = (Float(1.)-feta) * ftemp_term;
             Float fminor_n = feta * ftemp_term;
 
-            fminor[fminor_idx  ] = FMINOR_TYPE(fminor_p);
-            fminor[fminor_idx+1] = FMINOR_TYPE(fminor_n);
+            fminor[fminor_idx  ] = FloatFMinor(fminor_p);
+            fminor[fminor_idx+1] = FloatFMinor(fminor_n);
 
             // Compute interpolation fractions needed for major species.
             const int fmajor_idx = 2*2*(itemp + 2*(icol + ilay*ncol + iflav*ncol*nlay));
-            fmajor[fmajor_idx  ] = FMAJOR_TYPE((Float(1.)-fpress) * fminor_p);
-            fmajor[fmajor_idx+1] = FMAJOR_TYPE((Float(1.)-fpress) * fminor_n);
-            fmajor[fmajor_idx+2] = FMAJOR_TYPE(fpress * fminor_p);
-            fmajor[fmajor_idx+3] = FMAJOR_TYPE(fpress * fminor_n);
+            fmajor[fmajor_idx  ] = FloatFMajor((Float(1.)-fpress) * fminor_p);
+            fmajor[fmajor_idx+1] = FloatFMajor((Float(1.)-fpress) * fminor_n);
+            fmajor[fmajor_idx+2] = FloatFMajor(fpress * fminor_p);
+            fmajor[fmajor_idx+3] = FloatFMajor(fpress * fminor_n);
         }
     }
 }
@@ -415,11 +415,11 @@ void gas_optical_depths_major_kernel(
         const int nflav, const int neta, const int npres, const int ntemp,
         const int* __restrict__ gpoint_flavor,
         const int* __restrict__ band_lims_gpt,
-        const KMAJOR_TYPE* __restrict__ kmajor,
-        const MIX_COL_TYPE* __restrict__ col_mix, const FMAJOR_TYPE* __restrict__ fmajor,
+        const FloatKMajor* __restrict__ kmajor,
+        const FloatColMix* __restrict__ col_mix, const FloatFMajor* __restrict__ fmajor,
         const int* __restrict__ jeta, const Bool* __restrict__ tropo,
         const int* __restrict__ jtemp, const int* __restrict__ jpress,
-        TAU_TYPE* __restrict__ tau)
+        FloatTau* __restrict__ tau)
 {
     const int icol = blockIdx.x * blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y * blockDim.y + threadIdx.y;
@@ -439,7 +439,7 @@ void gas_optical_depths_major_kernel(
         const int idx_fcl3 = 2 * 2 * 2 * (icol + ilay*ncol + iflav*ncol*nlay);
         const int idx_fcl1 = 2 *         (icol + ilay*ncol + iflav*ncol*nlay);
 
-        const FMAJOR_TYPE* __restrict__ ifmajor = &fmajor[idx_fcl3];
+        const FloatFMajor* __restrict__ ifmajor = &fmajor[idx_fcl3];
 
         const int idx_out = icol + ilay*ncol + igpt*ncol*nlay;
 
@@ -453,7 +453,7 @@ void gas_optical_depths_major_kernel(
                  Float(ifmajor[i*4+2]) * Float(kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]) +
                  Float(ifmajor[i*4+3]) * Float(kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]));
 
-            tau[idx_out] += TAU_TYPE(result);
+            tau[idx_out] += FloatTau(result);
         }
     }
 }
@@ -479,22 +479,22 @@ void gas_optical_depths_minor_kernel(
         const int nminork,
         const int idx_h2o, const int idx_tropo,
         const int* __restrict__ gpoint_flavor,
-        const KMINOR_TYPE* __restrict__ kminor,
+        const FloatKMinor* __restrict__ kminor,
         const int* __restrict__ minor_limits_gpt,
         const Bool* __restrict__ minor_scales_with_density,
         const Bool* __restrict__ scale_by_complement,
         const int* __restrict__ idx_minor,
         const int* __restrict__ idx_minor_scaling,
         const int* __restrict__ kminor_start,
-        const PRESSURE_TYPE* __restrict__ play,
-        const TEMPERATURE_TYPE * __restrict__ tlay,
-        const GAS_COL_TYPE* __restrict__ col_gas,
-        const FMINOR_TYPE* __restrict__ fminor,
+        const FloatPressure* __restrict__ play,
+        const FloatTemperature * __restrict__ tlay,
+        const FloatColGas* __restrict__ col_gas,
+        const FloatFMinor* __restrict__ fminor,
         const int* __restrict__ jeta,
         const int* __restrict__ jtemp,
         const Bool* __restrict__ tropo,
-        TAU_TYPE* __restrict__ tau,
-        TAU_TYPE* __restrict__ tau_minor)
+        FloatTau* __restrict__ tau,
+        FloatTau* __restrict__ tau_minor)
 {
     const int icol = blockIdx.x * block_size_x + threadIdx.x;
     const int ilay = blockIdx.y * block_size_y + threadIdx.y;
@@ -555,8 +555,8 @@ void gas_optical_depths_minor_kernel(
                 const int idx_fcl2 = 2 * 2 * (icol + ilay*ncol + iflav*ncol*nlay);
                 const int idx_fcl1 = 2 * (icol + ilay*ncol + iflav*ncol*nlay);
 
-                const FMINOR_TYPE* kfminor = &fminor[idx_fcl2];
-                const KMINOR_TYPE* kin = &kminor[0];
+                const FloatFMinor* kfminor = &fminor[idx_fcl2];
+                const FloatKMinor* kin = &kminor[0];
 
                 const int j0 = jeta[idx_fcl1];
                 const int j1 = jeta[idx_fcl1+1];
@@ -572,7 +572,7 @@ void gas_optical_depths_minor_kernel(
                                         Float(kfminor[3]) * Float(kin[kjtemp     +  j1   *ntemp + (igpt+gpt_offset)*ntemp*neta]);
 
                     const int idx_out = icol + ilay*ncol + (igpt+gpt_start)*ncol*nlay;
-                    tau[idx_out] += TAU_TYPE(ltau_minor * scaling);
+                    tau[idx_out] += FloatTau(ltau_minor * scaling);
                 }
             }
         }
@@ -601,7 +601,7 @@ void gas_optical_depths_minor_reference_kernel(
         const Float* __restrict__ play,
         const Float* __restrict__ tlay,
         const Float* __restrict__ col_gas,
-        const FMINOR_TYPE* __restrict__ fminor,
+        const FloatFMinor* __restrict__ fminor,
         const int* __restrict__ jeta,
         const int* __restrict__ jtemp,
         const Bool* __restrict__ tropo,
@@ -680,10 +680,10 @@ void compute_tau_rayleigh_kernel(
         const int* __restrict__ gpoint_flavor,
         const int* __restrict__ band_lims_gpt,
         const Float* __restrict__ krayl,
-        int idx_h2o, const DRY_COL_TYPE* __restrict__ col_dry, const GAS_COL_TYPE* __restrict__ col_gas,
-        const FMINOR_TYPE* __restrict__ fminor, const int* __restrict__ jeta,
+        int idx_h2o, const FloatColDry* __restrict__ col_dry, const FloatColGas* __restrict__ col_gas,
+        const FloatFMinor* __restrict__ fminor, const int* __restrict__ jeta,
         const Bool* __restrict__ tropo, const int* __restrict__ jtemp,
-        TAU_TYPE* __restrict__ tau_rayleigh)
+        FloatTau* __restrict__ tau_rayleigh)
 {
     // Fetch the three coordinates.
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -715,7 +715,7 @@ void compute_tau_rayleigh_kernel(
 
             const int idx_out = icol + ilay*ncol + igpt*ncol*nlay;
             auto result = kloc * (Float(col_gas[idx_collaywv]) + Float(col_dry[idx_collay]));
-            tau_rayleigh[idx_out] = TAU_TYPE(result);
+            tau_rayleigh[idx_out] = FloatTau(result);
         }
     }
 }
@@ -724,8 +724,8 @@ void compute_tau_rayleigh_kernel(
 __global__
 void combine_abs_and_rayleigh_kernel(
         const int ncol, const int nlay, const int ngpt, const Float tmin,
-        const TAU_TYPE* __restrict__ tau_abs, const TAU_TYPE* __restrict__ tau_rayleigh,
-        TAU_TYPE* __restrict__ tau, Float* __restrict__ ssa, Float* __restrict__ g)
+        const FloatTau* __restrict__ tau_abs, const FloatTau* __restrict__ tau_rayleigh,
+        FloatTau* __restrict__ tau, Float* __restrict__ ssa, Float* __restrict__ g)
 {
     // Fetch the three coordinates.
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -736,9 +736,9 @@ void combine_abs_and_rayleigh_kernel(
     {
         const int idx = icol + ilay*ncol + igpt*ncol*nlay;
 
-        const TAU_TYPE tau_tot = tau_abs[idx] + tau_rayleigh[idx];
+        const FloatTau tau_tot = tau_abs[idx] + tau_rayleigh[idx];
 
-        tau[idx] = TAU_TYPE(tau_tot);
+        tau[idx] = FloatTau(tau_tot);
         g  [idx] = Float(0.);
 
         if (Float(tau_tot)>(Float(2.)*tmin))

@@ -71,7 +71,7 @@ namespace
 
     template<typename TF>__global__
     void combine_and_store_kernel(const int ncol, const int nlay, const int nbnd, const TF tmin,
-                  TAU_TYPE* __restrict__ tau,
+                  FloatTau* __restrict__ tau,
                   const TF* __restrict__ ltau, const TF* __restrict__ ltaussa,
                   const TF* __restrict__ itau, const TF* __restrict__ itaussa)
     {
@@ -84,13 +84,13 @@ namespace
             const int idx = icol + ilay*ncol + ibnd*nlay*ncol;
             const TF tau_t = (ltau[idx] - ltaussa[idx]) + (itau[idx] - itaussa[idx]);
 
-            tau[idx] = TAU_TYPE(tau_t);
+            tau[idx] = FloatTau(tau_t);
         }
     }
 
     template<typename TF>__global__
     void combine_and_store_kernel(const int ncol, const int nlay, const int nbnd, const TF tmin,
-                  TAU_TYPE* __restrict__ tau, OPTICAL_TYPE* __restrict__ ssa, OPTICAL_TYPE* __restrict__ g,
+                  FloatTau* __restrict__ tau, FloatOptical* __restrict__ ssa, FloatOptical* __restrict__ g,
                   const TF* __restrict__ ltau, const TF* __restrict__ ltaussa, const TF* __restrict__ ltaussag,
                   const TF* __restrict__ itau, const TF* __restrict__ itaussa, const TF* __restrict__ itaussag)
     {
@@ -105,9 +105,9 @@ namespace
             const TF taussa = ltaussa[idx] + itaussa[idx];
             const TF taussag = ltaussag[idx] + itaussag[idx];
 
-            tau[idx] = TAU_TYPE(tau_t);
-            ssa[idx] = OPTICAL_TYPE(taussa / max(tau_t, tmin));
-            g[idx]   = OPTICAL_TYPE(taussag/ max(taussa, tmin));
+            tau[idx] = FloatTau(tau_t);
+            ssa[idx] = FloatOptical(taussa / max(tau_t, tmin));
+            g[idx]   = FloatOptical(taussag/ max(taussa, tmin));
         }
     }
 

@@ -40,7 +40,7 @@ namespace
         const Float* aermr04, const Float* aermr05, const Float* aermr06,
         const Float* aermr07, const Float* aermr08, const Float* aermr09,
         const Float* aermr10, const Float* aermr11,
-        const Float* rh, const PRESSURE_TYPE* plev, const Float* rh_classes,
+        const Float* rh, const FloatPressure* plev, const Float* rh_classes,
         const Float* mext_phobic, const Float* ssa_phobic, const Float* g_phobic,
         const Float* mext_philic, const Float* ssa_philic, const Float* g_philic,
         Float* tau, Float* taussa, Float* taussag)
@@ -160,7 +160,7 @@ namespace
 
     __global__
     void combine_and_store_kernel(const int ncol, const int nlay, const int nbnd, const Float tmin,
-                  TAU_TYPE* __restrict__ tau, OPTICAL_TYPE* __restrict__ ssa, OPTICAL_TYPE* __restrict__ g,
+                  FloatTau* __restrict__ tau, FloatOptical* __restrict__ ssa, FloatOptical* __restrict__ g,
                   const Float* __restrict__ ltau, const Float* __restrict__ ltaussa, const Float* __restrict__ ltaussag)
     {
         const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -170,9 +170,9 @@ namespace
         if ( (icol < ncol) && (ilay < nlay) && (ibnd < nbnd) )
         {
             const int idx = icol + ilay*ncol + ibnd*nlay*ncol;
-            tau[idx] = TAU_TYPE(ltau[idx]);
-            ssa[idx] = OPTICAL_TYPE(ltaussa[idx] / max(ltau[idx], tmin));
-            g[idx]   = OPTICAL_TYPE(ltaussag[idx] / max(ltaussa[idx], tmin));
+            tau[idx] = FloatTau(ltau[idx]);
+            ssa[idx] = FloatOptical(ltaussa[idx] / max(ltau[idx], tmin));
+            g[idx]   = FloatOptical(ltaussag[idx] / max(ltaussa[idx], tmin));
         }
     }
 
@@ -220,7 +220,7 @@ Aerosol_optics_gpu::Aerosol_optics_gpu(
 
 void Aerosol_optics_gpu::aerosol_optics(
         Aerosol_concs_gpu& aerosol_concs,
-        const Array_gpu<Float,2>& rh, const Array_gpu<PRESSURE_TYPE,2>& plev,
+        const Array_gpu<Float,2>& rh, const Array_gpu<FloatPressure,2>& plev,
         Optical_props_2str_gpu& optical_props)
 {
     const int ncol = rh.dim(1);

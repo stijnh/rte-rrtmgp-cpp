@@ -56,27 +56,27 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int ncol, const int nlay,
             const int ngas, const int nflav, const int neta, const int npres, const int ntemp,
             const int* flavor,
-            const PRESSURE_TYPE* press_ref_log,
-            const TEMPERATURE_TYPE* temp_ref,
-            PRESSURE_TYPE press_ref_log_delta,
-            TEMPERATURE_TYPE temp_ref_min,
-            TEMPERATURE_TYPE temp_ref_delta,
-            PRESSURE_TYPE press_ref_trop_log,
+            const FloatPressure* press_ref_log,
+            const FloatTemperature* temp_ref,
+            FloatPressure press_ref_log_delta,
+            FloatTemperature temp_ref_min,
+            FloatTemperature temp_ref_delta,
+            FloatPressure press_ref_trop_log,
             const Float* vmr_ref,
-            const PRESSURE_TYPE* play,
-            const TEMPERATURE_TYPE* tlay,
-            GAS_COL_TYPE* col_gas,
+            const FloatPressure* play,
+            const FloatTemperature* tlay,
+            FloatColGas* col_gas,
             int* jtemp,
-            FMAJOR_TYPE* fmajor, FMINOR_TYPE* fminor,
-            MIX_COL_TYPE* col_mix,
+            FloatFMajor* fmajor, FloatFMinor* fminor,
+            FloatColMix* col_mix,
             Bool* tropo,
             int* jeta,
             int* jpress);
 
     void combine_abs_and_rayleigh(
             const int ncol, const int nlay, const int ngpt,
-            const TAU_TYPE* tau_local, const TAU_TYPE* tau_rayleigh,
-            TAU_TYPE* tau, OPTICAL_TYPE* ssa, OPTICAL_TYPE* g);
+            const FloatTau* tau_local, const FloatTau* tau_rayleigh,
+            FloatTau* tau, FloatOptical* ssa, FloatOptical* g);
 
     void compute_tau_rayleigh(
             const int ncol, const int nlay, const int nband, const int ngpt,
@@ -85,10 +85,10 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             // const int* gpoint_bands,
             const int* band_lims_gpt,
             const Float* krayl,
-            int idx_h2o, const DRY_COL_TYPE* col_dry, const GAS_COL_TYPE* col_gas,
-            const FMINOR_TYPE* fminor, const int* jeta,
+            int idx_h2o, const FloatColDry* col_dry, const FloatColGas* col_gas,
+            const FloatFMinor* fminor, const int* jeta,
             const Bool* tropo, const int* jtemp,
-            TAU_TYPE* tau_rayleigh);
+            FloatTau* tau_rayleigh);
 
     void compute_tau_absorption(
             const int ncol, const int nlay, const int nband, const int ngpt,
@@ -98,9 +98,9 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int idx_h2o,
             const int* gpoint_flavor,
             const int* band_lims_gpt,
-            const KMAJOR_TYPE* kmajor,
-            const KMINOR_TYPE* kminor_lower,
-            const KMINOR_TYPE* kminor_upper,
+            const FloatKMajor* kmajor,
+            const FloatKMinor* kminor_lower,
+            const FloatKMinor* kminor_upper,
             const int* minor_limits_gpt_lower,
             const int* minor_limits_gpt_upper,
             const Bool* minor_scales_with_density_lower,
@@ -114,21 +114,21 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int* kminor_start_lower,
             const int* kminor_start_upper,
             const Bool* tropo,
-            const MIX_COL_TYPE* col_mix, const FMAJOR_TYPE* fmajor,
-            const FMINOR_TYPE* fminor, const PRESSURE_TYPE* play,
-            const TEMPERATURE_TYPE* tlay, const GAS_COL_TYPE* col_gas,
+            const FloatColMix* col_mix, const FloatFMajor* fmajor,
+            const FloatFMinor* fminor, const FloatPressure* play,
+            const FloatTemperature* tlay, const FloatColGas* col_gas,
             const int* jeta, const int* jtemp,
-            const int* jpress, TAU_TYPE* tau);
+            const int* jpress, FloatTau* tau);
 
     void compute_planck_source(
             const int ncol, const int nlay, const int nbnd, const int ngpt,
             const int nflav, const int neta, const int npres, const int ntemp,
             const int nPlanckTemp,
-            const TEMPERATURE_TYPE* tlay,
-            const TEMPERATURE_TYPE* tlev,
-            const TEMPERATURE_TYPE* tsfc,
+            const FloatTemperature* tlay,
+            const FloatTemperature* tlev,
+            const FloatTemperature* tsfc,
             const int sfc_lay,
-            const FMAJOR_TYPE* fmajor,
+            const FloatFMajor* fmajor,
             const int* jeta,
             const Bool* tropo,
             const int* jtemp,
@@ -136,13 +136,13 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             const int* gpoint_bands,
             const int* band_lims_gpt,
             const Float* pfracin,
-            const TEMPERATURE_TYPE temp_ref_min,
+            const FloatTemperature temp_ref_min,
             const Float totplnk_delta,
             const Float* totplnk,
             const int* gpoint_flavor,
-            SURFACE_TYPE* sfc_src,
-            SOURCE_TYPE* lay_src,
-            SOURCE_TYPE* lev_src,
+            FloatSurface* sfc_src,
+            FloatSource* lay_src,
+            FloatSource* lev_src,
             Float* sfc_src_jac);
 }
 #endif

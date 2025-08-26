@@ -205,12 +205,12 @@ namespace Rte_solver_kernels_cuda
 
         Float* r_dif = Tools_gpu::allocate_gpu<Float>(opt_size);
         Float* t_dif = Tools_gpu::allocate_gpu<Float>(opt_size);
-        Float* source_up = Tools_gpu::allocate_gpu<Float>(opt_size);
-        Float* source_dn = Tools_gpu::allocate_gpu<Float>(opt_size);
-        Float* source_sfc = Tools_gpu::allocate_gpu<Float>(alb_size);
-        Float* albedo = Tools_gpu::allocate_gpu<Float>(flx_size);
-        Float* src = Tools_gpu::allocate_gpu<Float>(flx_size);
-        Float* denom = Tools_gpu::allocate_gpu<Float>(opt_size);
+        FloatSource* source_up = Tools_gpu::allocate_gpu<FloatSource>(opt_size);
+        FloatSource* source_dn = Tools_gpu::allocate_gpu<FloatSource>(opt_size);
+        FloatSource* source_sfc = Tools_gpu::allocate_gpu<FloatSource>(alb_size);
+        FloatIntermediate* albedo = Tools_gpu::allocate_gpu<FloatIntermediate>(flx_size);
+        FloatIntermediate* src = Tools_gpu::allocate_gpu<FloatIntermediate>(flx_size);
+        FloatIntermediate* denom = Tools_gpu::allocate_gpu<FloatIntermediate>(opt_size);
 
         // Step0. Upper boundary condition. At this stage, flux_dn contains the diffuse radiation only.
         Rte_solver_kernels_cuda::apply_BC(ncol, nlay, ngpt, top_at_1, inc_flux_dir, mu0, flux_dir);

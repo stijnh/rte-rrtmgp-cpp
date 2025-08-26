@@ -71,7 +71,7 @@ class Radiation_solver_longwave
                 const bool switch_output_optical,
                 const bool switch_output_bnd_fluxes,
                 const Gas_concs_gpu& gas_concs,
-                const Array_gpu<FloatPressure,2>& p_lay, const Array_gpu<Float,2>& p_lev,
+                const Array_gpu<FloatPressure,2>& p_lay, const Array_gpu<FloatPressure,2>& p_lev,
                 const Array_gpu<FloatTemperature,2>& t_lay, const Array_gpu<FloatTemperature,2>& t_lev,
                 Array_gpu<FloatColDry,2>& col_dry,
                 const Array_gpu<FloatSurface,1>& t_sfc, const Array_gpu<FloatSurface,2>& emis_sfc,

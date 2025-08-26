@@ -108,7 +108,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
     void combine_abs_and_rayleigh(
             const int ncol, const int nlay, const int ngpt,
             const FloatTau* tau_abs, const FloatTau* tau_rayleigh,
-            FloatTau* tau, Float* ssa, Float* g)
+            FloatTau* tau, FloatOptical* ssa, FloatOptical* g)
     {
         Tuner_map& tunings = Tuner::get_map();
 

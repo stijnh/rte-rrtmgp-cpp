@@ -245,7 +245,7 @@ void Planck_source_kernel(
     const Index_2d<const FloatTemperature> tlay        (tlay_ptr, ncol, nlay);
     const Index_2d<const FloatTemperature> tlev        (tlev_ptr, ncol, nlay+1);
     const Index_1d<const FloatTemperature> tsfc        (tsfc_ptr, ncol);
-    const Index_3d<const vector<Float, 8>> fmajor (reinterpret_cast<const vector<Float, 8>*>(fmajor_ptr), ncol, nlay, nflav);
+    const Index_3d<const vector<FloatFMajor, 8>> fmajor (reinterpret_cast<const vector<FloatFMajor, 8>*>(fmajor_ptr), ncol, nlay, nflav);
     const Index_4d<const int> jeta          (jeta_ptr, 2, ncol, nlay, nflav);
     const Index_2d<const Bool> tropo        (tropo_ptr, ncol, nlay);
     const Index_2d<const int> jtemp         (jtemp_ptr, ncol, nlay);
@@ -725,7 +725,7 @@ __global__
 void combine_abs_and_rayleigh_kernel(
         const int ncol, const int nlay, const int ngpt, const Float tmin,
         const FloatTau* __restrict__ tau_abs, const FloatTau* __restrict__ tau_rayleigh,
-        FloatTau* __restrict__ tau, Float* __restrict__ ssa, Float* __restrict__ g)
+        FloatTau* __restrict__ tau, FloatOptical* __restrict__ ssa, FloatOptical* __restrict__ g)
 {
     // Fetch the three coordinates.
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
@@ -736,14 +736,14 @@ void combine_abs_and_rayleigh_kernel(
     {
         const int idx = icol + ilay*ncol + igpt*ncol*nlay;
 
-        const FloatTau tau_tot = tau_abs[idx] + tau_rayleigh[idx];
+        const Float tau_tot = Float(tau_abs[idx]) + Float(tau_rayleigh[idx]);
 
         tau[idx] = FloatTau(tau_tot);
         g  [idx] = Float(0.);
 
         if (Float(tau_tot)>(Float(2.)*tmin))
-            ssa[idx] = tau_rayleigh[idx]/tau_tot;
+            ssa[idx] = FloatOptical(Float(tau_rayleigh[idx])/tau_tot);
         else
-            ssa[idx] = Float(0.);
+            ssa[idx] = FloatOptical(0.);
     }
 }

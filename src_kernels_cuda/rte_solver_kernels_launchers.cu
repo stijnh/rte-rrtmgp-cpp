@@ -1,10 +1,11 @@
 #include <chrono>
-
 #include "kernel.h"
 #include "rte_solver_kernels_cuda.h"
 #include "tools_gpu.h"
 #include "tuner.h"
-
+#include <float.h>
+#include "types.h"
+#include "kernel_float.h"
 #include <iomanip>
 
 
@@ -68,7 +69,7 @@ namespace Rte_solver_kernels_cuda
             const FloatFlux* inc_flux,
             FloatFlux* flux_up, FloatFlux* flux_dn,
             const Bool do_broadband, FloatFlux* flux_up_loc, FloatFlux* flux_dn_loc,
-            const Bool do_jacobians, const Float* sfc_src_jac, Float* flux_up_jac)
+            const Bool do_jacobians, const FloatSurface* sfc_src_jac, FloatFlux* flux_up_jac)
     {
         Float eps = std::numeric_limits<Float>::epsilon();
 
@@ -81,7 +82,7 @@ namespace Rte_solver_kernels_cuda
         FloatIntermediate* source_up = Tools_gpu::allocate_gpu<FloatIntermediate>(opt_size);
         FloatFlux* radn_dn = Tools_gpu::allocate_gpu<FloatFlux>(flx_size);
         FloatFlux* radn_up = Tools_gpu::allocate_gpu<FloatFlux>(flx_size);
-        Float* radn_up_jac = Tools_gpu::allocate_gpu<Float>(flx_size);
+        FloatFlux* radn_up_jac = Tools_gpu::allocate_gpu<FloatFlux>(flx_size);
 
         const int top_level = top_at_1 ? 0 : nlay;
         const Float tau_thres = sqrt(sqrt(eps));
@@ -162,7 +163,7 @@ namespace Rte_solver_kernels_cuda
             const FloatFlux* inc_flux,
             FloatFlux* flux_up, FloatFlux* flux_dn,
             const Bool do_broadband, FloatFlux* flux_up_loc, FloatFlux* flux_dn_loc,
-            const Bool do_jacobians, const Float* sfc_src_jac, Float* flux_up_jac)
+            const Bool do_jacobians, const Float* sfc_src_jac, FloatFlux* flux_up_jac)
     {
         if (top_at_1) {
             lw_solver_noscat_impl<true>(
@@ -203,8 +204,8 @@ namespace Rte_solver_kernels_cuda
         const int alb_size = ncol*ngpt;
         const int flx_size = ncol*(nlay+1)*ngpt;
 
-        Float* r_dif = Tools_gpu::allocate_gpu<Float>(opt_size);
-        Float* t_dif = Tools_gpu::allocate_gpu<Float>(opt_size);
+        FloatIntermediate* r_dif = Tools_gpu::allocate_gpu<FloatIntermediate>(opt_size);
+        FloatIntermediate* t_dif = Tools_gpu::allocate_gpu<FloatIntermediate>(opt_size);
         FloatSource* source_up = Tools_gpu::allocate_gpu<FloatSource>(opt_size);
         FloatSource* source_dn = Tools_gpu::allocate_gpu<FloatSource>(opt_size);
         FloatSource* source_sfc = Tools_gpu::allocate_gpu<FloatSource>(alb_size);

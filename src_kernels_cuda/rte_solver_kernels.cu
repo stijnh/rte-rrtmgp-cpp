@@ -1,6 +1,7 @@
 #include <float.h>
 
 #include "types.h"
+#include "kernel_float.h"
 
 
 const int loop_unroll_factor_nlay = 4;
@@ -9,7 +10,6 @@ const int loop_unroll_factor_nlay = 4;
 template<typename TF> __device__ constexpr TF k_min();
 template<> __device__ constexpr double k_min() { return 1.e-12; }
 template<> __device__ constexpr float k_min() { return 1.e-4f; }
-
 
 __global__
 void lw_secants_array_kernel(
@@ -31,43 +31,56 @@ void lw_secants_array_kernel(
 
 __device__
 void lw_transport_noscat_kernel(
-        const int icol, const int igpt, const int ncol, const int nlay, const int ngpt, const Bool top_at_1,
-        const FloatTau* __restrict__ tau, const FloatIntermediate* __restrict__ trans, const Float sfc_albedo,
-        const FloatIntermediate* __restrict__ source_dn, const FloatIntermediate* __restrict__ source_up, Float source_sfc,
-        FloatFlux* __restrict__ radn_up, FloatFlux* __restrict__ radn_dn, Float source_sfc_jac, Float* __restrict__ radn_up_jac,
-        Float radn_dn_top, Float scaling)
+        const int icol,
+        const int igpt,
+        const int ncol,
+        const int nlay,
+        const int ngpt,
+        const Bool top_at_1,
+        kernel_float::view_ptr<Float, const FloatTau> tau,
+        kernel_float::view_ptr<Float, const FloatIntermediate> trans,
+        const Float sfc_albedo,
+        kernel_float::view_ptr<Float, const FloatIntermediate> source_dn,
+        kernel_float::view_ptr<Float, const FloatIntermediate> source_up,
+        Float source_sfc,
+        kernel_float::view_ptr<Float, FloatFlux> radn_up,
+        kernel_float::view_ptr<Float, FloatFlux> radn_dn,
+        Float source_sfc_jac,
+        kernel_float::view_ptr<Float, FloatFlux> radn_up_jac,
+        Float radn_dn_top,
+        Float scaling)
 {
     if (top_at_1)
     {
         const int idx_top = icol + igpt*ncol*(nlay+1);
         Float radn_dn_loc = radn_dn_top;
-        radn_dn[idx_top] = FloatFlux(radn_dn_loc * scaling);
+        radn_dn[idx_top] = radn_dn_loc * scaling;
 
         #pragma unroll loop_unroll_factor_nlay
         for (int ilev=0; ilev<(nlay); ++ilev)
         {
             const int idx1 = icol + (ilev+1)*ncol + igpt*ncol*(nlay+1);
             const int idx3 = icol + ilev*ncol + igpt*ncol*nlay;
-            radn_dn_loc = Float(trans[idx3]) * radn_dn_loc + Float(source_dn[idx3]);
-            radn_dn[idx1] = FloatFlux(radn_dn_loc * scaling);
+            radn_dn_loc = trans[idx3] * radn_dn_loc + source_dn[idx3];
+            radn_dn[idx1] = radn_dn_loc * scaling;
         }
 
         Float radn_up_loc = radn_dn_loc * sfc_albedo + source_sfc;
         Float radn_jac_loc = source_sfc_jac;
 
         const int idx_bot = icol + nlay*ncol + igpt*ncol*(nlay+1);
-        radn_up[idx_bot] = FloatFlux(radn_up_loc * scaling);
+        radn_up[idx_bot] = radn_up_loc * scaling;
         radn_up_jac[idx_bot] = radn_jac_loc * scaling;
 
         #pragma unroll loop_unroll_factor_nlay
         for (int ilev=nlay-1; ilev>=0; --ilev)
         {
             const int idx3 = icol + ilev*ncol + igpt*ncol*nlay;
-            radn_up_loc = Float(trans[idx3]) * radn_up_loc + Float(source_up[idx3]);
-            radn_jac_loc = Float(trans[idx3]) * radn_jac_loc;
+            radn_up_loc = trans[idx3] * radn_up_loc + source_up[idx3];
+            radn_jac_loc = trans[idx3] * radn_jac_loc;
 
             const int idx1 = icol + ilev*ncol + igpt*ncol*(nlay+1);
-            radn_up[idx1] = FloatFlux(radn_up_loc * scaling);
+            radn_up[idx1] = radn_up_loc * scaling;
             radn_up_jac[idx1] = radn_jac_loc * scaling;
         }
     }
@@ -75,33 +88,33 @@ void lw_transport_noscat_kernel(
     {
         const int idx_top = icol + nlay*ncol + igpt*ncol*(nlay+1);
         Float radn_dn_loc = radn_dn_top;
-        radn_dn[idx_top] = FloatFlux(radn_dn_loc * scaling);
+        radn_dn[idx_top] = radn_dn_loc * scaling;
 
         #pragma unroll loop_unroll_factor_nlay
         for (int ilev=(nlay-1); ilev>=0; --ilev)
         {
             const int idx1 = icol + ilev*ncol + igpt*ncol*(nlay+1);
             const int idx3 = icol + ilev*ncol + igpt*ncol*nlay;
-            radn_dn_loc = Float(trans[idx3]) * radn_dn_loc + Float(source_dn[idx3]);
-            radn_dn[idx1] = FloatFlux(radn_dn_loc * scaling);
+            radn_dn_loc = trans[idx3] * radn_dn_loc + source_dn[idx3];
+            radn_dn[idx1] = radn_dn_loc * scaling;
         }
 
         Float radn_up_loc = radn_dn_loc * sfc_albedo + source_sfc;
         Float radn_jac_loc = source_sfc_jac;
 
         const int idx_bot = icol + igpt*ncol*(nlay+1);
-        radn_up[idx_bot] = FloatFlux(radn_up_loc * scaling);
+        radn_up[idx_bot] = radn_up_loc * scaling;
         radn_up_jac[idx_bot] = radn_jac_loc * scaling;
 
         #pragma unroll loop_unroll_factor_nlay
         for (int ilev=0; ilev<nlay; ++ilev)
         {
             const int idx3 = icol + ilev*ncol + igpt*ncol*nlay;
-            radn_up_loc = Float(trans[idx3]) * radn_up_loc + Float(source_up[idx3]);
-            radn_jac_loc = Float(trans[idx3]) * radn_jac_loc;
+            radn_up_loc = trans[idx3] * radn_up_loc + source_up[idx3];
+            radn_jac_loc = trans[idx3] * radn_jac_loc;
 
             const int idx1 = icol + (ilev+1)*ncol + igpt*ncol*(nlay+1);
-            radn_up[idx1] = FloatFlux(radn_up_loc * scaling);
+            radn_up[idx1] = radn_up_loc * scaling;
             radn_up_jac[idx1] = radn_jac_loc * scaling;
         }
     }
@@ -109,30 +122,57 @@ void lw_transport_noscat_kernel(
 
 #pragma kernel problem_size(ncol, ngpt)
 #pragma kernel block_size(32, 4)
-#pragma kernel buffer(D[ncol*ngpt])
-#pragma kernel buffer(weight[1])
-#pragma kernel buffer(tau[ncol*nlay*ngpt])
-#pragma kernel buffer(lay_source[ncol*nlay*ngpt])
-#pragma kernel buffer(lev_source[ngpt * ncol * (nlay + 1)])
-#pragma kernel buffer(sfc_emis[ngpt*ncol])
-#pragma kernel buffer(sfc_src[ngpt*ncol])
-#pragma kernel buffer(radn_up[ngpt*ncol*(nlay+1)])
-#pragma kernel buffer(radn_dn[ngpt*ncol*(nlay+1)])
-#pragma kernel buffer(sfc_src_jac[ngpt*ncol])
-#pragma kernel buffer(radn_up_jac[ngpt*ncol*(nlay+1)])
-#pragma kernel buffer(trans[ncol*nlay*ngpt])
-#pragma kernel buffer(source_dn[ncol*nlay*ngpt])
-#pragma kernel buffer(source_up[ncol*nlay*ngpt])
+#pragma kernel buffer(D_ptr[ncol*ngpt])
+#pragma kernel buffer(weight_ptr[1])
+#pragma kernel buffer(tau_ptr[ncol*nlay*ngpt])
+#pragma kernel buffer(lay_source_ptr[ncol*nlay*ngpt])
+#pragma kernel buffer(lev_source_ptr[ngpt * ncol * (nlay + 1)])
+#pragma kernel buffer(sfc_emis_ptr[ngpt*ncol])
+#pragma kernel buffer(sfc_src_ptr[ngpt*ncol])
+#pragma kernel buffer(radn_up_ptr[ngpt*ncol*(nlay+1)])
+#pragma kernel buffer(radn_dn_ptr[ngpt*ncol*(nlay+1)])
+#pragma kernel buffer(sfc_src_jac_ptr[ngpt*ncol])
+#pragma kernel buffer(radn_up_jac_ptr[ngpt*ncol*(nlay+1)])
+#pragma kernel buffer(trans_ptr[ncol*nlay*ngpt])
+#pragma kernel buffer(source_dn_ptr[ncol*nlay*ngpt])
+#pragma kernel buffer(source_up_ptr[ncol*nlay*ngpt])
 template <Bool top_at_1>
 __global__
 void lw_solver_noscat_kernel(
-        const int ncol, const int nlay, const int ngpt, const Float tau_thres,
-        const Float* __restrict__ D, const Float* __restrict__ weight, const FloatTau* __restrict__ tau, const FloatSource* __restrict__ lay_source,
-        const FloatSource* __restrict__ lev_source, const FloatSurface* __restrict__ sfc_emis,
-        const FloatSurface* __restrict__ sfc_src, FloatFlux* __restrict__ radn_up, FloatFlux* __restrict__ radn_dn,
-        const Float* __restrict__ sfc_src_jac, Float* __restrict__ radn_up_jac,
-        FloatIntermediate* __restrict__ trans, FloatIntermediate* __restrict__ source_dn, FloatIntermediate* __restrict__ source_up)
-{
+        const int ncol,
+        const int nlay,
+        const int ngpt,
+        const Float tau_thres,
+        const Float* __restrict__ D_ptr,
+        const Float* __restrict__ weight_ptr,
+        const FloatTau* __restrict__ tau_ptr,
+        const FloatSource* __restrict__ lay_source_ptr,
+        const FloatSource* __restrict__ lev_source_ptr,
+        const FloatSurface* __restrict__ sfc_emis_ptr,
+        const FloatSurface* __restrict__ sfc_src_ptr,
+        FloatFlux* __restrict__ radn_up_ptr,
+        FloatFlux* __restrict__ radn_dn_ptr,
+        const FloatSurface* __restrict__ sfc_src_jac_ptr,
+        FloatFlux* __restrict__ radn_up_jac_ptr,
+        FloatIntermediate* __restrict__ trans_ptr,
+        FloatIntermediate* __restrict__ source_dn_ptr,
+        FloatIntermediate* __restrict__ source_up_ptr
+) {
+    kernel_float::view_ptr<const Float> D = D_ptr;
+    kernel_float::view_ptr<const Float> weight = weight_ptr;
+    kernel_float::view_ptr<Float, const FloatTau> tau = tau_ptr;
+    kernel_float::view_ptr<Float, const FloatSource> lay_source = lay_source_ptr;
+    kernel_float::view_ptr<Float, const FloatSource> lev_source = lev_source_ptr;
+    kernel_float::view_ptr<Float, const FloatSurface> sfc_emis = sfc_emis_ptr;
+    kernel_float::view_ptr<Float, const FloatSurface> sfc_src = sfc_src_ptr;
+    kernel_float::view_ptr<Float, FloatFlux> radn_up = radn_up_ptr;
+    kernel_float::view_ptr<Float, FloatFlux> radn_dn = radn_dn_ptr;
+    kernel_float::view_ptr<Float, const FloatSurface> sfc_src_jac = sfc_src_jac_ptr;
+    kernel_float::view_ptr<Float, FloatFlux> radn_up_jac = radn_up_jac_ptr;
+    kernel_float::view_ptr<Float, FloatIntermediate> trans = trans_ptr;
+    kernel_float::view_ptr<Float, FloatIntermediate> source_dn = source_dn_ptr;
+    kernel_float::view_ptr<Float, FloatIntermediate> source_up = source_up_ptr;
+
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int igpt = blockIdx.y*blockDim.y + threadIdx.y;
 
@@ -166,14 +206,14 @@ void lw_solver_noscat_kernel(
         }
 
         const int idx2d = icol + igpt*ncol;
-        Float sfc_albedo = Float(1.) - Float(sfc_emis[idx2d]);
-        Float source_sfc = Float(sfc_emis[idx2d]) * Float(sfc_src[idx2d]);
-        Float source_sfc_jac = Float(sfc_emis[idx2d]) * Float(sfc_src_jac[idx2d]);
+        Float sfc_albedo = Float(1.) - sfc_emis[idx2d];
+        Float source_sfc = sfc_emis[idx2d] * sfc_src[idx2d];
+        Float source_sfc_jac = sfc_emis[idx2d] * sfc_src_jac[idx2d];
 
         const Float pi = acos(Float(-1.));
         Float scaling = pi * weight[0];
         const int idx_top = icol + (top_at_1 ? 0 : nlay)*ncol + igpt*ncol*(nlay+1);
-        const Float radn_dn_top = Float(radn_dn[idx_top]) / (Float(2.) * pi * weight[0]);
+        const Float radn_dn_top = radn_dn.read(idx_top) / (Float(2.) * scaling);
 
         lw_transport_noscat_kernel(
                 icol, igpt, ncol, nlay, ngpt, top_at_1, tau, trans, sfc_albedo, source_dn,
@@ -440,11 +480,15 @@ __device__
 void sw_2stream_function(
         const int icol, const int ilay, const int igpt,
         const int ncol, const int nlay, const int ngpt,
-        const FloatTau* __restrict__ tau, const FloatOptical* __restrict__ ssa,
-        const FloatOptical* __restrict__ g, const Float* __restrict__ mu0,
-        Float* __restrict__ r_dif, Float* __restrict__ t_dif,
-        Float* __restrict__ r_dir, Float* __restrict__ t_dir,
-        Float* __restrict__ t_noscat_out)
+        kernel_float::view_ptr<Float, const FloatTau> tau,
+        kernel_float::view_ptr<Float, const FloatOptical> ssa,
+        kernel_float::view_ptr<Float, const FloatOptical> g,
+        kernel_float::view_ptr<Float, const Float> mu0,
+        kernel_float::view_ptr<Float> r_dif,
+        kernel_float::view_ptr<Float> t_dif,
+        Float* r_dir,
+        Float* t_dir,
+        Float* t_noscat_out)
 {
         const int idx = icol + ilay*ncol + igpt*nlay*ncol;
 
@@ -467,8 +511,8 @@ void sw_2stream_function(
         r_dif[idx] = rt_term * gamma2 * one_minus_exp_minus2ktau;
         t_dif[idx] = rt_term * Float(2.) * k * exp_minusktau;
 
-        Float t_noscat = exp(-tau[idx] * mu0_inv);
-        Float one_minus_t_noscat = -expm1(-tau[idx] * mu0_inv);
+        auto t_noscat = exp(-tau[idx] * mu0_inv);
+        auto one_minus_t_noscat = -expm1(-tau[idx] * mu0_inv);
         *t_noscat_out = t_noscat;
 
         const Float k_mu     = k * mu0[icol];
@@ -493,42 +537,70 @@ void sw_2stream_function(
 
 #pragma kernel problem_size(ncol, ngpt)
 #pragma kernel block_size(32, 4)
-#pragma kernel buffer(tau[ngpt*nlay*ncol])
-#pragma kernel buffer(ssa[ngpt*nlay*ncol])
-#pragma kernel buffer(g[ngpt*nlay*ncol])
-#pragma kernel buffer(mu0[ncol])
-#pragma kernel buffer(r_dif[ncol*nlay*ngpt])
-#pragma kernel buffer(t_dif[ncol*nlay*ngpt])
-#pragma kernel buffer(sfc_alb_dir[ngpt*ncol])
-#pragma kernel buffer(sfc_alb_dif[ngpt*ncol])
-#pragma kernel buffer(source_up[ngpt*nlay*ncol])
-#pragma kernel buffer(source_dn[ngpt*nlay*ncol])
-#pragma kernel buffer(source_sfc[ngpt*ncol])
-#pragma kernel buffer(flux_up[ngpt*(nlay+1)*ncol])
-#pragma kernel buffer(flux_dn[ngpt*(nlay+1)*ncol])
-#pragma kernel buffer(flux_dir[ngpt*(nlay+1)*ncol])
-#pragma kernel buffer(albedo[ncol*(nlay+1)*ngpt])
-#pragma kernel buffer(src[ncol*(nlay+1)*ngpt])
-#pragma kernel buffer(denom[ngpt*ncol*nlay])
+#pragma kernel buffer(tau_ptr[ngpt*nlay*ncol])
+#pragma kernel buffer(ssa_ptr[ngpt*nlay*ncol])
+#pragma kernel buffer(g_ptr[ngpt*nlay*ncol])
+#pragma kernel buffer(mu0_ptr[ncol])
+#pragma kernel buffer(r_dif_ptr[ncol*nlay*ngpt])
+#pragma kernel buffer(t_dif_ptr[ncol*nlay*ngpt])
+#pragma kernel buffer(sfc_alb_dir_ptr[ngpt*ncol])
+#pragma kernel buffer(sfc_alb_dif_ptr[ngpt*ncol])
+#pragma kernel buffer(source_up_ptr[ngpt*nlay*ncol])
+#pragma kernel buffer(source_dn_ptr[ngpt*nlay*ncol])
+#pragma kernel buffer(source_sfc_ptr[ngpt*ncol])
+#pragma kernel buffer(flux_up_ptr[ngpt*(nlay+1)*ncol])
+#pragma kernel buffer(flux_dn_ptr[ngpt*(nlay+1)*ncol])
+#pragma kernel buffer(flux_dir_ptr[ngpt*(nlay+1)*ncol])
+#pragma kernel buffer(albedo_ptr[ncol*(nlay+1)*ngpt])
+#pragma kernel buffer(src_ptr[ncol*(nlay+1)*ngpt])
+#pragma kernel buffer(denom_ptr[ngpt*ncol*nlay])
 template<Bool top_at_1> __global__
 void sw_solver_kernel(
         const int ncol, const int nlay, const int ngpt,
-        const FloatTau* __restrict__ tau, const FloatOptical* __restrict__ ssa,
-        const FloatOptical* __restrict__ g, const Float* __restrict__ mu0,
-        Float* __restrict__ r_dif, Float* __restrict__ t_dif,
-        const FloatSurface* __restrict__ sfc_alb_dir, const FloatSurface* __restrict__ sfc_alb_dif,
-        FloatSource* __restrict__ source_up, FloatSource* __restrict__ source_dn, FloatSource* __restrict__ source_sfc,
-        FloatFlux* __restrict__ flux_up, FloatFlux* __restrict__ flux_dn, FloatFlux* __restrict__ flux_dir,
-        FloatIntermediate* __restrict__ albedo, FloatIntermediate* __restrict__ src, FloatIntermediate* __restrict__ denom)
+        const FloatTau* __restrict__ tau_ptr,
+        const FloatOptical* __restrict__ ssa_ptr,
+        const FloatOptical* __restrict__ g_ptr,
+        const Float* __restrict__ mu0_ptr,
+        FloatIntermediate* __restrict__ r_dif_ptr,
+        FloatIntermediate* __restrict__ t_dif_ptr,
+        const FloatSurface* __restrict__ sfc_alb_dir_ptr,
+        const FloatSurface* __restrict__ sfc_alb_dif_ptr,
+        FloatSource* __restrict__ source_up_ptr,
+        FloatSource* __restrict__ source_dn_ptr,
+        FloatSource* __restrict__ source_sfc_ptr,
+        FloatFlux* __restrict__ flux_up_ptr,
+        FloatFlux* __restrict__ flux_dn_ptr,
+        FloatFlux* __restrict__ flux_dir_ptr,
+        FloatIntermediate* __restrict__ albedo_ptr,
+        FloatIntermediate* __restrict__ src_ptr,
+        FloatIntermediate* __restrict__ denom_ptr)
 {
     const int icol = blockIdx.x*blockDim.x + threadIdx.x;
     const int igpt = blockIdx.y*blockDim.y + threadIdx.y;
+
+    kernel_float::view_ptr<Float, const FloatTau> tau = tau_ptr;
+    kernel_float::view_ptr<Float, const FloatOptical> ssa = ssa_ptr;
+    kernel_float::view_ptr<Float, const FloatOptical> g = g_ptr;
+    kernel_float::view_ptr<Float, const Float> mu0 = mu0_ptr;
+    kernel_float::view_ptr<Float, FloatIntermediate> r_dif = r_dif_ptr;
+    kernel_float::view_ptr<Float, FloatIntermediate> t_dif = t_dif_ptr;
+    kernel_float::view_ptr<Float, const FloatSurface> sfc_alb_dir = sfc_alb_dir_ptr;
+    kernel_float::view_ptr<Float, const FloatSurface> sfc_alb_dif = sfc_alb_dif_ptr;
+    kernel_float::view_ptr<Float, FloatSource> source_up = source_up_ptr;
+    kernel_float::view_ptr<Float, FloatSource> source_dn = source_dn_ptr;
+    kernel_float::view_ptr<Float, FloatSource> source_sfc = source_sfc_ptr;
+    kernel_float::view_ptr<Float, FloatFlux> flux_up = flux_up_ptr;
+    kernel_float::view_ptr<Float, FloatFlux> flux_dn = flux_dn_ptr;
+    kernel_float::view_ptr<Float, FloatFlux> flux_dir = flux_dir_ptr;
+    kernel_float::view_ptr<Float, FloatIntermediate> albedo = albedo_ptr;
+    kernel_float::view_ptr<Float, FloatIntermediate> src = src_ptr;
+    kernel_float::view_ptr<Float, FloatIntermediate> denom = denom_ptr;
 
     if ( (icol < ncol) && (igpt < ngpt) )
     {
         if (top_at_1)
         {
-            Float flux_dir_loc = flux_dir[icol + igpt*(nlay+1)*ncol];
+            auto flux_dir_loc = kernel_float::into_vec(flux_dir[icol + igpt*(nlay+1)*ncol]);
 
             for (int ilay=0; ilay<nlay; ++ilay)
             {
@@ -541,23 +613,21 @@ void sw_solver_kernel(
                 const int idx_lay  = icol + ilay*ncol + igpt*nlay*ncol;
                 const int idx_lev2 = icol + (ilay+1)*ncol + igpt*(nlay+1)*ncol;
 
-                source_up[idx_lay] = FloatSource(r_dir * flux_dir_loc);
-                source_dn[idx_lay] = FloatSource(t_dir * flux_dir_loc);
+                source_up[idx_lay] = r_dir * flux_dir_loc;
+                source_dn[idx_lay] = t_dir * flux_dir_loc;
 
                 flux_dir_loc = t_noscat * flux_dir_loc;
                 flux_dir[idx_lev2] = FloatFlux(flux_dir_loc);
             }
 
             const int sfc_idx = icol + igpt*ncol;
-            source_sfc[sfc_idx] = flux_dir_loc * sfc_alb_dir[icol];
-
-            const int sfc_idx_2d = icol + igpt*ncol;
-            Float albedo_loc = sfc_alb_dif[sfc_idx_2d];
-            Float src_loc = source_sfc[sfc_idx_2d];
+            auto src_loc = flux_dir_loc * sfc_alb_dir[icol];
+            auto albedo_loc = sfc_alb_dif[sfc_idx];
+            source_sfc[sfc_idx] = src_loc;
 
             const int sfc_idx_3d = icol + nlay*ncol + igpt*(nlay+1)*ncol;
-            albedo[sfc_idx_3d] = FloatIntermediate(albedo_loc);
-            src[sfc_idx_3d] = FloatIntermediate(src_loc);
+            albedo[sfc_idx_3d] = albedo_loc;
+            src[sfc_idx_3d] = src_loc;
 
 #pragma unroll loop_unroll_factor_nlay
             for (int ilay=nlay-1; ilay >= 0; --ilay)
@@ -565,10 +635,10 @@ void sw_solver_kernel(
                 const int lay_idx  = icol + ilay*ncol + igpt*ncol*nlay;
                 const int lev_idx1 = icol + ilay*ncol + igpt*ncol*(nlay+1);
 
-                Float denom_loc = Float(1.)/(Float(1.) - r_dif[lay_idx] * albedo_loc);
-                Float albedo_next = r_dif[lay_idx] + t_dif[lay_idx] * t_dif[lay_idx]
+                auto denom_loc = Float(1.)/(Float(1.) - r_dif[lay_idx] * albedo_loc);
+                auto albedo_next = r_dif[lay_idx] + t_dif[lay_idx].read() * t_dif[lay_idx]
                                                     * albedo_loc * denom_loc;
-                Float src_next = source_up[lay_idx] + t_dif[lay_idx] * denom_loc *
+                auto src_next = source_up[lay_idx] + t_dif[lay_idx] * denom_loc *
                                                      (src_loc + albedo_loc * source_dn[lay_idx]);
 
                 albedo_loc = albedo_next;
@@ -580,9 +650,9 @@ void sw_solver_kernel(
             }
 
             const int top_idx = icol + igpt*(nlay+1)*ncol;
-            Float flux_dn_loc = flux_dn[top_idx];
+            auto flux_dn_loc = kernel_float::into_vec(flux_dn[top_idx]);
 
-            flux_dn[top_idx] = FloatFlux(flux_dn_loc + Float(flux_dir[top_idx]));
+            flux_dn[top_idx] = FloatFlux(flux_dn_loc + flux_dir[top_idx]);
             flux_up[top_idx] = FloatFlux(flux_dn_loc * albedo_loc + src_loc);
 
             for (int ilay=0; ilay < nlay; ++ilay)
@@ -591,16 +661,16 @@ void sw_solver_kernel(
                 const int lay_idx = icol + ilay*ncol + igpt*(nlay)*ncol;
 
                 flux_dn_loc = (t_dif[lay_idx] * flux_dn_loc +
-                               r_dif[lay_idx] * src[lev_idx1] +
+                               r_dif[lay_idx].read() * src[lev_idx1] +
                                source_dn[lay_idx]) * denom[lay_idx];
 
-                flux_dn[lev_idx1] = FloatFlux(flux_dn_loc + flux_dir[lev_idx1]);
-                flux_up[lev_idx1] = FloatFlux(flux_dn_loc * albedo[lev_idx1] + src[lev_idx1]);
+                flux_dn[lev_idx1] = flux_dn_loc + flux_dir[lev_idx1];
+                flux_up[lev_idx1] = kernel_float::fma(flux_dn_loc, albedo[lev_idx1], src[lev_idx1]);
             }
         }
         else
         {
-            Float flux_dir_loc = flux_dir[icol + nlay*ncol + igpt*(nlay+1)*ncol];
+            auto flux_dir_loc = kernel_float::into_vec(flux_dir[icol + nlay*ncol + igpt*(nlay+1)*ncol]);
 
             for (int ilay=nlay-1; ilay>=0; --ilay)
             {
@@ -613,8 +683,8 @@ void sw_solver_kernel(
                 const int idx_lay  = icol + ilay*ncol + igpt*nlay*ncol;
                 const int idx_lev1 = icol + (ilay)*ncol + igpt*(nlay+1)*ncol;
 
-                source_up[idx_lay] = FloatSource(r_dir * flux_dir_loc);
-                source_dn[idx_lay] = FloatSource(t_dir * flux_dir_loc);
+                source_up[idx_lay] = r_dir * flux_dir_loc;
+                source_dn[idx_lay] = t_dir * flux_dir_loc;
 
                 flux_dir_loc = t_noscat * flux_dir_loc;
                 flux_dir[idx_lev1] = FloatFlux(flux_dir_loc);
@@ -622,11 +692,9 @@ void sw_solver_kernel(
 
             const int sfc_idx = icol + igpt*ncol;
             const int flx_idx = icol + igpt*(nlay+1)*ncol;
-            source_sfc[sfc_idx] = FloatSurface(Float(flux_dir[flx_idx]) * Float(sfc_alb_dir[icol]));
-
-            const int sfc_idx_2d = icol + igpt*ncol;
-            Float albedo_loc = sfc_alb_dif[sfc_idx_2d];
-            Float src_loc = source_sfc[sfc_idx_2d];
+            auto albedo_loc = sfc_alb_dif[sfc_idx];
+            auto src_loc = flux_dir[flx_idx] * sfc_alb_dir[icol];
+            source_sfc[sfc_idx] = src_loc;
 
             const int sfc_idx_3d = icol + igpt*(nlay+1)*ncol;
             albedo[sfc_idx_3d] = albedo_loc;
@@ -639,10 +707,10 @@ void sw_solver_kernel(
                 const int lev_idx2 = icol + (ilay+1)*ncol + igpt*ncol*(nlay+1);
 
                 Float denom_loc = Float(1.)/(Float(1.) - r_dif[lay_idx] * albedo_loc);
-                Float albedo_next = r_dif[lay_idx] + (t_dif[lay_idx] * t_dif[lay_idx] *
+                Float albedo_next = r_dif[lay_idx] + (t_dif[lay_idx].read() * t_dif[lay_idx] *
                                                      albedo_loc * denom_loc);
-                Float src_next = Float(source_up[lay_idx]) + Float(t_dif[lay_idx])*denom_loc *
-                                                     (src_loc+albedo_loc*Float(source_dn[lay_idx]));
+                Float src_next = source_up[lay_idx] + t_dif[lay_idx].read() * denom_loc *
+                                                     (src_loc+albedo_loc*source_dn[lay_idx]);
 
                 albedo_loc = albedo_next;
                 src_loc = src_next;
@@ -653,21 +721,21 @@ void sw_solver_kernel(
             }
 
             const int top_idx = icol + nlay*ncol + igpt*(nlay+1)*ncol;
-            Float flux_dn_loc = flux_dn[top_idx];
+            auto flux_dn_loc = kernel_float::into_vec(flux_dn[top_idx]);
 
-            flux_dn[top_idx] = FloatFlux(flux_dn_loc + Float(flux_dir[top_idx]));
-            flux_up[top_idx] = FloatFlux(flux_dn_loc * albedo_loc + src_loc);
+            flux_dn[top_idx] = flux_dn_loc + flux_dir[top_idx];
+            flux_up[top_idx] = flux_dn_loc * albedo_loc + src_loc;
 
             for (int ilay=nlay-1; ilay >= 0; --ilay) {
                 const int lay_idx = icol + ilay * ncol + igpt * nlay * ncol;
                 const int lev_idx1 = icol + ilay * ncol + igpt * (nlay + 1) * ncol;
 
                 flux_dn_loc = (t_dif[lay_idx] * flux_dn_loc +
-                               r_dif[lay_idx] * src[lev_idx1] +
+                               r_dif[lay_idx].read() * src[lev_idx1] +
                                source_dn[lay_idx]) * denom[lay_idx];
 
-                flux_dn[lev_idx1] = FloatFlux(flux_dn_loc + Float(flux_dir[lev_idx1]));
-                flux_up[lev_idx1] = FloatFlux(flux_dn_loc * Float(albedo[lev_idx1]) + Float(src[lev_idx1]));
+                flux_dn[lev_idx1] = flux_dn_loc + flux_dir[lev_idx1];
+                flux_up[lev_idx1] = flux_dn_loc * albedo[lev_idx1] + src[lev_idx1];
             }
         }
     }

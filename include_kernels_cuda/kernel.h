@@ -28,6 +28,20 @@ static std::string find_base_dir() {
     }
 }
 
+static std::string find_cuda_dir() {
+    for (const char* s: std::array<const char*, 3> {
+            std::getenv("CUDA_HOME"),
+            std::getenv("CUDA_ROOT"),
+            std::getenv("CUDA_PATH")
+    }) {
+        if (s != nullptr && s[0] != '\0') {
+            return s;
+        }
+    }
+
+    return "/usr/";
+}
+
 struct Kernel: kernel_launcher::PragmaKernel {
     Kernel(std::string name, std::string filename, std::vector<kernel_launcher::Value> args = {}):
             kernel_launcher::PragmaKernel(name, find_base_dir() + "/" + filename, args) {}
@@ -39,7 +53,11 @@ struct Kernel: kernel_launcher::PragmaKernel {
         if (!this_dir.empty()) {
             builder.compiler_flag("-I" + this_dir + "/include_kernels_cuda/");
             builder.compiler_flag("-I" + this_dir + "/include/");
+            builder.compiler_flag("-I" + this_dir + "/external/kernel_float/single_include/");
         }
+
+        builder.compiler_flag("-I" + find_cuda_dir() + "/include/");
+        builder.compiler_flag("--std=c++17");
 
         builder.define("USECUDA", "1");
         builder.define("RESTRICTKEYWORD", "__restrict__");

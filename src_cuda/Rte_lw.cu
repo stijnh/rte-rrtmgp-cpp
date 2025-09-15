@@ -106,8 +106,8 @@ void Rte_lw_gpu::rte_lw(
             gauss_Ds.ptr(), secants.ptr());
 
     // For now, just pass the arrays around.
-    Array_gpu<Float,2> sfc_src_jac(sources.get_sfc_source().get_dims());
-    Array_gpu<Float,3> gpt_flux_up_jac(gpt_flux_up.get_dims());
+    Array_gpu<FloatSurface,2> sfc_src_jac(sources.get_sfc_source().get_dims());
+    Array_gpu<FloatFlux,3> gpt_flux_up_jac(gpt_flux_up.get_dims());
 
     const Bool do_broadband = (gpt_flux_up.dim(3) == 1) ? true : false;
 

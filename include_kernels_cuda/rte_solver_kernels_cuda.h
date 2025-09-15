@@ -56,7 +56,7 @@ namespace Rte_solver_kernels_cuda
             const FloatFlux* inc_flux,
             FloatFlux* flux_up, FloatFlux* flux_dn,
             const Bool do_broadband, FloatFlux* flux_up_loc, FloatFlux* flux_dn_loc,
-            const Bool do_jacobians, const Float* sfc_src_jac, Float* flux_up_jac);
+            const Bool do_jacobians, const FloatSurface* sfc_src_jac, FloatFlux* flux_up_jac);
 
 
     void lw_secants_array(

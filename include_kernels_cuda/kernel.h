@@ -4,6 +4,9 @@
 #include "kernel_launcher/pragma.h"
 #include "Array.h"
 
+#define RTE_STRINGIFY2(x) #x
+#define RTE_STRINGIFY(x) RTE_STRINGIFY2(x)
+
 namespace kernel_launcher {
     template <typename T, int N>
     struct IntoKernelArg<Array_gpu<T, N>> {
@@ -63,11 +66,15 @@ struct Kernel: kernel_launcher::PragmaKernel {
         builder.define("RESTRICTKEYWORD", "__restrict__");
 
 #ifdef RTE_USE_CBOOL
-        builder.define("RTE_USE_CBOOL", "1");
+        builder.define("RTE_USE_CBOOL", RTE_STRINGIFY(RTE_USE_CBOOL));
 #endif
 
 #ifdef RTE_USE_SP
-        builder.define("RTE_USE_SP", "1");
+        builder.define("RTE_USE_CBOOL", RTE_STRINGIFY(RTE_USE_SP));
+#endif
+
+#ifdef RTE_ACCURACY
+        builder.define("RTE_ACCURACY", RTE_STRINGIFY(RTE_ACCURACY));
 #endif
 
         return builder;

@@ -6,11 +6,12 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/config)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 # Set the precision of the build.
-if(USESP)
-  message(STATUS "Precision: Single (32-bits floats)")
-  add_compile_definitions(RTE_USE_SP)
+if(ACCURACY)
+  message(STATUS "Accuracy level: ${ACCURACY}")
+  add_compile_definitions(RTE_ACCURACY=${ACCURACY})
 else()
-  message(STATUS "Precision: Double (64-bits floats)")
+  message(STATUS "Accuracy level: not set, default to level 0")
+  add_compile_definitions(RTE_ACCURACY=0)
 endif()
 
 # Load system specific settings if not set, force default.cmake.
@@ -109,6 +110,7 @@ endif()
 set(KERNEL_LAUNCHER_CLANG_TIDY 0)
 set(KERNEL_LAUNCHER_ZLIB 1)
 add_subdirectory(external/kernel_launcher)
+add_subdirectory(external/kernel_float)
 
 add_subdirectory(src_kernels)
 add_subdirectory(src)

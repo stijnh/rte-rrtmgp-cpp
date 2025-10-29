@@ -3,12 +3,8 @@
 
 #include <map>
 #include <float.h>
+#include "accuracy_levels.h"
 
-#ifdef __CUDACC__
-#include <cuda_fp16.h>
-#else
-struct half;
-#endif
 
 // CvH Temporary, crash on this flag to avoid trouble.
 #ifdef RTE_RRTMGP_USE_CBOOL
@@ -22,7 +18,11 @@ using Bool = signed char;
 using Bool = int;
 #endif
 
-#ifdef RTE_USE_SP
+using Int = unsigned long long;
+const Int Atomic_reduce_const = (Int)(-1LL);
+
+
+#if RTE_ACCURACY >= 2
 using Float = float;
 const Float Float_epsilon = FLT_EPSILON;
 #else
@@ -30,19 +30,15 @@ using Float = double;
 const Float Float_epsilon = DBL_EPSILON;
 #endif
 
-using Int = unsigned long long;
-const Int Atomic_reduce_const = (Int)(-1LL);
-
-using FloatIntermediate = Float;
-using FloatFlux = Float;
-using FloatSurface = Float;
+using FloatFlux = constants::lw_solver_noscat_kernel::flux_type;
+using FloatSurface = constants::lw_solver_noscat_kernel::surface_type;
+using FloatTau = constants::lw_solver_noscat_kernel::tau_type;
+using FloatSource = constants::lw_solver_noscat_kernel::source_type;
 using FloatTemperature = Float;
 using FloatPressure = Float;
 using FloatWeight = Float;
 using FloatCol = Float;
-using FloatTau = Float;
-using FloatSource = Float;
-using FloatOptical = Float;
+using FloatOptical = FloatTau;
 
 using FloatColDry = FloatCol;
 using FloatColMix = FloatCol;

@@ -71,6 +71,8 @@ namespace Rte_solver_kernels_cuda
             const Bool do_broadband, FloatFlux* flux_up_loc, FloatFlux* flux_dn_loc,
             const Bool do_jacobians, const FloatSurface* sfc_src_jac, FloatFlux* flux_up_jac)
     {
+        using C = constants::lw_solver_noscat_kernel;
+        using FloatIntermediate = C::intermediate_type;
         Float eps = std::numeric_limits<Float>::epsilon();
 
         const int flx_size = ncol*(nlay+1)*ngpt;
@@ -94,7 +96,21 @@ namespace Rte_solver_kernels_cuda
             Rte_solver_kernels_cuda::apply_BC(ncol, nlay, ngpt, top_at_1, inc_flux, flux_dn);
 
         kernel_launcher::launch(
-                Kernel("lw_solver_noscat_kernel", "src_kernels_cuda/rte_solver_kernels.cu", {top_at_1}),
+                Kernel("lw_solver_noscat_kernel", "src_kernels_cuda/rte_solver_kernels.cu", {
+                    top_at_1,
+                    C::block_size_x,
+                    C::block_size_y,
+                    C::loop_unroll_factor_init,
+                    C::loop_unroll_factor_nlay,
+                    C::vector_size,
+                    kernel_launcher::TemplateArg::from_type<Float>(),
+                    kernel_launcher::TemplateArg::from_type<C::tau_type>(),
+                    kernel_launcher::TemplateArg::from_type<C::source_type>(),
+                    kernel_launcher::TemplateArg::from_type<C::surface_type>(),
+                    kernel_launcher::TemplateArg::from_type<C::flux_type>(),
+                    kernel_launcher::TemplateArg::from_type<C::compute_type>(),
+                    kernel_launcher::TemplateArg::from_type<C::intermediate_type>()
+                }),
                 ncol, nlay, ngpt, tau_thres,
                 secants, weights, tau, lay_source,
                 lev_source,
@@ -163,7 +179,7 @@ namespace Rte_solver_kernels_cuda
             const FloatFlux* inc_flux,
             FloatFlux* flux_up, FloatFlux* flux_dn,
             const Bool do_broadband, FloatFlux* flux_up_loc, FloatFlux* flux_dn_loc,
-            const Bool do_jacobians, const Float* sfc_src_jac, FloatFlux* flux_up_jac)
+            const Bool do_jacobians, const FloatSurface* sfc_src_jac, FloatFlux* flux_up_jac)
     {
         if (top_at_1) {
             lw_solver_noscat_impl<true>(
@@ -200,6 +216,8 @@ namespace Rte_solver_kernels_cuda
             const Bool has_dif_bc, const FloatFlux* inc_flux_dif,
             const Bool do_broadband, FloatFlux* flux_up_loc, FloatFlux* flux_dn_loc, FloatFlux* flux_dir_loc)
     {
+        using C = constants::sw_solver_kernel;
+        using FloatIntermediate = C::intermediate_type;
         const int opt_size = ncol*nlay*ngpt;
         const int alb_size = ncol*ngpt;
         const int flx_size = ncol*(nlay+1)*ngpt;
@@ -208,7 +226,7 @@ namespace Rte_solver_kernels_cuda
         FloatIntermediate* t_dif = Tools_gpu::allocate_gpu<FloatIntermediate>(opt_size);
         FloatSource* source_up = Tools_gpu::allocate_gpu<FloatSource>(opt_size);
         FloatSource* source_dn = Tools_gpu::allocate_gpu<FloatSource>(opt_size);
-        FloatSource* source_sfc = Tools_gpu::allocate_gpu<FloatSource>(alb_size);
+        FloatSurface* source_sfc = Tools_gpu::allocate_gpu<FloatSurface>(alb_size);
         FloatIntermediate* albedo = Tools_gpu::allocate_gpu<FloatIntermediate>(flx_size);
         FloatIntermediate* src = Tools_gpu::allocate_gpu<FloatIntermediate>(flx_size);
         FloatIntermediate* denom = Tools_gpu::allocate_gpu<FloatIntermediate>(opt_size);
@@ -222,7 +240,21 @@ namespace Rte_solver_kernels_cuda
 
         // Step 1.
         kernel_launcher::launch(
-                Kernel("sw_solver_kernel", "src_kernels_cuda/rte_solver_kernels.cu", {top_at_1}),
+                Kernel("sw_solver_kernel", "src_kernels_cuda/rte_solver_kernels.cu", {
+                    top_at_1,
+                    C::block_size_x,
+                    C::block_size_y,
+                    C::vector_size,
+                    C::loop_unroll_factor_nlay,
+                    kernel_launcher::TemplateArg::from_type<Float>(),
+                    kernel_launcher::TemplateArg::from_type<C::compute_type>(),
+                    kernel_launcher::TemplateArg::from_type<C::stream_type>(),
+                    kernel_launcher::TemplateArg::from_type<C::tau_type>(),
+                    kernel_launcher::TemplateArg::from_type<C::source_type>(),
+                    kernel_launcher::TemplateArg::from_type<C::surface_type>(),
+                    kernel_launcher::TemplateArg::from_type<C::flux_type>(),
+                    kernel_launcher::TemplateArg::from_type<C::intermediate_type>()
+                }),
                 ncol, nlay, ngpt, tau, ssa, g, mu0, r_dif, t_dif,
                 sfc_alb_dir, sfc_alb_dif,
                 source_up, source_dn, source_sfc,

@@ -1,0 +1,113 @@
+{
+    "LW flux": {
+        "shape": [
+            348,
+            384,
+            384
+        ],
+        "mean": -83.65222557821951,
+        "mean_bias": 0.0,
+        "root_mean_sq_error": 0.0,
+        "mean_rel_error": 0.0,
+        "mean_abs_error": 0.0,
+        "p99_abs_error": 0.0
+    },
+    "LW flux (TOA)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": -162.12922193946144,
+        "mean_bias": 0.0,
+        "root_mean_sq_error": 0.0,
+        "mean_rel_error": 0.0,
+        "mean_abs_error": 0.0,
+        "p99_abs_error": 0.0
+    },
+    "LW flux (surface)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 161.42680915527717,
+        "mean_bias": 0.0,
+        "root_mean_sq_error": 0.0,
+        "mean_rel_error": 0.0,
+        "mean_abs_error": 0.0,
+        "p99_abs_error": 0.0
+    },
+    "SW flux": {
+        "shape": [
+            348,
+            384,
+            384
+        ],
+        "mean": 584.9848254333677,
+        "mean_bias": 0.0,
+        "root_mean_sq_error": 0.0,
+        "mean_rel_error": 0.0,
+        "mean_abs_error": 0.0,
+        "p99_abs_error": 0.0
+    },
+    "SW flux (TOA)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 656.2140913028605,
+        "mean_bias": 0.0,
+        "root_mean_sq_error": 0.0,
+        "mean_rel_error": 0.0,
+        "mean_abs_error": 0.0,
+        "p99_abs_error": 0.0
+    },
+    "SW flux (surface)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 506.98920262045897,
+        "mean_bias": 0.0,
+        "root_mean_sq_error": 0.0,
+        "mean_rel_error": 0.0,
+        "mean_abs_error": 0.0,
+        "p99_abs_error": 0.0
+    },
+    "net flux": {
+        "shape": [
+            348,
+            384,
+            384
+        ],
+        "mean": 501.3325998551488,
+        "mean_bias": 0.0,
+        "root_mean_sq_error": 0.0,
+        "mean_rel_error": 0.0,
+        "mean_abs_error": 0.0,
+        "p99_abs_error": 0.0
+    },
+    "net flux (TOA)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 494.08486936339915,
+        "mean_bias": 0.0,
+        "root_mean_sq_error": 0.0,
+        "mean_rel_error": 0.0,
+        "mean_abs_error": 0.0,
+        "p99_abs_error": 0.0
+    },
+    "net flux (surface)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 668.4160117757361,
+        "mean_bias": 0.0,
+        "root_mean_sq_error": 0.0,
+        "mean_rel_error": 0.0,
+        "mean_abs_error": 0.0,
+        "p99_abs_error": 0.0
+    }
+}

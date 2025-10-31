@@ -1,5 +1,97 @@
 
 {
+    "LW up flux": {
+        "shape": [
+            348,
+            384,
+            384
+        ],
+        "mean": 174.29621284235154,
+        "mean_bias": 0.091086611938004,
+        "root_mean_sq_error": 0.11908688725217928,
+        "mean_rel_error": 0.0005731239769778799,
+        "mean_abs_error": 0.09887685906012536,
+        "max_abs_error": 0.5012867585998038,
+        "max_rel_error": 0.0030825865284495936,
+        "p99_abs_error": 0.2790628363122741,
+        "p99_rel_error": 0.0016406205651832337
+    },
+    "LW up flux (TOA)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 162.12922193946144,
+        "mean_bias": 0.070367650625939,
+        "root_mean_sq_error": 0.09160101778830802,
+        "mean_rel_error": 0.00047471418913754574,
+        "mean_abs_error": 0.07693105451464097,
+        "max_abs_error": 0.3315892670945857,
+        "max_rel_error": 0.0020491775568131122,
+        "p99_abs_error": 0.20681891455536744,
+        "p99_rel_error": 0.0012776934395997304
+    },
+    "LW up flux (surface)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 42.15211247461103,
+        "mean_bias": 0.028360030508084062,
+        "root_mean_sq_error": 0.029375157670148207,
+        "mean_rel_error": 0.0006727882352650779,
+        "mean_abs_error": 0.028360030508084062,
+        "max_abs_error": 0.07017795941966654,
+        "max_rel_error": 0.0016635395706664246,
+        "p99_abs_error": 0.04672317299023981,
+        "p99_rel_error": 0.00110837398491902
+    },
+    "LW down flux": {
+        "shape": [
+            348,
+            384,
+            384
+        ],
+        "mean": 90.6439872641322,
+        "mean_bias": 0.018483567658731544,
+        "root_mean_sq_error": 0.045193455178594216,
+        "mean_rel_error": 0.00037462197555877266,
+        "mean_abs_error": 0.02986007956788856,
+        "max_abs_error": 0.36879531838920343,
+        "max_rel_error": 0.0027349646214633603,
+        "p99_abs_error": 0.15210051800557042,
+        "p99_rel_error": 0.0021784192003518558
+    },
+    "LW down flux (TOA)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 0.0,
+        "mean_bias": 0.0,
+        "root_mean_sq_error": 0.0,
+        "mean_rel_error": 0.0,
+        "mean_abs_error": 0.0,
+        "max_abs_error": 0.0,
+        "max_rel_error": 0.0,
+        "p99_abs_error": 0.0,
+        "p99_rel_error": 0.0
+    },
+    "LW down flux (surface)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 203.5789216298882,
+        "mean_bias": 0.0647955044754972,
+        "root_mean_sq_error": 0.09155043153745504,
+        "mean_rel_error": 0.0003697981580374466,
+        "mean_abs_error": 0.07527766257714805,
+        "max_abs_error": 0.36056045592343366,
+        "max_rel_error": 0.0017757342689568361,
+        "p99_abs_error": 0.21754635088654556,
+        "p99_rel_error": 0.0010685135190800043
+    },
     "LW flux": {
         "shape": [
             348,
@@ -11,7 +103,10 @@
         "root_mean_sq_error": 0.11519574073197485,
         "mean_rel_error": 0.005730888689082861,
         "mean_abs_error": 0.09415550828502775,
-        "p99_abs_error": 0.2780923507825552
+        "max_abs_error": 0.5185917874317312,
+        "max_rel_error": 3517.135634954192,
+        "p99_abs_error": 0.2780923507825552,
+        "p99_rel_error": 0.03328363861164694
     },
     "LW flux (TOA)": {
         "shape": [
@@ -23,7 +118,10 @@
         "root_mean_sq_error": 0.09160101778830802,
         "mean_rel_error": 0.00047471418913754574,
         "mean_abs_error": 0.07693105451464097,
-        "p99_abs_error": 0.20681891455536744
+        "max_abs_error": 0.3315892670945857,
+        "max_rel_error": 0.0020491775568131122,
+        "p99_abs_error": 0.20681891455536744,
+        "p99_rel_error": 0.0012776934395997304
     },
     "LW flux (surface)": {
         "shape": [
@@ -35,7 +133,10 @@
         "root_mean_sq_error": 0.0737730559823768,
         "mean_rel_error": 0.000365633876454215,
         "mean_abs_error": 0.05901818360153488,
-        "p99_abs_error": 0.18847173065912878
+        "max_abs_error": 0.33835439581886817,
+        "max_rel_error": 0.0021027235217497193,
+        "p99_abs_error": 0.18847173065912878,
+        "p99_rel_error": 0.0011685337637765913
     },
     "SW flux": {
         "shape": [
@@ -48,7 +149,10 @@
         "root_mean_sq_error": 9.639308505686367,
         "mean_rel_error": 0.01353212724617694,
         "mean_abs_error": 8.200455666468907,
-        "p99_abs_error": 16.7620288857895
+        "max_abs_error": 17.37346614149351,
+        "max_rel_error": 0.026901001385068284,
+        "p99_abs_error": 16.7620288857895,
+        "p99_rel_error": 0.025831806273390424
     },
     "SW flux (TOA)": {
         "shape": [
@@ -60,7 +164,10 @@
         "root_mean_sq_error": 16.658640502865186,
         "mean_rel_error": 0.025385510899359073,
         "mean_abs_error": 16.658361996454207,
-        "p99_abs_error": 16.892204298299525
+        "max_abs_error": 17.14313369951401,
+        "max_rel_error": 0.02604442440272939,
+        "p99_abs_error": 16.892204298299525,
+        "p99_rel_error": 0.02571597280456677
     },
     "SW flux (surface)": {
         "shape": [
@@ -72,7 +179,102 @@
         "root_mean_sq_error": 4.126887341063434,
         "mean_rel_error": 0.008136976307468442,
         "mean_abs_error": 4.1251064863910045,
-        "p99_abs_error": 4.422266792882965
+        "max_abs_error": 4.49112246276286,
+        "max_rel_error": 0.008895460489863683,
+        "p99_abs_error": 4.422266792882965,
+        "p99_rel_error": 0.008757038639888625
+    },
+    "SW up flux": {
+        "shape": [
+            348,
+            384,
+            384
+        ],
+        "mean": 155.5630724168532,
+        "mean_bias": -9.35187455370832,
+        "root_mean_sq_error": 10.28939003613074,
+        "mean_rel_error": 0.058685093234634333,
+        "mean_abs_error": 9.35187455370832,
+        "max_abs_error": 16.79285063226493,
+        "max_rel_error": 0.09861103120261375,
+        "p99_abs_error": 16.38010297732247,
+        "p99_rel_error": 0.09525154035987332
+    },
+    "SW up flux (TOA)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 172.3079632683731,
+        "mean_bias": -16.306839594661838,
+        "root_mean_sq_error": 16.30712410459086,
+        "mean_rel_error": 0.09463947481809547,
+        "mean_abs_error": 16.306839594661838,
+        "max_abs_error": 16.79164187242091,
+        "max_rel_error": 0.09860301234935563,
+        "p99_abs_error": 16.540683843813483,
+        "p99_rel_error": 0.09645893988190928
+    },
+    "SW up flux (surface)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 142.9969535918681,
+        "mean_bias": -1.1591175487697531,
+        "root_mean_sq_error": 1.159691929024237,
+        "mean_rel_error": 0.008106287400873862,
+        "mean_abs_error": 1.1591175487697531,
+        "max_abs_error": 1.2484411314405577,
+        "max_rel_error": 0.00876752912662211,
+        "p99_abs_error": 1.2229530567011595,
+        "p99_rel_error": 0.008580518722533039
+    },
+    "SW down flux": {
+        "shape": [
+            348,
+            384,
+            384
+        ],
+        "mean": 740.5478978502235,
+        "mean_bias": -1.706604446835423,
+        "root_mean_sq_error": 2.355011917090106,
+        "mean_rel_error": 0.002626640881165938,
+        "mean_abs_error": 1.8465774230507974,
+        "max_abs_error": 5.890379949268436,
+        "max_rel_error": 0.00912881728719603,
+        "p99_abs_error": 5.149683299469572,
+        "p99_rel_error": 0.007897724443658494
+    },
+    "SW down flux (TOA)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 828.5220545712344,
+        "mean_bias": 0.35152234467125254,
+        "root_mean_sq_error": 0.35152234467125254,
+        "mean_rel_error": 0.0004242763879751732,
+        "mean_abs_error": 0.35152234467125254,
+        "max_abs_error": 0.35152234467125254,
+        "max_rel_error": 0.0004242763879751734,
+        "p99_abs_error": 0.35152234467125254,
+        "p99_rel_error": 0.0004242763879751734
+    },
+    "SW down flux (surface)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 649.986156212327,
+        "mean_bias": -5.284224049958439,
+        "root_mean_sq_error": 5.286300764844226,
+        "mean_rel_error": 0.008130224770797306,
+        "mean_abs_error": 5.284224049958439,
+        "max_abs_error": 5.720429489690105,
+        "max_rel_error": 0.008837649587159824,
+        "p99_abs_error": 5.640372246897619,
+        "p99_rel_error": 0.00871160476250906
     },
     "net flux": {
         "shape": [
@@ -85,7 +287,10 @@
         "root_mean_sq_error": 9.56239222674053,
         "mean_rel_error": 0.016518127923635426,
         "mean_abs_error": 8.13328935569616,
-        "p99_abs_error": 16.717209990395897
+        "max_abs_error": 17.37815195580714,
+        "max_rel_error": 0.03574853234830858,
+        "p99_abs_error": 16.717209990395897,
+        "p99_rel_error": 0.03403413200218932
     },
     "net flux (TOA)": {
         "shape": [
@@ -97,7 +302,10 @@
         "root_mean_sq_error": 16.588402492354724,
         "mean_rel_error": 0.033573330656174044,
         "mean_abs_error": 16.587994288810634,
-        "p99_abs_error": 16.86687741729644
+        "max_abs_error": 17.124881746621668,
+        "max_rel_error": 0.03469843920706431,
+        "p99_abs_error": 16.86687741729644,
+        "p99_rel_error": 0.03417366296900508
     },
     "net flux (surface)": {
         "shape": [
@@ -109,6 +317,55 @@
         "root_mean_sq_error": 4.091042056406766,
         "mean_rel_error": 0.006117008283394819,
         "mean_abs_error": 4.088670978326838,
-        "p99_abs_error": 4.431087426860802
+        "max_abs_error": 4.63895198363025,
+        "max_rel_error": 0.006947565993682964,
+        "p99_abs_error": 4.431087426860802,
+        "p99_rel_error": 0.006632372734599043
+    },
+    "heating rate": {
+        "shape": [
+            347,
+            384,
+            384
+        ],
+        "mean": 0.8956054698028956,
+        "mean_bias": -0.2363033595346879,
+        "root_mean_sq_error": 1.2035059871331018,
+        "mean_rel_error": 3.7850600483230616,
+        "mean_abs_error": 0.8287702426578089,
+        "max_abs_error": 72.00866011391493,
+        "max_rel_error": 5739007.848880473,
+        "p99_abs_error": 3.9675569158347064,
+        "p99_rel_error": 21.907229609691253
+    },
+    "heating rate (TOA)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": -1.925009276677377,
+        "mean_bias": -0.5266958772010402,
+        "root_mean_sq_error": 2.6611202279823676,
+        "mean_rel_error": 0.27360640097495353,
+        "mean_abs_error": 0.5266958772010402,
+        "max_abs_error": 72.00866011391493,
+        "max_rel_error": 37.40801838469372,
+        "p99_abs_error": 24.126198671742102,
+        "p99_rel_error": 12.533048465393051
+    },
+    "heating rate (surface)": {
+        "shape": [
+            384,
+            384
+        ],
+        "mean": 139.26612034019817,
+        "mean_bias": -0.7276174862003223,
+        "root_mean_sq_error": 0.8313103226790054,
+        "mean_rel_error": 0.005441160849516944,
+        "mean_abs_error": 0.7580428432191657,
+        "max_abs_error": 2.104494836717379,
+        "max_rel_error": 0.015192959705729883,
+        "p99_abs_error": 1.5427283336390505,
+        "p99_rel_error": 0.011054425733388443
     }
 }

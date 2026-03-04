@@ -10,3 +10,6 @@
 [submodule "external/kernel_float"]
 	path = external/kernel_float
 	url = https://github.com/KernelTuner/kernel_float.git
+[submodule "external/kmm"]
+	path = external/kmm
+	url = https://github.com/NLeSC/kmm.git

@@ -111,6 +111,7 @@ set(KERNEL_LAUNCHER_CLANG_TIDY 0)
 set(KERNEL_LAUNCHER_ZLIB 1)
 add_subdirectory(external/kernel_launcher)
 add_subdirectory(external/kernel_float)
+add_subdirectory(external/kmm)
 
 add_subdirectory(src_kernels)
 add_subdirectory(src)

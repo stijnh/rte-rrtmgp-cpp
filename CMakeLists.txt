@@ -109,7 +109,6 @@ endif()
 
 set(KERNEL_LAUNCHER_CLANG_TIDY 0)
 set(KERNEL_LAUNCHER_ZLIB 1)
-add_subdirectory(external/kernel_launcher)
 add_subdirectory(external/kernel_float)
 add_subdirectory(external/kmm)
 

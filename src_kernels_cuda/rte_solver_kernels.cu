@@ -7,6 +7,7 @@
 template<typename TF> __device__ constexpr TF k_min();
 template<> __device__ constexpr double k_min() { return 1.e-12; }
 template<> __device__ constexpr float k_min() { return 0.010; }
+template<> __device__ half k_min() { return 1.e-2f; }
 
 __global__
 void lw_secants_array_kernel(
@@ -186,20 +187,24 @@ void lw_solver_noscat_kernel(
 __launch_bounds__(block_size_x*block_size_y)
 {
     using Float = compute_type;
-    auto D = kernel_float::wrap_ptr<compute_type, vector_size>(D_ptr);
-    auto weight = kernel_float::wrap_ptr<compute_type>(weight_ptr);
-    auto tau = kernel_float::wrap_ptr<compute_type, vector_size>(tau_ptr);
-    auto lay_source = kernel_float::wrap_ptr<compute_type, vector_size>(lay_source_ptr);
-    auto lev_source = kernel_float::wrap_ptr<compute_type, vector_size>(lev_source_ptr);
-    auto sfc_emis = kernel_float::wrap_ptr<compute_type, vector_size>(sfc_emis_ptr);
-    auto sfc_src = kernel_float::wrap_ptr<compute_type, vector_size>(sfc_src_ptr);
-    auto radn_up = kernel_float::wrap_ptr<compute_type, vector_size>(radn_up_ptr);
-    auto radn_dn = kernel_float::wrap_ptr<compute_type, vector_size>(radn_dn_ptr);
-    auto sfc_src_jac = kernel_float::wrap_ptr<compute_type, vector_size>(sfc_src_jac_ptr);
-    auto radn_up_jac = kernel_float::wrap_ptr<compute_type, vector_size>(radn_up_jac_ptr);
-    auto trans = kernel_float::wrap_ptr<compute_type, vector_size>(trans_ptr);
-    auto source_dn = kernel_float::wrap_ptr<compute_type, vector_size>(source_dn_ptr);
-    auto source_up = kernel_float::wrap_ptr<compute_type, vector_size>(source_up_ptr);
+    auto wrap_ptr = [] (auto* p) {
+        return kernel_float::make_vec_ptr<compute_type, vector_size>(p);
+    };
+
+    auto D = wrap_ptr(D_ptr);
+    auto weight = kernel_float::make_vec_ptr<compute_type>(weight_ptr);
+    auto tau = wrap_ptr(tau_ptr);
+    auto lay_source = wrap_ptr(lay_source_ptr);
+    auto lev_source = wrap_ptr(lev_source_ptr);
+    auto sfc_emis = wrap_ptr(sfc_emis_ptr);
+    auto sfc_src = wrap_ptr(sfc_src_ptr);
+    auto radn_up = wrap_ptr(radn_up_ptr);
+    auto radn_dn = wrap_ptr(radn_dn_ptr);
+    auto sfc_src_jac = wrap_ptr(sfc_src_jac_ptr);
+    auto radn_up_jac = wrap_ptr(radn_up_jac_ptr);
+    auto trans = wrap_ptr(trans_ptr);
+    auto source_dn = wrap_ptr(source_dn_ptr);
+    auto source_up = wrap_ptr(source_up_ptr);
 
     const int ivcol = blockIdx.x*blockDim.x + threadIdx.x;
     const int igpt = blockIdx.y*blockDim.y + threadIdx.y;
@@ -515,13 +520,15 @@ void add_fluxes_kernel(
 template<typename TF> __device__ constexpr TF tmin();
 template<> __forceinline__ __device__ constexpr double tmin() { return DBL_EPSILON; }
 template<> __forceinline__ __device__ constexpr float tmin() { return FLT_EPSILON; }
+template<> __forceinline__ __device__ half tmin() { return half(0.00097656); }
 
 template<
         typename TF,
         int vector_size,
         typename compute_type,
         typename tau_type,
-        typename intermediate_type
+        typename intermediate_type,
+        typename mu_type
 >
 __device__
 void sw_2stream_function(
@@ -530,7 +537,7 @@ void sw_2stream_function(
         kernel_float::vec_ptr<TF, vector_size, const tau_type> tau,
         kernel_float::vec_ptr<TF, vector_size, const tau_type> ssa,
         kernel_float::vec_ptr<TF, vector_size, const tau_type> g,
-        kernel_float::vec_ptr<TF, vector_size, const compute_type> mu0,
+        kernel_float::vec_ptr<TF, vector_size, const mu_type> mu0,
         kernel_float::vec_ptr<TF, vector_size, intermediate_type> r_dif,
         kernel_float::vec_ptr<TF, vector_size, intermediate_type> t_dif,
         kernel_float::vec_ptr<TF, vector_size, compute_type> r_dir,
@@ -650,23 +657,27 @@ __launch_bounds__(block_size_x * block_size_y)
     const int igpt = blockIdx.y*blockDim.y + threadIdx.y;
     const int nvcol = ncol / vector_size;
 
-    auto tau = kernel_float::wrap_ptr<compute_type, vector_size>(tau_ptr);
-    auto ssa = kernel_float::wrap_ptr<compute_type, vector_size>(ssa_ptr);
-    auto g = kernel_float::wrap_ptr<compute_type, vector_size>(g_ptr);
-    auto mu0 = kernel_float::wrap_ptr<compute_type, vector_size>(mu0_ptr);
-    auto r_dif = kernel_float::wrap_ptr<compute_type, vector_size>(r_dif_ptr);
-    auto t_dif = kernel_float::wrap_ptr<compute_type, vector_size>(t_dif_ptr);
-    auto sfc_alb_dir = kernel_float::wrap_ptr<compute_type, vector_size>(sfc_alb_dir_ptr);
-    auto sfc_alb_dif = kernel_float::wrap_ptr<compute_type, vector_size>(sfc_alb_dif_ptr);
-    auto source_up = kernel_float::wrap_ptr<compute_type, vector_size>(source_up_ptr);
-    auto source_dn = kernel_float::wrap_ptr<compute_type, vector_size>(source_dn_ptr);
-    auto source_sfc = kernel_float::wrap_ptr<compute_type, vector_size>(source_sfc_ptr);
-    auto flux_up = kernel_float::wrap_ptr<compute_type, vector_size>(flux_up_ptr);
-    auto flux_dn = kernel_float::wrap_ptr<compute_type, vector_size>(flux_dn_ptr);
-    auto flux_dir = kernel_float::wrap_ptr<compute_type, vector_size>(flux_dir_ptr);
-    auto albedo = kernel_float::wrap_ptr<compute_type, vector_size>(albedo_ptr);
-    auto src = kernel_float::wrap_ptr<compute_type, vector_size>(src_ptr);
-    auto denom = kernel_float::wrap_ptr<compute_type, vector_size>(denom_ptr);
+    auto wrap_ptr = [] (auto* p) {
+        return kernel_float::make_vec_ptr<compute_type, vector_size>(p);
+    };
+
+    auto tau = wrap_ptr(tau_ptr);
+    auto ssa = wrap_ptr(ssa_ptr);
+    auto g = wrap_ptr(g_ptr);
+    auto mu0 = wrap_ptr(mu0_ptr);
+    auto r_dif = wrap_ptr(r_dif_ptr);
+    auto t_dif = wrap_ptr(t_dif_ptr);
+    auto sfc_alb_dir = wrap_ptr(sfc_alb_dir_ptr);
+    auto sfc_alb_dif = wrap_ptr(sfc_alb_dif_ptr);
+    auto source_up = wrap_ptr(source_up_ptr);
+    auto source_dn = wrap_ptr(source_dn_ptr);
+    auto source_sfc = wrap_ptr(source_sfc_ptr);
+    auto flux_up = wrap_ptr(flux_up_ptr);
+    auto flux_dn = wrap_ptr(flux_dn_ptr);
+    auto flux_dir = wrap_ptr(flux_dir_ptr);
+    auto albedo = wrap_ptr(albedo_ptr);
+    auto src = wrap_ptr(src_ptr);
+    auto denom = wrap_ptr(denom_ptr);
 
     if ( (ivcol < nvcol) && (igpt < ngpt) )
     {
@@ -678,14 +689,14 @@ __launch_bounds__(block_size_x * block_size_y)
             for (int ilay=0; ilay<nlay; ++ilay)
             {
                 vec r_dir, t_dir, t_noscat;
-                sw_2stream_function<stream_type, vector_size, compute_type, tau_type, intermediate_type>(
+                sw_2stream_function<stream_type, vector_size, compute_type, tau_type, intermediate_type, float_type>(
                         ivcol, ilay, igpt,
                         nvcol, nlay, ngpt,
                         tau, ssa, g, mu0,
                         r_dif, t_dif,
-                        kernel_float::wrap_ptr<compute_type, vector_size>(r_dir.data()),
-                        kernel_float::wrap_ptr<compute_type, vector_size>(t_dir.data()),
-                        kernel_float::wrap_ptr<compute_type, vector_size>(t_noscat.data()));
+                        wrap_ptr(r_dir.data()),
+                        wrap_ptr(t_dir.data()),
+                        wrap_ptr(t_noscat.data()));
 
                 const int idx_lay  = ivcol + ilay*nvcol + igpt*nlay*nvcol;
                 const int idx_lev2 = ivcol + (ilay+1)*nvcol + igpt*(nlay+1)*nvcol;
@@ -754,14 +765,14 @@ __launch_bounds__(block_size_x * block_size_y)
             for (int ilay=nlay-1; ilay>=0; --ilay)
             {
                 vec r_dir, t_dir, t_noscat;
-                sw_2stream_function<stream_type, vector_size, compute_type, tau_type, intermediate_type>(
+                sw_2stream_function<stream_type, vector_size, compute_type, tau_type, intermediate_type, float_type>(
                         ivcol, ilay, igpt,
                         nvcol, nlay, ngpt,
                         tau, ssa, g, mu0,
                         r_dif, t_dif,
-                        kernel_float::wrap_ptr<compute_type, vector_size>(r_dir.data()),
-                        kernel_float::wrap_ptr<compute_type, vector_size>(t_dir.data()),
-                        kernel_float::wrap_ptr<compute_type, vector_size>(t_noscat.data()));
+                        wrap_ptr(r_dir.data()),
+                        wrap_ptr(t_dir.data()),
+                        wrap_ptr(t_noscat.data()));
 
                 const int idx_lay  = ivcol + ilay*nvcol + igpt*nlay*nvcol;
                 const int idx_lev1 = ivcol + (ilay)*nvcol + igpt*(nlay+1)*nvcol;

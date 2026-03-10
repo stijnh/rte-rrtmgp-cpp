@@ -16,5 +16,5 @@ endif()
 include_directories("../include" "../include_rt" "../include_rt_kernels" SYSTEM ${INCLUDE_DIRS})
 
 add_library(rte_rrtmgp_kernels_cuda_rt STATIC ${sourcefiles_rt})
-
+target_link_libraries(rte_rrtmgp_kernels_cuda_rt PUBLIC kernel_float)
 

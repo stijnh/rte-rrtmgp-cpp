@@ -30,10 +30,13 @@
 
 #include "Gas_concs.h" 
 #include "types.h"
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
 
 template<typename, int> class Array;
 
-#ifdef USECUDA
+#if USEGPU
 class Gas_concs_rt;
 #endif
 
@@ -65,7 +68,7 @@ class Gas_concs_rt;
 //};
 
 
-#ifdef USECUDA
+#if USEGPU
 template<typename, int> class Array_gpu;
 
 

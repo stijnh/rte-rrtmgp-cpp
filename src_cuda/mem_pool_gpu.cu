@@ -59,7 +59,7 @@ Memory_pool_gpu::~Memory_pool_gpu()
     // Free raw pointers
     for (auto it = raw_pointers.begin(); it != raw_pointers.end(); ++it)
     {
-        cudaFree(*it);
+        gpuFree(*it);
     }
     raw_pointers.clear();
     blocks.clear();
@@ -70,10 +70,10 @@ Memory_pool_gpu::~Memory_pool_gpu()
 void* Memory_pool_gpu::allocate(std::size_t nbytes_)
 {
     void* data_ptr = nullptr;
-    int err = cudaMalloc((void **) &data_ptr, nbytes_);
-    if (cudaSuccess != err)
+    int err = gpuMalloc((void **) &data_ptr, nbytes_);
+    if (err != GPU_SUCCESS)
     {
-        printf("cudaMalloc failed attempting to allocate %lu bytes\n", nbytes_);
+        printf("gpuMalloc failed attempting to allocate %lu bytes\n", nbytes_);
         throw 1;
     }
     alloc_counter++;

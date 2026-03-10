@@ -30,9 +30,13 @@
 
 #include "types.h"
 
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
+
 template<typename, int> class Array;
 
-#ifdef USECUDA
+#if USEGPU
 class Gas_concs_gpu;
 #endif
 
@@ -59,14 +63,14 @@ class Gas_concs
     private:
         std::map<std::string, Array<Float,2>> gas_concs_map;
 
-        #ifdef USECUDA
+        #if USEGPU
         friend class Gas_concs_gpu;
         friend class Gas_concs_rt;
         #endif
 };
 
 
-#ifdef USECUDA
+#if USEGPU
 template<typename, int> class Array_gpu;
 
 

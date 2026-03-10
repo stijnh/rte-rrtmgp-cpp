@@ -77,7 +77,7 @@ class Cloud_optics : public Optical_props
 };
 
 
-#ifdef USECUDA
+#if USEGPU
 class Cloud_optics_gpu : public Optical_props_gpu
 {
     public:

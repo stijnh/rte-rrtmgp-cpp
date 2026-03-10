@@ -62,7 +62,12 @@ struct Kernel: kernel_launcher::PragmaKernel {
         builder.compiler_flag("-I" + find_cuda_dir() + "/include/");
         builder.compiler_flag("--std=c++17");
 
+#if USECUDA
         builder.define("USECUDA", "1");
+#elif USEHIP
+        builder.define("USEHIP", "1");
+#endif
+
         builder.define("RESTRICTKEYWORD", "__restrict__");
 
 #ifdef RTE_USE_CBOOL

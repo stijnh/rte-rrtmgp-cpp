@@ -2,20 +2,25 @@
 #define RAYTRACER_RT_H
 
 #include <memory>
-#ifdef USECUDA
+#if defined(__CUDACC__)
 #include <curand_kernel.h>
+#elif defined(__HIPCC__)
+#include <rocrand/rocrand_kernel.h>
 #endif
 
 #include "types.h"
 #include "Optical_props_rt.h"
 #include "raytracer_definitions.h"
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
 
 // Forward declarations.
 template<typename, int> class Array_gpu;
 class Optical_props_rt;
 class Optical_props_arry_rt;
 
-#ifdef USECUDA
+#if USEGPU
 class Raytracer
 {
     public:
@@ -53,7 +58,11 @@ class Raytracer
                 Array_gpu<Float,3>& flux_abs_dif);
 
     private:
+        #if __CUDA_ARCH__
         curandDirectionVectors32_t* qrng_vectors_gpu;
+        #else
+        unsigned int* qrng_vectors_gpu;
+        #endif
         unsigned int* qrng_constants_gpu;
 };
 #endif

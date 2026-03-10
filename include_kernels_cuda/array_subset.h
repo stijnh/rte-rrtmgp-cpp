@@ -2,7 +2,7 @@
 #define ARRAY_SUBSET_H
 
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIPCC__)
 template<int N>
 struct Subset_data
 {

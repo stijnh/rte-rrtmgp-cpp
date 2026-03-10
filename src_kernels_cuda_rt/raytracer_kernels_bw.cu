@@ -1,4 +1,8 @@
+#if defined(__CUDACC__)
 #include <curand_kernel.h>
+#elif defined(__HIPCC__)
+#include <rocrand/rocrand_kernel.h>
+#endif
 #include <iomanip>
 #include <iostream>
 

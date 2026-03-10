@@ -1,4 +1,8 @@
+#if defined(__CUDACC__)
 #include <curand_kernel.h>
+#elif defined(__HIPCC__)
+#include <rocrand/rocrand_kernel.h>
+#endif
 
 #include "Raytracer.h"
 #include "Array.h"
@@ -26,14 +30,14 @@ namespace
     template<typename T>
     void copy_to_gpu(T* gpu_data, const T* cpu_data, const int length)
     {
-        cuda_safe_call(cudaMemcpy(gpu_data, cpu_data, length*sizeof(T), cudaMemcpyHostToDevice));
+        cuda_safe_call(gpuMemcpy(gpu_data, cpu_data, length*sizeof(T), gpuMemcpyHostToDevice));
     }
 
 
     template<typename T>
     void copy_from_gpu(T* cpu_data, const T* gpu_data, const int length)
     {
-        cuda_safe_call(cudaMemcpy(cpu_data, gpu_data, length*sizeof(T), cudaMemcpyDeviceToHost));
+        cuda_safe_call(gpuMemcpy(cpu_data, gpu_data, length*sizeof(T), gpuMemcpyDeviceToHost));
     }
 
 
@@ -214,6 +218,7 @@ namespace
 
 Raytracer::Raytracer()
 {
+     #if __CUDA_ARCH__
     curandDirectionVectors32_t* qrng_vectors;
     curandGetDirectionVectors32(
                 &qrng_vectors,
@@ -226,6 +231,20 @@ Raytracer::Raytracer()
 
     copy_to_gpu(qrng_vectors_gpu, qrng_vectors, 2);
     copy_to_gpu(qrng_constants_gpu, qrng_constants, 2);
+    #else
+    const unsigned int* qrng_vectors;
+    rocrand_get_direction_vectors32(
+                &qrng_vectors,
+                ROCRAND_SCRAMBLED_DIRECTION_VECTORS_32_JOEKUO6);
+    const unsigned int* qrng_constants;
+    rocrand_get_scramble_constants32(&qrng_constants);
+
+    this->qrng_vectors_gpu = allocate_gpu<unsigned int>(2);
+    this->qrng_constants_gpu = allocate_gpu<unsigned int>(2);
+
+    copy_to_gpu(this->qrng_vectors_gpu, qrng_vectors, 2);
+    copy_to_gpu(this->qrng_constants_gpu, qrng_constants, 2);
+    #endif
 }
 
 

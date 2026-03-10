@@ -30,7 +30,11 @@
 #include "Raytracer.h"
 #include "raytracer_kernels.h"
 #include "Source_functions_rt.h"
+#if defined(__CUDACC__)
 #include <curand_kernel.h>
+#elif defined(__HIPCC__)
+#include <rocrand/rocrand_kernel.h>
+#endif
 
 
 class Radiation_solver_longwave
@@ -42,7 +46,7 @@ class Radiation_solver_longwave
                 const std::string& file_name_gas,
                 const std::string& file_name_cloud);
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         void solve_gpu(
                 const bool switch_fluxes,
                 const bool switch_cloud_optics,
@@ -71,7 +75,7 @@ class Radiation_solver_longwave
         #endif
 
     private:
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         std::unique_ptr<Gas_optics_rrtmgp_rt> kdist_gpu;
         std::unique_ptr<Cloud_optics_rt> cloud_optics_gpu;
         Rte_lw_rt rte_lw;
@@ -96,7 +100,7 @@ class Radiation_solver_shortwave
         void load_mie_tables(
                 const std::string& file_name_mie);
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         void solve_gpu(
                 const bool switch_fluxes,
                 const bool switch_twostream,
@@ -152,7 +156,7 @@ class Radiation_solver_shortwave
         #endif
 
     private:
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         std::unique_ptr<Gas_optics_rt> kdist_gpu;
         std::unique_ptr<Cloud_optics_rt> cloud_optics_gpu;
         std::unique_ptr<Aerosol_optics_rt> aerosol_optics_gpu;

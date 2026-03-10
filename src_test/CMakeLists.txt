@@ -36,6 +36,23 @@ if(USECUDA)
 
   add_executable(test_rt_lite_gpu test_rt_lite.cu)
   target_link_libraries(test_rt_lite_gpu rte_rrtmgp_cuda rte_rrtmgp_cuda_rt curand ${LIBS} m)
+elseif(USEHIP)
+  enable_language(HIP)
+  add_executable(test_rte_rrtmgp_gpu Radiation_solver.cu test_rte_rrtmgp.cu)
+  set_source_files_properties(Radiation_solver.cu test_rte_rrtmgp.cu PROPERTIES LANGUAGE HIP)
+  target_link_libraries(test_rte_rrtmgp_gpu rte_rrtmgp rte_rrtmgp_cuda ${LIBS} m kmm)
+  
+  #add_executable(test_rte_rrtmgp_rt_gpu Radiation_solver_rt.cu test_rte_rrtmgp_rt.cu ../src_tilt/tilt_utils.cpp)
+  #set_source_files_properties(Radiation_solver_rt.cu test_rte_rrtmgp_rt.cu ../src_tilt/tilt_utils.cpp PROPERTIES LANGUAGE HIP)
+  #target_link_libraries(test_rte_rrtmgp_rt_gpu rte_rrtmgp rte_rrtmgp_cuda rte_rrtmgp_cuda_rt rocrand ${LIBS} m kmm)
+  
+  #add_executable(test_rte_rrtmgp_bw_gpu Radiation_solver_bw.cu test_rte_rrtmgp_bw.cu)
+  #set_source_files_properties(Radiation_solver_bw.cu test_rte_rrtmgp_bw.cu PROPERTIES LANGUAGE HIP)
+  #target_link_libraries(test_rte_rrtmgp_bw_gpu rte_rrtmgp rte_rrtmgp_cuda rte_rrtmgp_cuda_rt rocrand ${LIBS} m kmm)
+
+  #add_executable(test_rt_lite_gpu test_rt_lite.cu)
+  #set_source_files_properties(test_rt_lite.cu PROPERTIES LANGUAGE HIP)
+  #target_link_libraries(test_rt_lite_gpu rte_rrtmgp_cuda rte_rrtmgp_cuda_rt rocrand ${LIBS} m kmm)
 endif()
 
 add_executable(test_rte_rrtmgp Radiation_solver.cpp test_rte_rrtmgp.cpp)

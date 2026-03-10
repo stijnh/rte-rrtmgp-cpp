@@ -38,6 +38,8 @@ endif()
 # Start the project only after the system specific settings are loaded.
 if(USECUDA)
   project(rte-rrtmgp-cpp C CXX Fortran CUDA)
+elseif(USEHIP)
+  project(rte-rrtmgp-cpp C CXX Fortran HIP)
 else()
   project(rte-rrtmgp-cpp C CXX Fortran)
 endif()
@@ -48,6 +50,13 @@ if(USECUDA)
   add_definitions("-DUSECUDA")
 else()
   message(STATUS "CUDA: Disabled.")
+endif()
+
+if(USEHIP)
+  message(STATUS "HIP: Enabled.")
+  add_definitions("-DUSEHIP")
+else()
+  message(STATUS "HIP: Disabled.")
 endif()
 
 # Only set the compiler flags when the cache is created
@@ -81,7 +90,14 @@ if(NOT HASCACHE)
       "Flags used by the CXX-compiler during debug builds." FORCE)
     set(CMAKE_CUDA_FLAGS_RELEASE ${USER_CUDA_FLAGS_RELEASE} CACHE STRING
       "Flags used by the CXX-compiler during release builds." FORCE)
-  endif()
+elseif(USEHIP)
+    set(CMAKE_HIP_FLAGS ${USER_HIP_FLAGS} CACHE STRING
+      "Flags used by the CXX-compiler during all build types." FORCE)
+    set(CMAKE_HIP_FLAGS_DEBUG ${USER_HIP_FLAGS_DEBUG} CACHE STRING
+      "Flags used by the CXX-compiler during debug builds." FORCE)
+    set(CMAKE_HIP_FLAGS_RELEASE ${USER_HIP_FLAGS_RELEASE} CACHE STRING
+      "Flags used by the CXX-compiler during release builds." FORCE)
+endif()
 
   message(STATUS "Build Type: " ${CMAKE_BUILD_TYPE})
   set(HASCACHE TRUE CACHE BOOL "CMakeCache.txt created." FORCE)
@@ -107,14 +123,14 @@ if(USECUDA)
   endif()
 endif()
 
-set(KERNEL_LAUNCHER_CLANG_TIDY 0)
-set(KERNEL_LAUNCHER_ZLIB 1)
+set(KERNEL_FLOAT_LANGUAGE "HIP")
 add_subdirectory(external/kernel_float)
+
 add_subdirectory(external/kmm)
 
 add_subdirectory(src_kernels)
 add_subdirectory(src)
-if(USECUDA)
+if(USECUDA OR USEHIP)
   add_subdirectory(src_kernels_cuda)
   add_subdirectory(src_cuda)
   add_subdirectory(src_kernels_cuda_rt)

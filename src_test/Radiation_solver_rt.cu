@@ -20,7 +20,11 @@
 #include <boost/algorithm/string.hpp>
 #include <cmath>
 #include <numeric>
+#if defined(__CUDACC__)
 #include <curand_kernel.h>
+#elif defined(__HIPCC__)
+#include <rocrand/rocrand_kernel.h>
+#endif
 
 #include "Radiation_solver_rt.h"
 #include "Status.h"

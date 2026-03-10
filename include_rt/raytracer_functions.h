@@ -2,12 +2,15 @@
 #define RAYTRACER_FUNCTIONS_H
 
 #include <iostream>
+#if defined(__CUDACC__)
 #include <curand_kernel.h>
+#elif defined(__HIPCC__)
+#include <rocrand/rocrand_kernel.h>
+#endif
 
 #include "types.h"
 #include "raytracer_definitions.h"
 #include "raytracer_functions.h"
-
 
 namespace Raytracer_functions
 {
@@ -205,7 +208,7 @@ namespace Raytracer_functions
     __device__
     inline void write_photon_out(Float* field_out, const Float w)
     {
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         atomicAdd(field_out, w);
         #endif
     }
@@ -216,26 +219,40 @@ namespace Raytracer_functions
     {
         __device__ Random_number_generator(unsigned int tid)
         {
+            #if __CUDA_ARCH__
             curand_init(tid, tid, 0, &state);
+            #elif __HIP_DEVICE_COMPILE__
+            rocrand_init(tid, tid, 0, &state);
+            #endif
         }
 
         __device__ T operator()();
 
+        #if __CUDA_ARCH__
         curandState state;
+        #elif __HIP_DEVICE_COMPILE__
+        rocrand_state_philox4x32_10 state;
+        #endif
     };
 
 
     template<>
     __device__ inline double Random_number_generator<double>::operator()()
     {
+        #if __CUDA_ARCH__
         return 1. - curand_uniform_double(&state);
+        #elif __HIP_DEVICE_COMPILE__
+        #endif
     }
 
 
     template<>
     __device__ inline float Random_number_generator<float>::operator()()
     {
+        #if __CUDA_ARCH__
         return 1.f - curand_uniform(&state);
+        #elif __HIP_DEVICE_COMPILE__
+        #endif
     }
 }
 #endif

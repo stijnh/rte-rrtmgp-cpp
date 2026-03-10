@@ -3,16 +3,23 @@
 
 #include <memory>
 #include "types.h"
+#if defined(__CUDACC__)
 #include <curand_kernel.h>
+#elif defined(__HIPCC__)
+#include <rocrand/rocrand_kernel.h>
+#endif
 #include "raytracer_kernels_bw.h"
 #include "Optical_props_rt.h"
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
 
 // Forward declarations.
 template<typename, int> class Array_gpu;
 class Optical_props_rt;
 class Optical_props_arry_rt;
 
-#ifdef __CUDACC__
+#if USEGPU
 class Raytracer_bw
 {
     public:

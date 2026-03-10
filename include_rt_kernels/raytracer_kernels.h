@@ -44,7 +44,12 @@ void ray_tracer_kernel(
         const Vector<int> grid_cells,
         const Vector<int> kn_grid,
         const Vector<Float> sun_direction,
-        curandDirectionVectors32_t* qrng_vectors, unsigned int* qrng_constants,
+        #if __CUDA_ARCH__
+        curandDirectionVectors32_t* qrng_vectors,
+        #else
+        unsigned int* qrng_vectors,
+        #endif
+        unsigned int* qrng_constants,
         const Float* __restrict__ mie_cdf,
         const Float* __restrict__ mie_ang,
         const int mie_table_size);

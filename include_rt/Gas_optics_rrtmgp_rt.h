@@ -30,6 +30,9 @@
 #include "Array.h"
 #include "Gas_optics_rt.h"
 #include "types.h"
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
 
 // Forward declarations.
 // template<typename Float> class Gas_optics;
@@ -38,7 +41,7 @@ class Optical_props_arry_rt;
 class Gas_concs_gpu;
 class Source_func_lw_rt;
 
-#ifdef USECUDA
+#if USEGPU
 class Gas_optics_rrtmgp_rt : public Gas_optics_rt
 {
     public:

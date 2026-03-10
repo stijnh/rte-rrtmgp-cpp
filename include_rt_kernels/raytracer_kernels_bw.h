@@ -1,7 +1,11 @@
 #ifndef RAYTRACER_KERNELS_BW_H
 #define RAYTRACER_KERNELS_BW_H
 
+#if defined(__CUDACC__)
 #include <curand_kernel.h>
+#elif defined(__HIPCC__)
+#include <rocrand/rocrand_kernel.h>
+#endif
 
 #include "types.h"
 #include "raytracer_definitions.h"

@@ -19,8 +19,15 @@
 #include <boost/algorithm/string.hpp>
 #include <chrono>
 #include <iomanip>
+#if defined(__CUDACC__)
+#include "tools_gpu.h"
+using kmm::GPUevent_t;
 #include <cuda_profiler_api.h>
-
+#elif defined(__HIPCC__)
+#include "tools_gpu.h"
+using kmm::GPUevent_t;
+#include <rocprofiler/v2/rocprofiler.h>
+#endif
 
 #include "Status.h"
 #include "Netcdf_interface.h"
@@ -680,13 +687,18 @@ void solve_radiation(int argc, char** argv)
             Array_gpu<Float,2> dei_gpu(dei);
 
 
-            cudaDeviceSynchronize();
-            cudaEvent_t start;
-            cudaEvent_t stop;
-            cudaEventCreate(&start);
-            cudaEventCreate(&stop);
+            gpuDeviceSynchronize();
+            GPUevent_t start;
+            GPUevent_t stop;
+            #if USECUDA
+            gpuEventCreate(&start);
+            gpuEventCreate(&stop);
+            #elif USEHIP
+            gpuEventCreate(&start, 0);
+            gpuEventCreate(&stop, 0);
+            #endif
 
-            cudaEventRecord(start, 0);
+            gpuEventRecord(start, 0);
 
             rad_lw.solve_gpu(
                     switch_fluxes,
@@ -704,13 +716,13 @@ void solve_radiation(int argc, char** argv)
                     lw_flux_up, lw_flux_dn, lw_flux_net,
                     lw_gpt_flux_up, lw_gpt_flux_dn, lw_gpt_flux_net);
 
-            cudaEventRecord(stop, 0);
-            cudaEventSynchronize(stop);
+            gpuEventRecord(stop, 0);
+            gpuEventSynchronize(stop);
             float duration = 0.f;
-            cudaEventElapsedTime(&duration, start, stop);
+            gpuEventElapsedTime(&duration, start, stop);
 
-            cudaEventDestroy(start);
-            cudaEventDestroy(stop);
+            gpuEventDestroy(start);
+            gpuEventDestroy(stop);
 
             Status::print_message("Duration longwave solver: " + std::to_string(duration) + " (ms)");
         };
@@ -719,9 +731,13 @@ void solve_radiation(int argc, char** argv)
         run_solver();
 
         // Profiling step;
+        #if defined(__CUDACC__)
         cudaProfilerStart();
         run_solver();
         cudaProfilerStop();
+        #elif defined(__HIPCC__)
+        run_solver();
+        #endif
 
         constexpr int n_measures=10;
         for (int n=0; n<n_measures; ++n)
@@ -936,13 +952,18 @@ void solve_radiation(int argc, char** argv)
             Array_gpu<Float,2> rh_gpu(rh);
             Aerosol_concs_gpu aerosol_concs_gpu(aerosol_concs);
 
-            cudaDeviceSynchronize();
-            cudaEvent_t start;
-            cudaEvent_t stop;
-            cudaEventCreate(&start);
-            cudaEventCreate(&stop);
+            gpuDeviceSynchronize();
+            GPUevent_t start;
+            GPUevent_t stop;
+            #if USECUDA
+            gpuEventCreate(&start);
+            gpuEventCreate(&stop);
+            #elif USEHIP
+            gpuEventCreate(&start, 0);
+            gpuEventCreate(&stop, 0);
+            #endif
 
-            cudaEventRecord(start, 0);
+            gpuEventRecord(start, 0);
 
             rad_sw.solve_gpu(
                     switch_fluxes,
@@ -985,13 +1006,13 @@ void solve_radiation(int argc, char** argv)
                     rt_flux_abs_dir,
                     rt_flux_abs_dif);
 
-            cudaEventRecord(stop, 0);
-            cudaEventSynchronize(stop);
+            gpuEventRecord(stop, 0);
+            gpuEventSynchronize(stop);
             float duration = 0.f;
-            cudaEventElapsedTime(&duration, start, stop);
+            gpuEventElapsedTime(&duration, start, stop);
 
-            cudaEventDestroy(start);
-            cudaEventDestroy(stop);
+            gpuEventDestroy(start);
+            gpuEventDestroy(stop);
 
             Status::print_message("Duration shortwave solver: " + std::to_string(duration) + " (ms)");
         };
@@ -1002,9 +1023,13 @@ void solve_radiation(int argc, char** argv)
         // Profiling step;
         if (switch_profiling)
         {
+            #if defined(__CUDACC__)
             cudaProfilerStart();
             run_solver();
             cudaProfilerStop();
+            #elif defined(__HIPCC__)
+            run_solver();
+            #endif
         }
 
         // Store the output.

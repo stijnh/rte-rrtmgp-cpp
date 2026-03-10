@@ -8,11 +8,12 @@
 #include <vector>
 #include <array>
 #include <map>
+#include <kmm/kmm.hpp>
 
+using kmm::gpuError_t;
+using kmm::GPUevent_t;
 
-// #ifdef __CUDACC__
 using Tuner_map = std::map<std::string, std::pair<dim3, dim3>>;
-// #endif
 
 
 class Tuner
@@ -126,27 +127,27 @@ std::tuple<dim3, dim3> tune_kernel(
                 for (int n=0; n<n_samples; ++n)
                     f<<<grid, block>>>(args...);
 
-                cudaDeviceSynchronize();
-                cudaEvent_t start;
-                cudaEvent_t stop;
-                cudaEventCreate(&start);
-                cudaEventCreate(&stop);
+                gpuDeviceSynchronize();
+                GPUevent_t start;
+                GPUevent_t stop;
+                gpuEventCreate(&start, 0);
+                gpuEventCreate(&stop, 0);
 
-                cudaEventRecord(start, 0);
+                gpuEventRecord(start, 0);
                 for (int n=0; n<n_samples; ++n)
                     f<<<grid, block>>>(args...);
-                cudaEventRecord(stop, 0);
+                gpuEventRecord(stop, 0);
 
-                cudaEventSynchronize(stop);
+                gpuEventSynchronize(stop);
                 float duration = 0.f;
-                cudaEventElapsedTime(&duration, start, stop);
+                gpuEventElapsedTime(&duration, start, stop);
 
-                cudaEventDestroy(start);
-                cudaEventDestroy(stop);
+                gpuEventDestroy(start);
+                gpuEventDestroy(stop);
 
                 // Check whether kernel has succeeded.
-                cudaError err = cudaGetLastError();
-                if (err != cudaSuccess)
+                gpuError_t err = gpuGetLastError();
+                if (err != GPU_SUCCESS)
                 {
                     tuner_output
                         << std::setw(10) << i
@@ -202,27 +203,27 @@ void tune_ijk(
     for (int i=0; i<n_samples; ++i)
         Func::template launch<I, J, K>(grid, block, args...);
 
-    cudaDeviceSynchronize();
-    cudaEvent_t start;
-    cudaEvent_t stop;
-    cudaEventCreate(&start);
-    cudaEventCreate(&stop);
+    gpuDeviceSynchronize();
+    GPUevent_t start;
+    GPUevent_t stop;
+    gpuEventCreate(&start, 0);
+    gpuEventCreate(&stop, 0);
 
-    cudaEventRecord(start, 0);
+    gpuEventRecord(start, 0);
     for (int i=0; i<n_samples; ++i)
         Func::template launch<I, J, K>(grid, block, args...);
-    cudaEventRecord(stop, 0);
+    gpuEventRecord(stop, 0);
 
-    cudaEventSynchronize(stop);
+    gpuEventSynchronize(stop);
     float duration = 0.f;
-    cudaEventElapsedTime(&duration, start, stop);
+    gpuEventElapsedTime(&duration, start, stop);
 
-    cudaEventDestroy(start);
-    cudaEventDestroy(stop);
+    gpuEventDestroy(start);
+    gpuEventDestroy(stop);
 
     // Check whether kernel has succeeded.
-    cudaError err = cudaGetLastError();
-    if (err != cudaSuccess)
+    gpuError_t err = gpuGetLastError();
+    if (err != GPU_SUCCESS)
     {
         tuner_output
             << std::setw(10) << I

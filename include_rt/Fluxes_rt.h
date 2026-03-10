@@ -35,8 +35,6 @@
 class Optical_props_arry_rt;
 
 
-//#ifdef USECUDA
-
 class Fluxes_rt
 {
     public:
@@ -141,5 +139,4 @@ class Fluxes_byband_rt : public Fluxes_broadband_rt
         Array_gpu<Float,3> bnd_flux_net;
 };
 
-//#endif
 #endif

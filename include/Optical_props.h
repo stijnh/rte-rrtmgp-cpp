@@ -28,6 +28,9 @@
 #include <memory>
 #include "Array.h"
 #include "types.h"
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
 
 
 class Optical_props
@@ -167,7 +170,7 @@ void add_to(Optical_props_2str& op_inout, const Optical_props_2str& op_in);
 
 
 // GPU version of optical props class
-#ifdef USECUDA
+#if USEGPU
 
 // Forward declare the classes in order to define add_to before the classes to enable friend function.
 class Optical_props_1scl_gpu;

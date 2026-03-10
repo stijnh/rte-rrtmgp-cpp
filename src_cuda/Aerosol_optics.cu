@@ -3,6 +3,7 @@
 //
 
 #include <limits>
+#include <kmm/kmm.hpp>
 #include "Aerosol_optics.h"
 
 namespace

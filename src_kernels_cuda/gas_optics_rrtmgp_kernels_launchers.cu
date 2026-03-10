@@ -65,7 +65,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
     }
 
     void zero_array_bytes(const size_t nbytes, void* arr) {
-        cuda_safe_call(cudaMemsetAsync(arr, 0, nbytes, nullptr));
+        cuda_safe_call(gpuMemsetAsync(arr, 0, nbytes, nullptr));
     }
 
     void interpolation(

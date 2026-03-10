@@ -1,4 +1,8 @@
+#if defined(__CUDACC__)
 #include <curand_kernel.h>
+#elif defined(__HIPCC__)
+#include <rocrand/rocrand_kernel.h>
+#endif
 
 #include "Optical_props_rt.h"
 #include "Array.h"
@@ -73,14 +77,14 @@ namespace
     template<typename T>
     void copy_to_gpu(T* gpu_data, const T* cpu_data, const int length)
     {
-        cuda_safe_call(cudaMemcpy(gpu_data, cpu_data, length*sizeof(T), cudaMemcpyHostToDevice));
+        cuda_safe_call(gpuMemcpy(gpu_data, cpu_data, length*sizeof(T), gpuMemcpyHostToDevice));
     }
 
 
     template<typename T>
     void copy_from_gpu(T* cpu_data, const T* gpu_data, const int length)
     {
-        cuda_safe_call(cudaMemcpy(cpu_data, gpu_data, length*sizeof(T), cudaMemcpyDeviceToHost));
+        cuda_safe_call(gpuMemcpy(cpu_data, gpu_data, length*sizeof(T), gpuMemcpyDeviceToHost));
     }
 
     __global__

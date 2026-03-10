@@ -3,8 +3,11 @@
 #ifdef __CUDACC__
 #include <cuda_fp16.h>
 #include <cuda_bf16.h>
-
 using bfloat16 = __nv_bfloat16;
+#elif defined(__HIPCC__)
+#include <hip/hip_fp16.h>
+#include <hip/hip_bf16.h>
+using bfloat16 = __hip_bfloat16;
 #else
 struct half { int16_t _; };
 struct bfloat16 { int16_t _; };

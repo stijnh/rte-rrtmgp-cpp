@@ -29,6 +29,9 @@
 
 #include "types.h"
 
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
 
 // Forward declarations.
 template<typename, int> class Array;
@@ -58,7 +61,7 @@ class Rte_lw
                 Array<Float,2>& arr_out);
 };
 
-#ifdef USECUDA
+#if USEGPU
 class Rte_lw_gpu
 {
     public:

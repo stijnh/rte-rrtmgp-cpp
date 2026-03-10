@@ -1,4 +1,8 @@
+#if defined(__CUDACC__)
 #include <curand_kernel.h>
+#elif defined(__HIPCC__)
+#include <rocrand/rocrand_kernel.h>
+#endif
 #include <iostream>
 
 #include "raytracer_kernels.h"
@@ -12,20 +16,34 @@ namespace
 
     struct Quasi_random_number_generator_2d
     {
+        #if __CUDA_ARCH__
         __device__ Quasi_random_number_generator_2d(
                 curandDirectionVectors32_t* vectors, unsigned int* constants, unsigned int offset)
         {
             curand_init(vectors[0], constants[0], offset, &state_x);
             curand_init(vectors[1], constants[1], offset, &state_y);
         }
+        #else
+        __device__ Quasi_random_number_generator_2d(
+                const unsigned int** vectors, const unsigned int** constants, unsigned int offset)
+        {
+            rocrand_init(vectors[0], constants[0][0], offset, &state_x);
+            rocrand_init(vectors[1], constants[1][0], offset, &state_y);
+        }
+        #endif
 
         __device__ void xy(unsigned int* x, unsigned int* y,
                            const Vector<int>& grid_cells,
                            const Int qrng_grid_x, const Int qrng_grid_y,
                            Int& photons_shot)
         {
+            #if __CUDA_ARCH__
             *x = curand(&state_x);
             *y = curand(&state_y);
+            #else
+            *x = rocrand(&state_x);
+            *y = rocrand(&state_y);
+            #endif
 
             while (true)
             {
@@ -39,14 +57,24 @@ namespace
                 }
                 else
                 {
+                    #if __CUDA_ARCH__
                     *x = curand(&state_x);
                     *y = curand(&state_y);
+                    #else
+                    *x = rocrand(&state_x);
+                    *y = rocrand(&state_y);
+                    #endif
                 }
             }
         }
 
+        #if __CUDA_ARCH__
         curandStateScrambledSobol32_t state_x;
         curandStateScrambledSobol32_t state_y;
+        #else
+        rocrand_state_scrambled_sobol32 state_x;
+        rocrand_state_scrambled_sobol32 state_y;
+        #endif
     };
 
     __device__
@@ -143,7 +171,13 @@ void ray_tracer_kernel(
         const Vector<int> grid_cells,
         const Vector<int> kn_grid,
         const Vector<Float> sun_direction,
-        curandDirectionVectors32_t* qrng_vectors, unsigned int* qrng_constants,
+        #if __CUDA_ARCH__
+        curandDirectionVectors32_t* qrng_vectors,
+        unsigned int* qrng_constants,
+        #else
+        const unsigned int** qrng_vectors,
+        const unsigned int** qrng_constants,
+        #endif
         const Float* __restrict__ mie_cdf,
         const Float* __restrict__ mie_ang,
         const int mie_table_size)
@@ -165,7 +199,11 @@ void ray_tracer_kernel(
 
     Photon photon;
     Random_number_generator<Float> rng(n+qrng_gpt_offset);
+    #if __CUDA_ARCH__
     Quasi_random_number_generator_2d qrng(qrng_vectors, qrng_constants, n*photons_to_shoot + qrng_gpt_offset);
+    #else
+    Quasi_random_number_generator_2d qrng(const_cast<const unsigned int**>(qrng_vectors), const_cast<const unsigned int**>(qrng_constants), n*photons_to_shoot + qrng_gpt_offset);
+    #endif
 
     const Float s_min = max(grid_size.z, max(grid_size.y, grid_size.x)) * Float_epsilon;
 

@@ -9,6 +9,9 @@
 #include "Optical_props_rt.h"
 #include "Gas_concs.h"
 #include "types.h"
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
 
 using Aerosol_concs_gpu = Gas_concs_gpu;
 using Aerosol_concs = Gas_concs;
@@ -16,7 +19,7 @@ using Aerosol_concs = Gas_concs;
 // Forward declarations.
 class Optical_props_rt;
 
-#ifdef USECUDA
+#if USEGPU
 class Aerosol_optics_rt : public Optical_props_rt
 {
     public:

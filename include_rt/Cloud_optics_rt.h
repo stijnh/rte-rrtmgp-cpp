@@ -28,11 +28,14 @@
 #include "Array.h"
 #include "Optical_props_rt.h"
 #include "types.h"
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
 
 // Forward declarations.
 class Optical_props_rt;
 
-#ifdef USECUDA
+#if USEGPU
 class Cloud_optics_rt : public Optical_props_rt
 {
     public:

@@ -24,11 +24,14 @@
 
 #ifndef SOURCE_FUNCTIONS_RT_H
 #define SOURCE_FUNCTIONS_RT_H
-#include "Optical_props_rt.h" 
+#include "Optical_props_rt.h"
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
 
 template<typename, int> class Array_gpu;
 
-#ifdef USECUDA
+#if USEGPU
 class Source_func_lw_rt : public Optical_props_rt
 {
     public:

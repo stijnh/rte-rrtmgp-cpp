@@ -32,7 +32,7 @@
 #include <fstream>
 #include <utility>
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIPCC__)
 #include "tools_gpu.h"
 template<typename T, int N> class Array_gpu;
 #endif
@@ -141,7 +141,7 @@ class Array
             offsets(std::exchange(array.offsets, {}))
         {}
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         Array(const Array_gpu<T, N>& array_gpu) :
             dims(array_gpu.dims),
             ncells(array_gpu.ncells),
@@ -149,12 +149,12 @@ class Array
             strides(array_gpu.strides),
             offsets(array_gpu.offsets)
         {
-            cuda_safe_call(cudaMemcpy(data.data(), array_gpu.ptr(), ncells*sizeof(T), cudaMemcpyDeviceToHost));
+            cuda_safe_call(gpuMemcpy(data.data(), array_gpu.ptr(), ncells*sizeof(T), gpuMemcpyDeviceToHost));
         }
         #endif
 
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         template <typename U>
         Array(const Array_gpu<U, N>& array_gpu):
             Array(Array_gpu<T, N>(array_gpu)) {}
@@ -298,13 +298,13 @@ class Array
         std::array<int, N> strides;
         std::array<int, N> offsets;
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         friend class Array_gpu<T, N>;
         #endif
 };
 
 
-#ifdef __CUDACC__
+#if defined(__CUDACC__) || defined(__HIPCC__)
 template<int N>
 struct Subset_data
 {
@@ -401,7 +401,7 @@ class Array_gpu
             is_view(false)
         {}
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         ~Array_gpu()
         {
             if (is_view)
@@ -411,7 +411,7 @@ class Array_gpu
         }
         #endif
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         Array_gpu& operator=(const Array_gpu<T, N>& array)
         {
             if ( !(this->ncells == array.size() || (this->ncells == 0 && data_ptr == nullptr)) )
@@ -435,13 +435,13 @@ class Array_gpu
                     data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
                 }
 
-                cuda_safe_call(cudaMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), cudaMemcpyDeviceToDevice));
+                cuda_safe_call(gpuMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), gpuMemcpyDeviceToDevice));
             }
             return (*this);
         }
         #endif
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         Array_gpu& operator=(Array_gpu<T, N>&& array)
         {
             if ( !(this->ncells == array.size() || (this->ncells == 0 && data_ptr == nullptr)) )
@@ -461,7 +461,7 @@ class Array_gpu
         }
         #endif
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         Array_gpu(const Array_gpu<T, N>& array) :
             dims(array.dims),
             ncells(array.ncells),
@@ -478,13 +478,13 @@ class Array_gpu
             else
             {
                 data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
-                cuda_safe_call(cudaMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), cudaMemcpyDeviceToDevice));
+                cuda_safe_call(gpuMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), gpuMemcpyDeviceToDevice));
             }
         }
         #endif
 
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         template <typename U>
         Array_gpu(const Array_gpu<U, N>& array) :
             dims(array.dims),
@@ -506,7 +506,7 @@ class Array_gpu
         }
         #endif
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         Array_gpu(Array_gpu<T, N>&& array) :
             dims(std::exchange(array.dims, {})),
             ncells(std::exchange(array.ncells, 0)),
@@ -518,7 +518,7 @@ class Array_gpu
         }
         #endif
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         // Create an array of zeros with given dimensions.
         Array_gpu(const std::array<int, N>& dims) :
             dims(dims),
@@ -532,7 +532,7 @@ class Array_gpu
         }
         #endif
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         // Create an array that is a view.
         Array_gpu(T* ptr, const std::array<int, N>& dims) :
             dims(dims),
@@ -545,7 +545,7 @@ class Array_gpu
         }
         #endif
 
-    #ifdef __CUDACC__
+    #if defined(__CUDACC__) || defined(__HIPCC__)
     Array_gpu(const Array<T, N>& array) :
             dims(array.dims),
             ncells(array.ncells),
@@ -555,11 +555,11 @@ class Array_gpu
             is_view(false)
         {
             data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
-            cuda_safe_call(cudaMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), cudaMemcpyHostToDevice));
+            cuda_safe_call(gpuMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), gpuMemcpyHostToDevice));
         }
         #endif
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         template <typename U>
         Array_gpu(const Array<U, N>& array) :
             Array_gpu(Array_gpu<U, N>(array))
@@ -574,7 +574,7 @@ class Array_gpu
 
         inline std::array<int, N> get_dims() const { return dims; }
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         inline void fill(const T value)
         {
             constexpr int block_ncells = 64;
@@ -587,15 +587,15 @@ class Array_gpu
         }
         #endif
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         inline void set_data(const Array<T, N>& array)
         {
             data_ptr = Tools_gpu::allocate_gpu<T>(ncells);
-            cuda_safe_call(cudaMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), cudaMemcpyHostToDevice));
+            cuda_safe_call(gpuMemcpy(data_ptr, array.ptr(), ncells*sizeof(T), gpuMemcpyHostToDevice));
         }
         #endif
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         inline void set_dims(const std::array<int, N>& dims)
         {
             if ( !(this->ncells == 0 && data_ptr == nullptr) )
@@ -611,18 +611,18 @@ class Array_gpu
 
         inline void copy(const std::array<int, N>& indices, Array_gpu<T, N>& input, const std::array<int, N>& indices_input) const
         {
-            #ifdef __CUDACC__
+            #if defined(__CUDACC__) || defined(__HIPCC__)
             const int index = calc_index<N>(indices, strides, offsets);
             const int index_in =  calc_index<N>(indices_input, input.strides, input.offsets);
-            cuda_safe_call(cudaMemcpy(data_ptr + index, input.ptr() + index_in, sizeof(T), cudaMemcpyDeviceToDevice));
+            cuda_safe_call(gpuMemcpy(data_ptr + index, input.ptr() + index_in, sizeof(T), gpuMemcpyDeviceToDevice));
             #endif
         }
 
         inline void insert(const std::array<int, N>& indices, const T value) const
         {
-            #ifdef __CUDACC__
+            #if defined(__CUDACC__) || defined(__HIPCC__)
             const int index = calc_index<N>(indices, strides, offsets);
-            cuda_safe_call(cudaMemcpy(data_ptr + index, &value, sizeof(T), cudaMemcpyHostToDevice));
+            cuda_safe_call(gpuMemcpy(data_ptr + index, &value, sizeof(T), gpuMemcpyHostToDevice));
             #endif
         }
 
@@ -631,19 +631,19 @@ class Array_gpu
 
         inline int size() const { return ncells; }
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         inline T operator()(const std::array<int, N>& indices) const
         {
             const int index = calc_index<N>(indices, strides, offsets);
             T value;
-            cuda_safe_call(cudaMemcpy(&value, data_ptr + index, sizeof(T), cudaMemcpyDeviceToHost));
+            cuda_safe_call(gpuMemcpy(&value, data_ptr + index, sizeof(T), gpuMemcpyDeviceToHost));
             return value;
         }
         #endif
 
         inline int dim(const int i) const { return dims[i-1]; }
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         template <typename U=T>
         inline void subset_copy(Array_gpu<U, N>& a_sub,
                 const std::array<int, N>& block_corners) const

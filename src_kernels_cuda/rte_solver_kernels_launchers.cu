@@ -1,5 +1,4 @@
 #include <chrono>
-#include "kernel.h"
 #include "rte_solver_kernels_cuda.h"
 #include "tools_gpu.h"
 #include "tuner.h"
@@ -7,6 +6,8 @@
 #include "types.h"
 #include "kernel_float.h"
 #include <iomanip>
+
+#include "../include/tools_gpu.h"
 
 
 namespace
@@ -95,23 +96,22 @@ namespace Rte_solver_kernels_cuda
         else
             Rte_solver_kernels_cuda::apply_BC(ncol, nlay, ngpt, top_at_1, inc_flux, flux_dn);
 
-        kernel_launcher::launch(
-                Kernel("lw_solver_noscat_kernel", "src_kernels_cuda/rte_solver_kernels.cu", {
-                    top_at_1,
+        dim3 block_gpu(C::block_size_x, C::block_size_y);
+        dim3 grid_gpu = calc_grid_size(block_gpu, (ncol / C::vector_size, ngpt));
+
+        lw_solver_noscat_kernel<top_at_1,
                     C::block_size_x,
                     C::block_size_y,
                     C::loop_unroll_factor_init,
                     C::loop_unroll_factor_nlay,
                     C::vector_size,
-                    kernel_launcher::TemplateArg::from_type<Float>(),
-                    kernel_launcher::TemplateArg::from_type<C::tau_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::source_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::surface_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::flux_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::compute_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::intermediate_type>()
-                }),
-                ncol, nlay, ngpt, tau_thres,
+                    Float,
+                    C::tau_type,
+                    C::source_type,
+                    C::surface_type,
+                    C::flux_type,
+                    C::compute_type,
+                    C::intermediate_type><<<grid_gpu, block_gpu>>>(ncol, nlay, ngpt, tau_thres,
                 secants, weights, tau, lay_source,
                 lev_source,
                 sfc_emis, sfc_src, flux_up, flux_dn, sfc_src_jac,
@@ -239,27 +239,46 @@ namespace Rte_solver_kernels_cuda
             Rte_solver_kernels_cuda::apply_BC(ncol, nlay, ngpt, top_at_1, inc_flux_dif, flux_dn);
 
         // Step 1.
-        kernel_launcher::launch(
-                Kernel("sw_solver_kernel", "src_kernels_cuda/rte_solver_kernels.cu", {
-                    top_at_1,
+        dim3 block_gpu(C::block_size_x, C::block_size_y);
+        dim3 grid_gpu = calc_grid_size(block_gpu, (ncol / C::vector_size, ngpt));
+        if (top_at_1) {
+            sw_solver_kernel<true,
                     C::block_size_x,
                     C::block_size_y,
                     C::vector_size,
                     C::loop_unroll_factor_nlay,
-                    kernel_launcher::TemplateArg::from_type<Float>(),
-                    kernel_launcher::TemplateArg::from_type<C::compute_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::stream_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::tau_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::source_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::surface_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::flux_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::intermediate_type>()
-                }),
-                ncol, nlay, ngpt, tau, ssa, g, mu0, r_dif, t_dif,
+                    Float,
+                    C::compute_type,
+                    C::stream_type,
+                    C::tau_type,
+                    C::source_type,
+                    C::surface_type,
+                    C::flux_type,
+                    C::intermediate_type><<<grid_gpu, block_gpu>>>(ncol, nlay, ngpt, tau, ssa, g, mu0, r_dif, t_dif,
                 sfc_alb_dir, sfc_alb_dif,
                 source_up, source_dn, source_sfc,
                 flux_up, flux_dn, flux_dir,
                 albedo, src, denom);
+        }
+        else {
+            sw_solver_kernel<false,
+                    C::block_size_x,
+                    C::block_size_y,
+                    C::vector_size,
+                    C::loop_unroll_factor_nlay,
+                    Float,
+                    C::compute_type,
+                    C::stream_type,
+                    C::tau_type,
+                    C::source_type,
+                    C::surface_type,
+                    C::flux_type,
+                    C::intermediate_type><<<grid_gpu, block_gpu>>>(ncol, nlay, ngpt, tau, ssa, g, mu0, r_dif, t_dif,
+                sfc_alb_dir, sfc_alb_dif,
+                source_up, source_dn, source_sfc,
+                flux_up, flux_dn, flux_dir,
+                albedo, src, denom);
+        }
 
         Tools_gpu::free_gpu(r_dif);
         Tools_gpu::free_gpu(t_dif);

@@ -6,7 +6,7 @@
 #include <map>
 #include <tuple>
 #include <iostream>
-
+#include <kmm/kmm.hpp>
 
 // Multi-queue memory pool for device pointers. 
 class Memory_pool_gpu

@@ -64,7 +64,7 @@ class Radiation_solver_longwave
                 Array<Float,2>& lw_flux_up, Array<Float,2>& lw_flux_dn, Array<Float,2>& lw_flux_net,
                 Array<Float,3>& lw_bnd_flux_up, Array<Float,3>& lw_bnd_flux_dn, Array<Float,3>& lw_bnd_flux_net) const;
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         void solve_gpu(
                 const bool switch_fluxes,
                 const bool switch_cloud_optics,
@@ -94,7 +94,7 @@ class Radiation_solver_longwave
 
     private:
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         std::unique_ptr<Gas_optics_rrtmgp_rt> kdist_gpu;
         std::unique_ptr<Cloud_optics_rt> cloud_optics_gpu;
         Rte_lw_rt rte_lw;
@@ -150,7 +150,7 @@ class Radiation_solver_shortwave
                 const bool switch_broadband,
                 const bool switch_image);
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         void solve_gpu(
                 const bool tune_step,
                 const bool switch_cloud_optics,
@@ -186,7 +186,7 @@ class Radiation_solver_shortwave
                 Array_gpu<Float,2>& zen_cam);
         #endif
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         void solve_gpu_bb(
                 const bool switch_cloud_optics,
                 const bool switch_cloud_mie,
@@ -234,7 +234,7 @@ class Radiation_solver_shortwave
 
     private:
 
-        #ifdef __CUDACC__
+        #if defined(__CUDACC__) || defined(__HIPCC__)
         std::unique_ptr<Gas_optics_rt> kdist_gpu;
         std::unique_ptr<Cloud_optics_rt> cloud_optics_gpu;
         std::unique_ptr<Aerosol_optics_rt> aerosol_optics_gpu;

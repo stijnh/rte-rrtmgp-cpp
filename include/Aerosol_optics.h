@@ -8,6 +8,9 @@
 #include "Optical_props.h"
 #include "Gas_concs.h"
 #include "types.h"
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
 
 
 // Forward declarations.
@@ -46,7 +49,7 @@ class Aerosol_optics : public Optical_props
 
 };
 
-#ifdef USECUDA
+#if USEGPU
 class Aerosol_optics_gpu : public Optical_props_gpu
 {
     public:

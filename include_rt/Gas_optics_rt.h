@@ -29,12 +29,15 @@
 
 #include "Array.h"
 #include "Optical_props_rt.h"
+#if defined(__CUDACC__) || defined(__HIPCC__)
+#include "tools_gpu.h"
+#endif
 
 // Forward declarations.
 class Gas_concs_gpu;
 class Source_func_lw_rt;
 
-#ifdef USECUDA
+#if USEGPU
 class Gas_optics_rt : public Optical_props_rt
 {
     public:

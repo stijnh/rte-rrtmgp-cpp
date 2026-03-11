@@ -393,7 +393,7 @@ namespace
     void fill_gases_kernel(
             const int ncol, const int nlay, const int dim1, const int dim2, const int ngas, const int igas,
             Float* __restrict__ vmr_out, const Float* __restrict__ vmr_in,
-            FloatColDry* __restrict__ col_gas, const FloatColDry* __restrict__ col_dry)
+            FloatColGas* __restrict__ col_gas, const FloatColDry* __restrict__ col_dry)
     {
         const int icol = blockIdx.x*blockDim.x + threadIdx.x;
         const int ilay = blockIdx.y*blockDim.y + threadIdx.y;

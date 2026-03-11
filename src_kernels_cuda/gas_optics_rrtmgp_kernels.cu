@@ -1,3 +1,6 @@
+#include "types.h"
+#include "kernel_float.h"
+
 __device__
 Float interpolate1D(
         const Float val,
@@ -270,15 +273,15 @@ void Planck_source_kernel(
 
         // 3D interp.
         const Float pfrac =
-              ( fmajor(icol, ilay, iflav)[0] * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)  , jpress(icol, ilay)-1 + itropo, igpt)
-              + fmajor(icol, ilay, iflav)[1] * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)+1, jpress(icol, ilay)-1 + itropo, igpt)
-              + fmajor(icol, ilay, iflav)[2] * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)  , jpress(icol, ilay)   + itropo, igpt)
-              + fmajor(icol, ilay, iflav)[3] * pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)+1, jpress(icol, ilay)   + itropo, igpt) )
+              ( Float(fmajor(icol, ilay, iflav)[0]) * Float(pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)  , jpress(icol, ilay)-1 + itropo, igpt))
+              + Float(fmajor(icol, ilay, iflav)[1]) * Float(pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)+1, jpress(icol, ilay)-1 + itropo, igpt))
+              + Float(fmajor(icol, ilay, iflav)[2]) * Float(pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)  , jpress(icol, ilay)   + itropo, igpt))
+              + Float(fmajor(icol, ilay, iflav)[3]) * Float(pfracin(jtemp(icol, ilay), jeta(1, icol, ilay, iflav)+1, jpress(icol, ilay)   + itropo, igpt)) )
 
-            + ( fmajor(icol, ilay, iflav)[4] * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)  , jpress(icol, ilay)-1 + itropo, igpt)
-              + fmajor(icol, ilay, iflav)[5] * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)+1, jpress(icol, ilay)-1 + itropo, igpt)
-              + fmajor(icol, ilay, iflav)[6] * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)  , jpress(icol, ilay)   + itropo, igpt)
-              + fmajor(icol, ilay, iflav)[7] * pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)+1, jpress(icol, ilay)   + itropo, igpt) );
+            + ( Float(fmajor(icol, ilay, iflav)[4]) * Float(pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)  , jpress(icol, ilay)-1 + itropo, igpt))
+              + Float(fmajor(icol, ilay, iflav)[5]) * Float(pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)+1, jpress(icol, ilay)-1 + itropo, igpt))
+              + Float(fmajor(icol, ilay, iflav)[6]) * Float(pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)  , jpress(icol, ilay)   + itropo, igpt))
+              + Float(fmajor(icol, ilay, iflav)[7]) * Float(pfracin(jtemp(icol, ilay)+1, jeta(2, icol, ilay, iflav)+1, jpress(icol, ilay)   + itropo, igpt)) );
 
         Float planck_function_1 = interpolate1D(tlay(icol, ilay), temp_ref_min, totplnk_delta, nPlanckTemp, &totplnk(1, ibnd));
         lay_src(icol, ilay, igpt) = pfrac * planck_function_1;
@@ -294,15 +297,15 @@ void Planck_source_kernel(
             const int iflav = gpoint_flavor(itropo, igpt);
 
             const Float pfrac_m1 =
-                  ( fmajor(icol, ilay-1, iflav)[0] * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)  , jpress(icol, ilay-1)-1 + itropo, igpt)
-                  + fmajor(icol, ilay-1, iflav)[1] * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)-1 + itropo, igpt)
-                  + fmajor(icol, ilay-1, iflav)[2] * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)  , jpress(icol, ilay-1)   + itropo, igpt)
-                  + fmajor(icol, ilay-1, iflav)[3] * pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)   + itropo, igpt) )
+                  ( Float(fmajor(icol, ilay-1, iflav)[0]) * Float(pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)  , jpress(icol, ilay-1)-1 + itropo, igpt))
+                  + Float(fmajor(icol, ilay-1, iflav)[1]) * Float(pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)-1 + itropo, igpt))
+                  + Float(fmajor(icol, ilay-1, iflav)[2]) * Float(pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)  , jpress(icol, ilay-1)   + itropo, igpt))
+                  + Float(fmajor(icol, ilay-1, iflav)[3]) * Float(pfracin(jtemp(icol, ilay-1), jeta(1, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)   + itropo, igpt)) )
 
-                + ( fmajor(icol, ilay-1, iflav)[4] * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)  , jpress(icol, ilay-1)-1 + itropo, igpt)
-                  + fmajor(icol, ilay-1, iflav)[5] * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)-1 + itropo, igpt)
-                  + fmajor(icol, ilay-1, iflav)[6] * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)  , jpress(icol, ilay-1)   + itropo, igpt)
-                  + fmajor(icol, ilay-1, iflav)[7] * pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)   + itropo, igpt) );
+                + ( Float(fmajor(icol, ilay-1, iflav)[4]) * Float(pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)  , jpress(icol, ilay-1)-1 + itropo, igpt))
+                  + Float(fmajor(icol, ilay-1, iflav)[5]) * Float(pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)-1 + itropo, igpt))
+                  + Float(fmajor(icol, ilay-1, iflav)[6]) * Float(pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)  , jpress(icol, ilay-1)   + itropo, igpt))
+                  + Float(fmajor(icol, ilay-1, iflav)[7]) * Float(pfracin(jtemp(icol, ilay-1)+1, jeta(2, icol, ilay-1, iflav)+1, jpress(icol, ilay-1)   + itropo, igpt)) );
 
             lev_src(icol, ilay, igpt) = sqrt(pfrac * pfrac_m1) * planck_function_1;
         }
@@ -408,70 +411,300 @@ void interpolation_kernel(
     }
 }
 
-
+#pragma kernel problem_size(ncol, nlay, ngpt)
+#pragma kernel block_size(block_size_x, block_size_y, block_size_z)
+#pragma kernel buffer(gpoint_flavor[2*ngpt])
+#pragma kernel buffer(band_lims_gpt[1])
+#pragma kernel buffer(kmajor_ptr[ntemp * (npres+1) * neta * ngpt])
+#pragma kernel buffer(col_mix_ptr[2*(nflav*ncol*nlay)])
+#pragma kernel buffer(fmajor_ptr[2 * 2 * 2 * (nflav*ncol*nlay)])
+#pragma kernel buffer(jeta[2*(nflav*ncol*nlay)])
+#pragma kernel buffer(tropo[nlay*ncol])
+#pragma kernel buffer(jtemp[nlay*ncol])
+#pragma kernel buffer(jpress[nlay*ncol])
+#pragma kernel buffer(tau_ptr[ngpt*nlay*ncol])
+template<
+        int block_size_x,
+        int block_size_y,
+        int block_size_z,
+        int vector_size,
+        typename compute_type,
+        typename FloatKMajor,
+        typename FloatColMix,
+        typename FloatFMajor,
+        typename FloatTau
+>
 __global__
 void gas_optical_depths_major_kernel(
         const int ncol, const int nlay, const int nband, const int ngpt,
         const int nflav, const int neta, const int npres, const int ntemp,
         const int* __restrict__ gpoint_flavor,
         const int* __restrict__ band_lims_gpt,
-        const FloatKMajor* __restrict__ kmajor,
-        const FloatColMix* __restrict__ col_mix, const FloatFMajor* __restrict__ fmajor,
-        const int* __restrict__ jeta, const Bool* __restrict__ tropo,
-        const int* __restrict__ jtemp, const int* __restrict__ jpress,
-        FloatTau* __restrict__ tau)
+        const FloatKMajor* __restrict__ kmajor_ptr,
+        const FloatColMix* __restrict__ col_mix_ptr,
+        const FloatFMajor* __restrict__ fmajor_ptr,
+        const int* __restrict__ jeta,
+        const Bool* __restrict__ tropo,
+        const int* __restrict__ jtemp,
+        const int* __restrict__ jpress,
+        FloatTau* __restrict__ tau_ptr)
+__launch_bounds__(block_size_x * block_size_y * block_size_z)
 {
-    const int icol = blockIdx.x * blockDim.x + threadIdx.x;
+    const int ivcol = blockIdx.x * blockDim.x + threadIdx.x;
     const int ilay = blockIdx.y * blockDim.y + threadIdx.y;
     const int igpt = blockIdx.z * blockDim.z + threadIdx.z;
+    const int nvcol = ncol / vector_size;
 
-    if ( (icol < ncol) && (ilay < nlay) && (igpt < ngpt) )
+    using Float = compute_type;
+    auto fmajor = kernel_float::make_vec_ptr<compute_type, 4>(fmajor_ptr);
+    auto kmajor = kernel_float::make_vec_ptr<compute_type>(kmajor_ptr);
+    auto col_mix = kernel_float::make_vec_ptr<compute_type, 2>(col_mix_ptr);
+    auto tau = kernel_float::make_vec_ptr<compute_type, vector_size>(tau_ptr);
+
+    if ( (ivcol * vector_size < ncol) && (ilay < nlay) && (igpt < ngpt) )
     {
-        const int idx_collay = icol + ilay*ncol;
-        const int itropo = !tropo[idx_collay];
-        const int iflav = gpoint_flavor[itropo + 2*igpt] - 1;
+        auto result = kernel_float::zeros<Float, vector_size>();
 
-        const int ljtemp = jtemp[idx_collay];
-        const int jpressi = jpress[idx_collay] + itropo;
+        const int idx_collay = ivcol * vector_size + ilay*ncol;
         const int npress = npres+1;
 
+        const auto itropo = kernel_float::cast<int>(!kernel_float::read_aligned<vector_size>(&tropo[idx_collay]));
+        const auto ljtemp = kernel_float::read_aligned<vector_size>(&jtemp[idx_collay]);
+        const auto jpressi = kernel_float::read_aligned<vector_size>(&jpress[idx_collay]) + itropo;
+
         // Major gases.
-        const int idx_fcl3 = 2 * 2 * 2 * (icol + ilay*ncol + iflav*ncol*nlay);
-        const int idx_fcl1 = 2 *         (icol + ilay*ncol + iflav*ncol*nlay);
+#pragma unroll
+        for (int i = 0; i < vector_size; i++) {
+#pragma unroll
+            for (int j=0; j<2; ++j)
+            {
+                const int icol = ivcol * vector_size + i;
+                const int iflav = kernel_float::read_aligned<2>(&gpoint_flavor[2*igpt])[itropo[i]] - 1;
 
-        const FloatFMajor* __restrict__ ifmajor = &fmajor[idx_fcl3];
+                const int idx_fcl = (icol + ilay*ncol + iflav*ncol*nlay);
+                auto v0 = fmajor[2 * idx_fcl + j];
 
-        const int idx_out = icol + ilay*ncol + igpt*ncol*nlay;
+                auto jetai = jeta[2 * idx_fcl + j];
+                auto v1 = kernel_float::concat(
+                        kmajor[(ljtemp[i]-1+j) + (jetai-1)*ntemp + (jpressi[i]-1)*ntemp*neta + igpt*ntemp*neta*npress],
+                        kmajor[(ljtemp[i]-1+j) +  jetai   *ntemp + (jpressi[i]-1)*ntemp*neta + igpt*ntemp*neta*npress],
+                        kmajor[(ljtemp[i]-1+j) + (jetai-1)*ntemp + jpressi[i]    *ntemp*neta + igpt*ntemp*neta*npress],
+                        kmajor[(ljtemp[i]-1+j) +  jetai   *ntemp + jpressi[i]    *ntemp*neta + igpt*ntemp*neta*npress]
+                );
 
-        // un-unrolling this loops saves registers and improves parallelism/utilization.
-        #pragma unroll 1
-        for (int i=0; i<2; ++i)
-        {
-            auto result = Float(col_mix[idx_fcl1+i]) *
-                (Float(ifmajor[i*4+0]) * Float(kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress]) +
-                 Float(ifmajor[i*4+1]) * Float(kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + (jpressi-1)*ntemp*neta + igpt*ntemp*neta*npress]) +
-                 Float(ifmajor[i*4+2]) * Float(kmajor[(ljtemp-1+i) + (jeta[idx_fcl1+i]-1)*ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]) +
-                 Float(ifmajor[i*4+3]) * Float(kmajor[(ljtemp-1+i) +  jeta[idx_fcl1+i]   *ntemp + jpressi    *ntemp*neta + igpt*ntemp*neta*npress]));
-
-            tau[idx_out] += FloatTau(result);
+                result[i] += col_mix[idx_fcl][j] * kernel_float::dot(v0, v1);
+            }
         }
+
+        const int idx_out = ivcol + ilay*nvcol + igpt*nvcol*nlay;
+        tau[idx_out] += result;
     }
 }
 
 
-// Some ifdefs for kernel tuner.
-
-#ifndef kernel_tuner
-#undef block_size_x
-#endif
-
-#ifndef kernel_tuner
-#define use_shared_tau 0
-#endif
 
 
-#if use_shared_tau == 0
-template<int block_size_x, int block_size_y, int block_size_z, int max_gpt=16> __global__
+#pragma kernel problem_size(ncol, nlay)
+#pragma kernel block_size(block_size_x, block_size_y, block_size_z)
+#pragma kernel buffer(gpoint_flavor[2*ngpt])
+#pragma kernel buffer(kminor_ptr[nminork*ntemp*neta])
+#pragma kernel buffer(minor_limits_gpt[2*nminor])
+#pragma kernel buffer(minor_scales_with_density[nminor])
+#pragma kernel buffer(scale_by_complement[nminor])
+#pragma kernel buffer(idx_minor[nminor])
+#pragma kernel buffer(idx_minor_scaling[nminor])
+#pragma kernel buffer(kminor_start[nminor])
+#pragma kernel buffer(play_ptr[nlay*ncol])
+#pragma kernel buffer(tlay_ptr[nlay*ncol])
+#pragma kernel buffer(col_gas_ptr[ncol*nlay*ngas])
+#pragma kernel buffer(fminor_ptr[2 * 2 * (nflav*ncol*nlay)])
+#pragma kernel buffer(jeta[2*nflav*ncol*nlay])
+#pragma kernel buffer(jtemp[nlay*ncol])
+#pragma kernel buffer(tropo_ptr[nlay*ncol])
+#pragma kernel buffer(tau_ptr[ngpt*ncol*nlay])
+template<
+        int block_size_x,
+        int block_size_y,
+        int block_size_z,
+        int vector_size=1,
+        bool use_smem,
+        typename Float,
+        typename FloatKMinor,
+        typename FloatPressure,
+        typename FloatTemperature,
+        typename FloatColGas,
+        typename FloatFMinor,
+        typename FloatTau,
+        typename Policy
+> __global__
+void gas_optical_depths_minor_kernel(
+        const int ncol, const int nlay, const int ngpt,
+        const int ngas, const int nflav, const int ntemp, const int neta,
+        const int nminor,
+        const int nminork,
+        const int idx_h2o, const int idx_tropo,
+        const int* __restrict__ gpoint_flavor,
+        const FloatKMinor* __restrict__ kminor_ptr,
+        const int* __restrict__ minor_limits_gpt,
+        const Bool* __restrict__ minor_scales_with_density,
+        const Bool* __restrict__ scale_by_complement,
+        const int* __restrict__ idx_minor,
+        const int* __restrict__ idx_minor_scaling,
+        const int* __restrict__ kminor_start,
+        const FloatPressure* __restrict__ play_ptr,
+        const FloatTemperature * __restrict__ tlay_ptr,
+        const FloatColGas* __restrict__ col_gas_ptr,
+        const FloatFMinor* __restrict__ fminor_ptr,
+        const int2* __restrict__ jeta,
+        const int* __restrict__ jtemp,
+        const Bool* __restrict__ tropo_ptr,
+        FloatTau* __restrict__ tau_ptr)
+__launch_bounds__(block_size_x * block_size_y * block_size_z)
+{
+    const int ivcol = blockIdx.x * block_size_x + threadIdx.x;
+    const int ilay = blockIdx.y * block_size_y + threadIdx.y;
+    const int nvcol = ncol / vector_size;
+
+    __shared__ kernel_float::vector_storage<Float, vector_size> scalings[block_size_y][block_size_x];
+
+    auto play = kernel_float::make_vec_ptr<Float, vector_size>(play_ptr);
+    auto tlay = kernel_float::make_vec_ptr<Float, vector_size>(tlay_ptr);
+    auto col_gas = kernel_float::make_vec_ptr<Float, vector_size>(col_gas_ptr);
+    auto tau = kernel_float::make_vec_ptr<Float, vector_size>(tau_ptr);
+    auto tropo = kernel_float::make_vec_ptr<Bool, vector_size>(tropo_ptr);
+
+    auto kminor = kernel_float::make_vec_ptr<Float>(kminor_ptr);
+    auto fminor = kernel_float::make_vec_ptr<Float, 4>(fminor_ptr);
+
+    if ( (ivcol < nvcol) && (ilay < nlay) )
+    {
+        const int idx_vcollay = ivcol + ilay*nvcol;
+        const auto tropoi = tropo[idx_vcollay] == idx_tropo;
+
+        if (!kernel_float::any(tropoi)) {
+            return;
+        }
+
+        for (int imnr=0; imnr<nminor; ++imnr)
+        {
+            kernel_float::vec<Float, vector_size> scaling = 0;
+
+            if (!use_smem || threadIdx.z == 0)
+            {
+                const int nvcl = nvcol * nlay;
+                scaling = col_gas[idx_vcollay + idx_minor[imnr] * nvcl];
+
+                if (minor_scales_with_density[imnr])
+                {
+                    const Float PaTohPa = 0.01;
+                    scaling *= PaTohPa * kernel_float::divide<Policy>(play[idx_vcollay], tlay[idx_vcollay]);
+
+                    if (idx_minor_scaling[imnr] > 0)
+                    {
+                        const int idx_vcollaywv = ivcol + ilay*nvcol + idx_h2o*nvcl;
+                        auto vmr_fact = kernel_float::rcp<Policy>(col_gas[idx_vcollay]);
+                        auto dry_fact = kernel_float::rcp<Policy>(kernel_float::fma(col_gas[idx_vcollaywv], vmr_fact, 1));
+
+                        auto weight = col_gas[idx_vcollay + idx_minor_scaling[imnr] * nvcl] * vmr_fact * dry_fact;
+
+                        if (scale_by_complement[imnr])
+                            scaling *= 1 - weight;
+                        else
+                            scaling *= weight;
+                    }
+                }
+
+                // Set entries to zero
+                if constexpr (vector_size > 1) {
+                    scaling *= tropoi;
+                }
+            }
+
+            if constexpr (use_smem) {
+                if (threadIdx.z == 0) {
+                    scalings[threadIdx.y][threadIdx.x] = scaling;
+                }
+
+                __syncthreads();
+
+                scaling = scalings[threadIdx.y][threadIdx.x];
+
+                __syncthreads();
+            }
+
+            const int gpt_start = kernel_float::read_aligned<2>(&minor_limits_gpt[2*imnr])[0]-1;
+            const int gpt_end = kernel_float::read_aligned<2>(&minor_limits_gpt[2*imnr])[1];
+            const int gpt_offs = 1-idx_tropo;
+            const int band_gpt = gpt_end-gpt_start;
+            const int gpt_offset = kminor_start[imnr]-1;
+            const int iflav = kernel_float::read_aligned<2>(&gpoint_flavor[2*gpt_start])[gpt_offs]-1;
+
+            for (int igpt=threadIdx.z; igpt<band_gpt; igpt+=block_size_z)
+            {
+                kernel_float::vec<Float, vector_size> ltau_minor;
+
+#pragma unroll
+                for (int k = 0; k < vector_size; k++) {
+                    const int icol = ivcol * vector_size + k;
+                    const int idx_fcl = (icol + ilay*ncol) + iflav*ncol*nlay;
+                    const int j0 = jeta[idx_fcl].x;
+                    const int j1 = jeta[idx_fcl].y;
+                    const int kjtemp = jtemp[icol + ilay*ncol];
+
+                    const auto v0 = fminor[idx_fcl];
+                    const auto v1 = kernel_float::concat(
+                            kminor[(kjtemp-1) + (j0-1)*ntemp + (igpt+gpt_offset)*ntemp*neta],
+                            kminor[(kjtemp-1) +  j0   *ntemp + (igpt+gpt_offset)*ntemp*neta],
+                            kminor[kjtemp     + (j1-1)*ntemp + (igpt+gpt_offset)*ntemp*neta],
+                            kminor[kjtemp     +  j1   *ntemp + (igpt+gpt_offset)*ntemp*neta]);
+
+                    ltau_minor[k] = kernel_float::dot(v0, v1);
+                }
+
+                const int idx_out = ivcol + ilay*nvcol + (igpt+gpt_start)*nvcol*nlay;
+                tau[idx_out] = kernel_float::fma(ltau_minor, scaling, tau[idx_out]);
+            }
+        }
+    }
+}
+
+/*
+#pragma kernel buffer(gpoint_flavor[2*ngpt])
+#pragma kernel buffer(kminor_ptr[nminork*ntemp*neta])
+#pragma kernel buffer(minor_limits_gpt[2*nminor])
+#pragma kernel buffer(minor_scales_with_density[nminor])
+#pragma kernel buffer(scale_by_complement[nminor])
+#pragma kernel buffer(idx_minor[nminor])
+#pragma kernel buffer(idx_minor_scaling[nminor])
+#pragma kernel buffer(kminor_start[nminor])
+#pragma kernel buffer(play_ptr[nlay*ncol])
+#pragma kernel buffer(tlay_ptr[nlay*ncol])
+#pragma kernel buffer(col_gas_ptr[ncol*nlay*ngas])
+#pragma kernel buffer(fminor_ptr[2 * 2 * (nflav*ncol*nlay)])
+#pragma kernel buffer(jeta[2*nflav*ncol*nlay])
+#pragma kernel buffer(jtemp[nlay*ncol])
+#pragma kernel buffer(tropo_ptr[nlay*ncol])
+#pragma kernel buffer(tau_ptr[ngpt*ncol*nlay])
+ */
+
+/*
+#pragma kernel problem_size(ncol, nlay)
+#pragma kernel block_size(block_size_x, block_size_y, block_size_z)
+template<
+        int block_size_x,
+        int block_size_y,
+        int block_size_z,
+        int vector_size=1,
+        bool use_smem,
+        typename Float,
+        typename FloatKMinor,
+        typename FloatPressure,
+        typename FloatTemperature,
+        typename FloatColGas,
+        typename FloatFMinor,
+        typename FloatTau,
+        typename Policy
+> __global__
 void gas_optical_depths_minor_kernel(
         const int ncol, const int nlay, const int ngpt,
         const int ngas, const int nflav, const int ntemp, const int neta,
@@ -490,11 +723,10 @@ void gas_optical_depths_minor_kernel(
         const FloatTemperature * __restrict__ tlay,
         const FloatColGas* __restrict__ col_gas,
         const FloatFMinor* __restrict__ fminor,
-        const int* __restrict__ jeta,
+        const int2* __restrict__ jeta,
         const int* __restrict__ jtemp,
         const Bool* __restrict__ tropo,
-        FloatTau* __restrict__ tau,
-        FloatTau* __restrict__ tau_minor)
+        FloatTau* __restrict__ tau)
 {
     const int icol = blockIdx.x * block_size_x + threadIdx.x;
     const int ilay = blockIdx.y * block_size_y + threadIdx.y;
@@ -558,8 +790,8 @@ void gas_optical_depths_minor_kernel(
                 const FloatFMinor* kfminor = &fminor[idx_fcl2];
                 const FloatKMinor* kin = &kminor[0];
 
-                const int j0 = jeta[idx_fcl1];
-                const int j1 = jeta[idx_fcl1+1];
+                const int j0 = jeta[idx_fcl1/2].x;
+                const int j1 = jeta[idx_fcl1/2].y;
                 const int kjtemp = jtemp[idx_collay];
                 const int band_gpt = gpt_end-gpt_start;
                 const int gpt_offset = kminor_start[imnr]-1;
@@ -578,8 +810,7 @@ void gas_optical_depths_minor_kernel(
         }
     }
 }
-#endif
-
+*/
 
 /*
 __global__

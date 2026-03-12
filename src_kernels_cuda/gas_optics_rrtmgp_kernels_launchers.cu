@@ -6,7 +6,6 @@
 #include "gas_optics_rrtmgp_kernels_cuda.h"
 #include "tools_gpu.h"
 #include "tuner.h"
-#include "kernel.h"
 #include "kernel_float.h"
 
 
@@ -245,20 +244,17 @@ namespace Gas_optics_rrtmgp_kernels_cuda
             FloatTau* tau)
     {
         using C = constants::gas_optical_depths_major_kernel;
-        kernel_launcher::launch(
-                Kernel("gas_optical_depths_major_kernel", "src_kernels_cuda/gas_optics_rrtmgp_kernels.cu",
-                {
-                    C::block_size_x,
+        dim3 block_gpu3d(C::block_size_x, C::block_size_y, C::block_size_z);
+        dim3 grid_gpu3d = calc_grid_size(block_gpu3d, (ncol, nlay, ngpt));
+        gas_optical_depths_major_kernel<C::block_size_x,
                     C::block_size_y,
                     C::block_size_z,
                     C::vector_size,
-                    kernel_launcher::TemplateArg::from_type<C::compute_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::kmajor_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::col_mix_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::fmajor_type>(),
-                    kernel_launcher::TemplateArg::from_type<C::tau_type>()
-               }),
-                ncol, nlay, nband, ngpt,
+                    C::compute_type,
+                    C::kmajor_type,
+                    C::col_mix_type,
+                    C::fmajor_type,
+                    C::tau_type><<<grid_gpu3d, block_gpu3d>>>(ncol, nlay, nband, ngpt,
                 nflav, neta, npres, ntemp,
                 gpoint_flavor, band_lims_gpt,
                 kmajor, col_mix, fmajor, jeta,
@@ -269,24 +265,21 @@ namespace Gas_optics_rrtmgp_kernels_cuda
         int idx_tropo = 1;
 
         using D = constants::gas_optical_depths_minor_kernel;
-        kernel_launcher::launch(
-                Kernel("gas_optical_depths_minor_kernel", "src_kernels_cuda/gas_optics_rrtmgp_kernels.cu",
-               {
-                    D::block_size_x,
+        dim3 block_gpu2d(D::block_size_x, D::block_size_y);
+        dim3 grid_gpu2d = calc_grid_size(block_gpu2d, (ncol, nlay));
+        gas_optical_depths_minor_kernel<D::block_size_x,
                     D::block_size_y,
                     D::block_size_z,
                     D::vector_size,
                     D::use_smem,
-                    kernel_launcher::TemplateArg::from_type<D::compute_type>(),
-                    kernel_launcher::TemplateArg::from_type<D::kminor_type>(),
-                    kernel_launcher::TemplateArg::from_type<D::pressure_type>(),
-                    kernel_launcher::TemplateArg::from_type<D::temperature_type>(),
-                    kernel_launcher::TemplateArg::from_type<D::col_gas_type>(),
-                    kernel_launcher::TemplateArg::from_type<D::fminor_type>(),
-                    kernel_launcher::TemplateArg::from_type<D::tau_type>(),
-                    kernel_launcher::TemplateArg::from_type<D::accuracy_policy>()
-                }),
-                ncol, nlay, ngpt,
+                    D::compute_type,
+                    D::kminor_type,
+                    D::pressure_type,
+                    D::temperature_type,
+                    D::col_gas_type,
+                    D::fminor_type,
+                    D::tau_type,
+                    D::accuracy_policy><<<grid_gpu2d, block_gpu2d>>>(ncol, nlay, ngpt,
                 ngas, nflav, ntemp, neta,
                 nminorlower,
                 nminorklower,
@@ -303,28 +296,22 @@ namespace Gas_optics_rrtmgp_kernels_cuda
                 fminor, reinterpret_cast<const int2*>(jeta), jtemp,
                 tropo, tau);
 
-
         // Upper
         idx_tropo = 0;
 
-        kernel_launcher::launch(
-            Kernel("gas_optical_depths_minor_kernel", "src_kernels_cuda/gas_optics_rrtmgp_kernels.cu",
-                {
-                   D::block_size_x,
+        gas_optical_depths_minor_kernel<D::block_size_x,
                    D::block_size_y,
                    D::block_size_z,
                    D::vector_size,
                    D::use_smem,
-                   kernel_launcher::TemplateArg::from_type<D::compute_type>(),
-                   kernel_launcher::TemplateArg::from_type<D::kminor_type>(),
-                   kernel_launcher::TemplateArg::from_type<D::pressure_type>(),
-                   kernel_launcher::TemplateArg::from_type<D::temperature_type>(),
-                   kernel_launcher::TemplateArg::from_type<D::col_gas_type>(),
-                   kernel_launcher::TemplateArg::from_type<D::fminor_type>(),
-                   kernel_launcher::TemplateArg::from_type<D::tau_type>(),
-                   kernel_launcher::TemplateArg::from_type<D::accuracy_policy>()
-                }),
-                ncol, nlay, ngpt,
+                   D::compute_type,
+                   D::kminor_type,
+                   D::pressure_type,
+                   D::temperature_type,
+                   D::col_gas_type,
+                   D::fminor_type,
+                   D::tau_type,
+                   D::accuracy_policy><<<grid_gpu2d, block_gpu2d>>>(ncol, nlay, ngpt,
                 ngas, nflav, ntemp, neta,
                 nminorupper,
                 nminorkupper,

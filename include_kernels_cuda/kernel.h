@@ -1,7 +1,5 @@
 #include <cstdint>
 
-#include "kernel_launcher.h"
-#include "kernel_launcher/pragma.h"
 #include "Array.h"
 
 #define RTE_STRINGIFY2(x) #x

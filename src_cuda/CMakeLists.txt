@@ -14,4 +14,4 @@ if(USEHIP)
     set_source_files_properties(${sourcefiles_cuda} PROPERTIES LANGUAGE HIP)
 endif()
 
-target_link_libraries(rte_rrtmgp_cuda PRIVATE kmm)
+target_link_libraries(rte_rrtmgp_cuda PRIVATE kmm kernel_float)

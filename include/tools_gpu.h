@@ -86,13 +86,21 @@ namespace Tools_gpu
         #else
         cuda_safe_call(gpuMemAlloc((void **) &data_ptr, length*sizeof(T)));
         #endif
+        // printf("Pointer %p allocated on GPU.\n", data_ptr);
+        // printf("Allocated %d bytes on GPU for %d elements of type %s.\n", length*sizeof(T), length, typeid(T).name());
         return data_ptr;
     }
 
     template<typename T>
     void free_gpu(T*& data_ptr)
     {
+        if (data_ptr == nullptr)
+        {
+            // printf("Pointer is already null, skipping free.\n");
+            return;
+        }
         #if defined(RTE_RRTMGP_GPU_MEMPOOL_CUDA)
+        // printf("Freeing pointer %p on GPU.\n", data_ptr);
         cuda_safe_call(gpuFreeAsync(data_ptr, 0));
         #elif defined(RTE_RRTMGP_GPU_MEMPOOL_OWN)
         Memory_pool_gpu::get_instance().release((void*)data_ptr);

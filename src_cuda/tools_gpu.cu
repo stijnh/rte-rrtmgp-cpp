@@ -17,7 +17,6 @@ void prepare_cuda_mempool()
     gpuDeviceGetDefaultMemPool(&mempool, 0);
     auto threshold = UINT64_MAX;
     gpuMemPoolSetAttribute(mempool, gpuMemPoolAttrReleaseThreshold, &threshold);
-    printf("CUDA mempool %lu release threshold set to %lu bytes.\n", mempool, threshold);
     cuda_mempool_initialized = true;
 }
 #endif

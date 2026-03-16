@@ -97,7 +97,7 @@ namespace Rte_solver_kernels_cuda
             Rte_solver_kernels_cuda::apply_BC(ncol, nlay, ngpt, top_at_1, inc_flux, flux_dn);
 
         dim3 block_gpu(C::block_size_x, C::block_size_y);
-        dim3 grid_gpu = calc_grid_size(block_gpu, (ncol / C::vector_size, ngpt));
+        dim3 grid_gpu = calc_grid_size(block_gpu, dim3(ncol / C::vector_size, ngpt));
 
         lw_solver_noscat_kernel<top_at_1,
                     C::block_size_x,
@@ -240,7 +240,7 @@ namespace Rte_solver_kernels_cuda
 
         // Step 1.
         dim3 block_gpu(C::block_size_x, C::block_size_y);
-        dim3 grid_gpu = calc_grid_size(block_gpu, (ncol / C::vector_size, ngpt));
+        dim3 grid_gpu = calc_grid_size(block_gpu, dim3(ncol / C::vector_size, ngpt));
         if (top_at_1) {
             sw_solver_kernel<true,
                     C::block_size_x,

@@ -265,7 +265,7 @@ namespace Gas_optics_rrtmgp_kernels_cuda
         int idx_tropo = 1;
 
         using D = constants::gas_optical_depths_minor_kernel;
-        dim3 block_gpu2d(D::block_size_x, D::block_size_y);
+        dim3 block_gpu2d(D::block_size_x, D::block_size_y, D::block_size_z);
         dim3 grid_gpu2d = calc_grid_size(block_gpu2d, dim3(ncol, nlay));
         gas_optical_depths_minor_kernel<D::block_size_x,
                     D::block_size_y,

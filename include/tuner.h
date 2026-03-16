@@ -136,6 +136,7 @@ std::tuple<dim3, dim3> tune_kernel(
                 gpuEventRecord(start, 0);
                 for (int n=0; n<n_samples; ++n)
                     f<<<grid, block>>>(args...);
+                gpuError_t err = gpuGetLastError();
                 gpuEventRecord(stop, 0);
 
                 gpuEventSynchronize(stop);
@@ -146,7 +147,6 @@ std::tuple<dim3, dim3> tune_kernel(
                 gpuEventDestroy(stop);
 
                 // Check whether kernel has succeeded.
-                gpuError_t err = gpuGetLastError();
                 if (err != GPU_SUCCESS)
                 {
                     tuner_output
@@ -212,6 +212,7 @@ void tune_ijk(
     gpuEventRecord(start, 0);
     for (int i=0; i<n_samples; ++i)
         Func::template launch<I, J, K>(grid, block, args...);
+    gpuError_t err = gpuGetLastError();
     gpuEventRecord(stop, 0);
 
     gpuEventSynchronize(stop);
@@ -222,7 +223,6 @@ void tune_ijk(
     gpuEventDestroy(stop);
 
     // Check whether kernel has succeeded.
-    gpuError_t err = gpuGetLastError();
     if (err != GPU_SUCCESS)
     {
         tuner_output

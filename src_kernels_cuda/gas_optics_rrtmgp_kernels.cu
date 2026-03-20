@@ -565,9 +565,7 @@ __launch_bounds__(block_size_x * block_size_y * block_size_z)
     const int ilay = blockIdx.y * block_size_y + threadIdx.y;
     const int nvcol = ncol / vector_size;
 
-    //__shared__ kernel_float::vector_storage<Float, vector_size> scalings[block_size_y][block_size_x];
-    __shared__ char smem[sizeof(Float) * vector_size * block_size_x * block_size_y];
-    auto scalings = reinterpret_cast<kernel_float::vector_storage<Float, vector_size>*>(smem);
+    __shared__ kernel_float::vector_storage<Float, vector_size> scalings[block_size_y][block_size_x];
 
     auto play = kernel_float::make_vec_ptr<Float, vector_size>(play_ptr);
     auto tlay = kernel_float::make_vec_ptr<Float, vector_size>(tlay_ptr);

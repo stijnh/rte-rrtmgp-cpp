@@ -93,9 +93,9 @@ def main():
     eprint("computing statistics")
     output = dict()
     stats = [
-        ("lw flux": reference["lw_flux_net"], result["lw_flux_net"]),
-        ("sw flux": reference["sw_flux_net"], result["sw_flux_net"]),
-        ("net flux": flux_reference, flux_result),
+        ("lw flux", reference["lw_flux_net"], result["lw_flux_net"]),
+        ("sw flux", reference["sw_flux_net"], result["sw_flux_net"]),
+        ("net flux", flux_reference, flux_result),
         ("heating rate", hr_reference, hr_result),
     ]
 

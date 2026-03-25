@@ -35,30 +35,6 @@ else()
   project(rte-rrtmgp-cpp C CXX Fortran)
 endif()
 
-# Set the precision of the build.
-if(ACCURACY)
-  message(STATUS "Accuracy level: ${ACCURACY}")
-  target_compile_definitions(rte-rrtmgp-cpp PRIVATE RTE_ACCURACY=${ACCURACY})
-else()
-  message(STATUS "Accuracy level: not set, default to level 0")
-  target_compile_definitions(rte-rrtmgp-cpp PRIVATE RTE_ACCURACY=0)
-endif()
-
-# Load the CUDA module in case CUDA is enabled and display status message.
-if(USECUDA)
-  message(STATUS "CUDA: Enabled.")
-  target_compile_definitions(rte-rrtmgp-cpp PRIVATE USECUDA)
-else()
-  message(STATUS "CUDA: Disabled.")
-endif()
-
-if(USEHIP)
-  message(STATUS "HIP: Enabled.")
-  target_compile_definitions(rte-rrtmgp-cpp PRIVATE USEHIP)
-else()
-  message(STATUS "HIP: Disabled.")
-endif()
-
 # Only set the compiler flags when the cache is created
 # to enable editing of the flags in the CMakeCache.txt file.
 if(NOT HASCACHE)

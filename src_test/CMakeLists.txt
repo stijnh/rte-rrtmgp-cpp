@@ -43,10 +43,10 @@ elseif(USEHIP)
   # Set the precision of the build.
   if(ACCURACY)
     message(STATUS "Accuracy level: ${ACCURACY}")
-    target_compile_definitions(rte-test_rte_rrtmgp_gpu PRIVATE RTE_ACCURACY=${ACCURACY})
+    target_compile_definitions(test_rte_rrtmgp_gpu PRIVATE RTE_ACCURACY=${ACCURACY})
   else()
     message(STATUS "Accuracy level: not set, default to level 0")
-    target_compile_definitions(rte-test_rte_rrtmgp_gpu PRIVATE RTE_ACCURACY=0)
+    target_compile_definitions(test_rte_rrtmgp_gpu PRIVATE RTE_ACCURACY=0)
   endif()
   target_link_libraries(test_rte_rrtmgp_gpu rte_rrtmgp rte_rrtmgp_cuda ${LIBS} m kmm kernel_float)
   

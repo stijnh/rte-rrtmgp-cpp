@@ -8,19 +8,19 @@ add_library(rte_rrtmgp STATIC ${sourcefiles} Aerosol_optics.cpp ../include/Aeros
 
 if(USECUDA)
   message(STATUS "CUDA: Enabled.")
-  target_compile_definitions(rte-rrtmgp PRIVATE USECUDA)
+  target_compile_definitions(rte_rrtmgp PRIVATE USECUDA)
 elseif(USEHIP)
   message(STATUS "HIP: Enabled.")
-  target_compile_definitions(rte-rrtmgp PRIVATE USEHIP)
+  target_compile_definitions(rte_rrtmgp PRIVATE USEHIP)
 endif()
 
 # Set the precision of the build.
 if(ACCURACY)
   message(STATUS "Accuracy level: ${ACCURACY}")
-  target_compile_definitions(rte-rrtmgp PRIVATE RTE_ACCURACY=${ACCURACY})
+  target_compile_definitions(rte_rrtmgp PRIVATE RTE_ACCURACY=${ACCURACY})
 else()
   message(STATUS "Accuracy level: not set, default to level 0")
-  target_compile_definitions(rte-rrtmgp PRIVATE RTE_ACCURACY=0)
+  target_compile_definitions(rte_rrtmgp PRIVATE RTE_ACCURACY=0)
 endif()
 
 target_link_libraries(rte_rrtmgp PRIVATE kmm rte_rrtmgp_kernels kernel_float)

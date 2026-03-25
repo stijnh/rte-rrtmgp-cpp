@@ -8,19 +8,19 @@ add_library(rte_rrtmgp_cuda STATIC ${sourcefiles_cuda})
 
 if(USECUDA)
   message(STATUS "CUDA: Enabled.")
-  target_compile_definitions(rte-rrtmgp_cuda PRIVATE USECUDA)
+  target_compile_definitions(rte_rrtmgp_cuda PRIVATE USECUDA)
 elseif(USEHIP)
   message(STATUS "HIP: Enabled.")
-  target_compile_definitions(rte-rrtmgp_cuda PRIVATE USEHIP)
+  target_compile_definitions(rte_rrtmgp_cuda PRIVATE USEHIP)
 endif()
 
 # Set the precision of the build.
 if(ACCURACY)
   message(STATUS "Accuracy level: ${ACCURACY}")
-  target_compile_definitions(rte-rrtmgp_cuda PRIVATE RTE_ACCURACY=${ACCURACY})
+  target_compile_definitions(rte_rrtmgp_cuda PRIVATE RTE_ACCURACY=${ACCURACY})
 else()
   message(STATUS "Accuracy level: not set, default to level 0")
-  target_compile_definitions(rte-rrtmgp_cuda PRIVATE RTE_ACCURACY=0)
+  target_compile_definitions(rte_rrtmgp_cuda PRIVATE RTE_ACCURACY=0)
 endif()
 
 if(USEHIP)

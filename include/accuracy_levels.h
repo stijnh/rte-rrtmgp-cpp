@@ -235,18 +235,18 @@ struct gas_optical_depths_major_kernel {
   using compute_type = double;
 };
 
-// error: -6.18102439559172, time: 2.5610147203717912
+// error: -7.382772897995827, time: 2.6160715648106168
 struct gas_optical_depths_minor_kernel {
   static constexpr int block_size_x = 128;
   static constexpr int block_size_y = 2;
   static constexpr int block_size_z = 4;
   static constexpr int vector_size = 1;
   static constexpr int use_smem = 1;
-  using accuracy_policy = accurate_policy;
+  using accuracy_policy = approx_policy;
   using kminor_type = float;
   using pressure_type = float;
   using temperature_type = float;
-  using col_gas_type = bfloat16;
+  using col_gas_type = float;
   using fminor_type = float;
   using tau_type = float;
   using compute_type = float;
@@ -298,19 +298,19 @@ struct gas_optical_depths_major_kernel {
   using compute_type = float;
 };
 
-// error: -3.337116126494517, time: 2.141897337777274
+// error: -3.6019709768292585, time: 2.2411708491189137
 struct gas_optical_depths_minor_kernel {
-  static constexpr int block_size_x = 64;
-  static constexpr int block_size_y = 4;
-  static constexpr int block_size_z = 2;
-  static constexpr int vector_size = 2;
+  static constexpr int block_size_x = 128;
+  static constexpr int block_size_y = 2;
+  static constexpr int block_size_z = 4;
+  static constexpr int vector_size = 1;
   static constexpr int use_smem = 1;
   using accuracy_policy = approx_policy;
-  using kminor_type = half;
+  using kminor_type = float;
   using pressure_type = float;
   using temperature_type = float;
-  using col_gas_type = bfloat16;
-  using fminor_type = half;
+  using col_gas_type = float;
+  using fminor_type = float;
   using tau_type = half;
   using compute_type = float;
 };
@@ -362,19 +362,19 @@ struct gas_optical_depths_major_kernel {
   using compute_type = float;
 };
 
-// error: -3.337116126494517, time: 2.141897337777274
+// error: -3.6019709768292585, time: 2.2411708491189137
 struct gas_optical_depths_minor_kernel {
-  static constexpr int block_size_x = 64;
-  static constexpr int block_size_y = 4;
-  static constexpr int block_size_z = 2;
-  static constexpr int vector_size = 2;
+  static constexpr int block_size_x = 128;
+  static constexpr int block_size_y = 2;
+  static constexpr int block_size_z = 4;
+  static constexpr int vector_size = 1;
   static constexpr int use_smem = 1;
   using accuracy_policy = approx_policy;
-  using kminor_type = half;
+  using kminor_type = float;
   using pressure_type = float;
   using temperature_type = float;
-  using col_gas_type = bfloat16;
-  using fminor_type = half;
+  using col_gas_type = float;
+  using fminor_type = float;
   using tau_type = half;
   using compute_type = float;
 };
@@ -427,12 +427,12 @@ struct gas_optical_depths_major_kernel {
   using compute_type = float;
 };
 
-// error: -3.337116126494517, time: 2.141897337777274
+// error: -3.6019709768292585, time: 2.2411708491189137
 struct gas_optical_depths_minor_kernel {
-  static constexpr int block_size_x = 64;
-  static constexpr int block_size_y = 4;
-  static constexpr int block_size_z = 2;
-  static constexpr int vector_size = 2;
+  static constexpr int block_size_x = 128;
+  static constexpr int block_size_y = 2;
+  static constexpr int block_size_z = 4;
+  static constexpr int vector_size = 1;
   static constexpr int use_smem = 1;
   using accuracy_policy = approx_policy;
   using kminor_type = half;
@@ -442,6 +442,7 @@ struct gas_optical_depths_minor_kernel {
   using fminor_type = half;
   using tau_type = half;
   using compute_type = float;
+
 };
 
 // error: -1.8611426273023153, time: 2.454885619027274
@@ -477,3 +478,4 @@ struct sw_solver_kernel {
 #endif
 
 }
+

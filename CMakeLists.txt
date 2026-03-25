@@ -5,15 +5,6 @@ cmake_minimum_required (VERSION 3.18)
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_CURRENT_SOURCE_DIR}/config)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-# Set the precision of the build.
-if(ACCURACY)
-  message(STATUS "Accuracy level: ${ACCURACY}")
-  add_compile_definitions(RTE_ACCURACY=${ACCURACY})
-else()
-  message(STATUS "Accuracy level: not set, default to level 0")
-  add_compile_definitions(RTE_ACCURACY=0)
-endif()
-
 # Load system specific settings if not set, force default.cmake.
 if(NOT SYST)
   set(SYST default)
@@ -44,17 +35,26 @@ else()
   project(rte-rrtmgp-cpp C CXX Fortran)
 endif()
 
+# Set the precision of the build.
+if(ACCURACY)
+  message(STATUS "Accuracy level: ${ACCURACY}")
+  target_compile_definitions(rte-rrtmgp-cpp PRIVATE RTE_ACCURACY=${ACCURACY})
+else()
+  message(STATUS "Accuracy level: not set, default to level 0")
+  target_compile_definitions(rte-rrtmgp-cpp PRIVATE RTE_ACCURACY=0)
+endif()
+
 # Load the CUDA module in case CUDA is enabled and display status message.
 if(USECUDA)
   message(STATUS "CUDA: Enabled.")
-  add_definitions("-DUSECUDA")
+  target_compile_definitions(rte-rrtmgp-cpp PRIVATE USECUDA)
 else()
   message(STATUS "CUDA: Disabled.")
 endif()
 
 if(USEHIP)
   message(STATUS "HIP: Enabled.")
-  add_definitions("-DUSEHIP")
+  target_compile_definitions(rte-rrtmgp-cpp PRIVATE USEHIP)
 else()
   message(STATUS "HIP: Disabled.")
 endif()

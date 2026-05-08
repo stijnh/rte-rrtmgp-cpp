@@ -1,0 +1,60 @@
+[200~srun: no account specified, using your default account aifac_5c0_154
+srun: job 38302080 queued and waiting for resources
+srun: job 38302080 has been allocated resources
+###### Starting RTE+RRTMGP solver ######
+Solver settings:
+aerosol-optics       = false
+cloud-optics         = false
+delta-aerosol        = false
+delta-cloud          = true
+fluxes               = true
+longwave             = true
+output-bnd-fluxes    = false
+output-optical       = false
+shortwave            = true
+timings              = true
+Reading atmospheric input data from NetCDF.
+WARNING: Gas "cfc22" not available in input file.
+Preparing NetCDF output file.
+Initializing the longwave solver.
+Setting up CUDA mempool.
+Solving the longwave radiation.
+KERNEL_LAUNCHER [INFO] could not find file map, searched following directories:
+KERNEL_LAUNCHER [INFO]  - /leonardo/home/userexternal/gvandeno/rte-rrtmgp-cpp/build
+KERNEL_LAUNCHER [INFO] could not find file map, searched following directories:
+KERNEL_LAUNCHER [INFO]  - /leonardo/home/userexternal/gvandeno/rte-rrtmgp-cpp/build
+Constructing GPU tuner and loading kernel settings from disk
+KERNEL_LAUNCHER [INFO] could not find file map, searched following directories:
+KERNEL_LAUNCHER [INFO]  - /leonardo/home/userexternal/gvandeno/rte-rrtmgp-cpp/build
+Duration longwave solver: 4392.509766 (ms)
+Duration longwave solver: 2533.343506 (ms)
+Duration longwave solver: 2533.447266 (ms)
+Duration longwave solver: 2533.145020 (ms)
+Duration longwave solver: 2533.196289 (ms)
+Duration longwave solver: 2533.560059 (ms)
+Duration longwave solver: 2533.243896 (ms)
+Duration longwave solver: 2532.740234 (ms)
+Duration longwave solver: 2533.203613 (ms)
+Duration longwave solver: 2533.062988 (ms)
+Duration longwave solver: 2532.796387 (ms)
+Duration longwave solver: 2533.174561 (ms)
+Storing the longwave output.
+Initializing the shortwave solver.
+Solving the shortwave radiation.
+KERNEL_LAUNCHER [INFO] could not find file map, searched following directories:
+KERNEL_LAUNCHER [INFO]  - /leonardo/home/userexternal/gvandeno/rte-rrtmgp-cpp/build
+Duration shortwave solver: 2829.924805 (ms)
+Duration shortwave solver: 1736.939209 (ms)
+Duration shortwave solver: 1736.280273 (ms)
+Duration shortwave solver: 1736.333984 (ms)
+Duration shortwave solver: 1735.956787 (ms)
+Duration shortwave solver: 1736.077026 (ms)
+Duration shortwave solver: 1736.339111 (ms)
+Duration shortwave solver: 1736.082886 (ms)
+Duration shortwave solver: 1736.341431 (ms)
+Duration shortwave solver: 1736.499756 (ms)
+Duration shortwave solver: 1736.358032 (ms)
+Duration shortwave solver: 1736.344849 (ms)
+Storing the shortwave output.
+###### Finished RTE+RRTMGP solver ######
+

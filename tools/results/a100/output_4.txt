@@ -1,0 +1,218 @@
+sending incremental file list
+
+sent 16,719 bytes  received 103 bytes  3,058.55 bytes/sec
+total size is 59,987,157  speedup is 3,565.99
+srun: Single-node jobs run on a shared node by default. Add --exclusive if you want to use a node exclusively.
+srun: A full node consists of 72 CPU cores, 491520 MiB of memory and 4 GPUs and can be shared by up to 4 jobs.
+srun: By default shared jobs get 6826 MiB of memory per CPU core, unless explicitly overridden with --mem-per-cpu, --mem-per-gpu or --mem.
+srun: You will be charged for 1 GPUs, based on the number of CPUs, GPUs and the amount memory that you've requested.
+srun: job 21691460 queued and waiting for resources
+srun: job 21691460 has been allocated resources
+-- Accuracy level: 4
+-- CUDA: Enabled.
+-- CXX-compiler flags: -std=c++17 -fopenmp -Ofast
+-- Fortran-compiler flags: -std=c++17 -fopenmp -Ofast
+-- NVCC-compiler flags: -arch=sm_80 -std=c++17 -O3 --expt-relaxed-constexpr -DNDEBUG
+-- === Kernel Float ===
+-- Using GPU Language: CUDA
+-- Building Tests: OFF
+-- Building Examples: OFF
+fatal: not a git repository (or any parent up to mount point /gpfs)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+-- Git hash not available
+-- Configuring done (0.9s)
+-- Generating done (0.4s)
+-- Build files have been written to: /home/sheldens/rte-rrtmgp-cpp/build
+srun: Single-node jobs run on a shared node by default. Add --exclusive if you want to use a node exclusively.
+srun: A full node consists of 72 CPU cores, 491520 MiB of memory and 4 GPUs and can be shared by up to 4 jobs.
+srun: By default shared jobs get 6826 MiB of memory per CPU core, unless explicitly overridden with --mem-per-cpu, --mem-per-gpu or --mem.
+srun: You will be charged for 1 GPUs, based on the number of CPUs, GPUs and the amount memory that you've requested.
+srun: job 21691462 queued and waiting for resources
+srun: job 21691462 has been allocated resources
+[  1%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/gas_optics_rrtmgp_kernels_launchers_rt.cu.o
+[  3%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/gpt_combine_kernels_launchers_rt.cu.o
+[  3%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/optical_props_kernels_launchers_rt.cu.o
+[  4%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/raytracer_kernels.cu.o
+[  5%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/raytracer_kernels_bw.cu.o
+[  7%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/rte_solver_kernels_launchers_rt.cu.o
+[  7%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/arg.cpp.o
+[  8%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/value.cpp.o
+[ 10%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/jitsafe_headers.cpp.o
+[ 11%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/pragma.cpp.o
+[ 13%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/compiler.cpp.o
+[ 13%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/internal/tokens.cpp.o
+[ 15%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/builder.cpp.o
+[ 16%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/fs.cpp.o
+[ 16%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/registry.cpp.o
+[ 17%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/expr.cpp.o
+[ 19%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/internal/parser.cpp.o
+[ 20%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/internal/directives.cpp.o
+[ 22%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/config.cpp.o
+[ 22%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/cuda.cpp.o
+[ 23%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/export.cpp.o
+[ 24%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/wisdom.cpp.o
+[ 25%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/utils.cpp.o
+[ 26%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/kernel.cpp.o
+[ 28%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rte-frontend/mo_rte_kind.F90.o
+[ 29%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/mo_fluxes_byband_kernels.F90.o
+[ 31%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rte-kernels/mo_optical_props_kernels.F90.o
+[ 31%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rte-kernels/mo_fluxes_broadband_kernels.F90.o
+[ 32%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rte-kernels/mo_rte_util_array.F90.o
+[ 33%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rte-kernels/mo_rte_solver_kernels.F90.o
+[ 34%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rrtmgp-kernels/mo_gas_optics_rrtmgp_kernels.F90.o
+[ 35%] Linking Fortran static library librte_rrtmgp_kernels.a
+[ 35%] Built target rte_rrtmgp_kernels
+[ 37%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Aerosol_optics.cpp.o
+[ 38%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Cloud_optics.cpp.o
+[ 39%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Fluxes.cpp.o
+[ 44%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Rte_lw.cpp.o
+[ 44%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Rte_sw.cpp.o
+[ 44%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Gas_concs.cpp.o
+[ 44%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Optical_props.cpp.o
+[ 44%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Gas_optics_rrtmgp.cpp.o
+[ 46%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Source_functions.cpp.o
+/home/sheldens/rte-rrtmgp-cpp/src_kernels_cuda_rt/rte_solver_kernels_rt.cu(315): warning #177-D: variable "idx_in" was declared but never referenced
+          const int idx_in = icol;
+                    ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/home/sheldens/rte-rrtmgp-cpp/src_kernels_cuda_rt/raytracer_kernels_bw.cu(305): warning #940-D: missing return statement at end of non-void function "<unnamed>::probability_from_sun"
+      }
+      ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+[ 47%] Linking CXX static library libkernel_launcher.a
+[ 47%] Built target kernel_launcher
+[ 48%] Building CUDA object src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/fluxes_kernels_launchers.cu.o
+[ 49%] Building CUDA object src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/gas_optics_rrtmgp_kernels_launchers.cu.o
+[ 50%] Building CUDA object src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/optical_props_kernels_launchers.cu.o
+[ 51%] Building CUDA object src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/rte_solver_kernels_launchers.cu.o
+[ 52%] Building CUDA object src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/subset_kernels_launchers.cu.o
+[ 53%] Linking CXX static library librte_rrtmgp.a
+[ 55%] Linking CUDA static library librte_rrtmgp_kernels_cuda_rt.a
+[ 55%] Built target rte_rrtmgp
+[ 55%] Built target rte_rrtmgp_kernels_cuda_rt
+[ 56%] Building CXX object src_test/CMakeFiles/test_rte_rrtmgp.dir/Radiation_solver.cpp.o
+[ 57%] Building CXX object src_test/CMakeFiles/test_rte_rrtmgp.dir/test_rte_rrtmgp.cpp.o
+[ 58%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Aerosol_optics_rt.cu.o
+[ 59%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Cloud_optics_rt.cu.o
+[ 60%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Gas_concs_rt.cu.o
+[ 61%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Fluxes_rt.cu.o
+[ 62%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Raytracer_bw.cu.o
+[ 64%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Raytracer.cu.o
+[ 66%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Rte_lw_rt.cu.o
+[ 67%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Gas_optics_rrtmgp_rt.cu.o
+[ 67%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Optical_props_rt.cu.o
+[ 68%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Rte_sw_rt.cu.o
+[ 69%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Source_functions_rt.cu.o
+/home/sheldens/rte-rrtmgp-cpp/src_kernels_cuda/rte_solver_kernels_launchers.cu(80): warning #177-D: variable "sfc_size" was declared but never referenced
+          const int sfc_size = ncol*ngpt;;
+                    ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+[ 70%] Linking CXX executable ../test_rte_rrtmgp
+[ 70%] Built target test_rte_rrtmgp
+[ 71%] Linking CXX static library librte_rrtmgp_kernels_cuda.a
+[ 71%] Built target rte_rrtmgp_kernels_cuda
+[ 73%] Building CUDA object src_cuda/CMakeFiles/rte_rrtmgp_cuda.dir/Aerosol_optics.cu.o
+[ 74%] Building CUDA object src_cuda/CMakeFiles/rte_rrtmgp_cuda.dir/Cloud_optics.cu.o
+[ 75%] Building CUDA object src_cuda/CMakeFiles/rte_rrtmgp_cuda.dir/Fluxes.cu.o
+[ 76%] Building CUDA object src_cuda/CMakeFiles/rte_rrtmgp_cuda.dir/Gas_concs.cu.o
+[ 77%] Building CUDA object src_cuda/CMakeFiles/rte_rrtmgp_cuda.dir/Gas_optics_rrtmgp.cu.o
+[ 78%] Building CUDA object src_cuda/CMakeFiles/rte_rrtmgp_cuda.dir/Optical_props.cu.o
+[ 79%] Building CUDA object src_cuda/CMakeFiles/rte_rrtmgp_cuda.dir/Source_functions.cu.o
+[ 80%] Building CUDA object src_cuda/CMakeFiles/rte_rrtmgp_cuda.dir/Rte_sw.cu.o
+[ 83%] Building CUDA object src_cuda/CMakeFiles/rte_rrtmgp_cuda.dir/Rte_lw.cu.o
+[ 83%] Building CUDA object src_cuda/CMakeFiles/rte_rrtmgp_cuda.dir/tools_gpu.cu.o
+[ 84%] Building CUDA object src_cuda/CMakeFiles/rte_rrtmgp_cuda.dir/mem_pool_gpu.cu.o
+[ 85%] Linking CUDA static library librte_rrtmgp_cuda_rt.a
+[ 85%] Built target rte_rrtmgp_cuda_rt
+[ 86%] Linking CXX static library librte_rrtmgp_cuda.a
+[ 86%] Built target rte_rrtmgp_cuda
+[ 95%] Building CUDA object src_test/CMakeFiles/test_rte_rrtmgp_rt_gpu.dir/test_rte_rrtmgp_rt.cu.o
+[ 95%] Building CUDA object src_test/CMakeFiles/test_rte_rrtmgp_gpu.dir/Radiation_solver.cu.o
+[ 95%] Building CUDA object src_test/CMakeFiles/test_rte_rrtmgp_bw_gpu.dir/test_rte_rrtmgp_bw.cu.o
+[ 95%] Building CUDA object src_test/CMakeFiles/test_rte_rrtmgp_bw_gpu.dir/Radiation_solver_bw.cu.o
+[ 95%] Building CUDA object src_test/CMakeFiles/test_rt_lite_gpu.dir/test_rt_lite.cu.o
+[ 95%] Building CUDA object src_test/CMakeFiles/test_rte_rrtmgp_gpu.dir/test_rte_rrtmgp.cu.o
+[ 95%] Building CUDA object src_test/CMakeFiles/test_rte_rrtmgp_rt_gpu.dir/Radiation_solver_rt.cu.o
+[ 95%] Building CXX object src_test/CMakeFiles/test_rte_rrtmgp_rt_gpu.dir/__/src_tilt/tilt_utils.cpp.o
+/home/sheldens/rte-rrtmgp-cpp/src_test/test_rt_lite.cu(368): warning #177-D: variable "rte_sw" was declared but never referenced
+          Rte_sw_rt rte_sw;
+                    ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+[ 96%] Linking CXX executable ../test_rte_rrtmgp_gpu
+[ 97%] Linking CXX executable ../test_rt_lite_gpu
+[ 97%] Built target test_rte_rrtmgp_gpu
+[ 97%] Built target test_rt_lite_gpu
+[ 98%] Linking CXX executable ../test_rte_rrtmgp_bw_gpu
+[ 98%] Built target test_rte_rrtmgp_bw_gpu
+[100%] Linking CXX executable ../test_rte_rrtmgp_rt_gpu
+[100%] Built target test_rte_rrtmgp_rt_gpu
+srun: Single-node jobs run on a shared node by default. Add --exclusive if you want to use a node exclusively.
+srun: A full node consists of 72 CPU cores, 491520 MiB of memory and 4 GPUs and can be shared by up to 4 jobs.
+srun: By default shared jobs get 6826 MiB of memory per CPU core, unless explicitly overridden with --mem-per-cpu, --mem-per-gpu or --mem.
+srun: You will be charged for 1 GPUs, based on the number of CPUs, GPUs and the amount memory that you've requested.
+srun: job 21691504 queued and waiting for resources
+srun: job 21691504 has been allocated resources
+###### Starting RTE+RRTMGP solver ######
+Solver settings:
+aerosol-optics       = false
+cloud-optics         = false
+delta-aerosol        = false
+delta-cloud          = true
+fluxes               = true
+longwave             = true
+output-bnd-fluxes    = false
+output-optical       = false
+shortwave            = true
+timings              = true
+Reading atmospheric input data from NetCDF.
+WARNING: Gas "cfc22" not available in input file.
+Preparing NetCDF output file.
+Initializing the longwave solver.
+Setting up CUDA mempool.
+Solving the longwave radiation.
+KERNEL_LAUNCHER [INFO] could not find file map, searched following directories:
+KERNEL_LAUNCHER [INFO]  - /gpfs/home6/sheldens/rte-rrtmgp-cpp/wur_case
+KERNEL_LAUNCHER [INFO] could not find file map, searched following directories:
+KERNEL_LAUNCHER [INFO]  - /gpfs/home6/sheldens/rte-rrtmgp-cpp/wur_case
+Constructing GPU tuner and loading kernel settings from disk
+KERNEL_LAUNCHER [INFO] could not find file map, searched following directories:
+KERNEL_LAUNCHER [INFO]  - /gpfs/home6/sheldens/rte-rrtmgp-cpp/wur_case
+Duration longwave solver: 3364.806641 (ms), 556.812000 Joule
+Duration longwave solver: 1471.927246 (ms), 400.624000 Joule
+Duration longwave solver: 1471.816650 (ms), 417.654000 Joule
+Duration longwave solver: 1471.952881 (ms), 403.216000 Joule
+Duration longwave solver: 1472.006104 (ms), 427.505000 Joule
+Duration longwave solver: 1471.916016 (ms), 422.148000 Joule
+Duration longwave solver: 1471.531982 (ms), 409.322000 Joule
+Duration longwave solver: 1471.797241 (ms), 433.601000 Joule
+Duration longwave solver: 1471.847412 (ms), 423.771000 Joule
+Duration longwave solver: 1471.833130 (ms), 414.993000 Joule
+Duration longwave solver: 1471.961060 (ms), 440.252000 Joule
+Duration longwave solver: 1472.068604 (ms), 433.301000 Joule
+Storing the longwave output.
+Initializing the shortwave solver.
+Solving the shortwave radiation.
+KERNEL_LAUNCHER [INFO] could not find file map, searched following directories:
+KERNEL_LAUNCHER [INFO]  - /gpfs/home6/sheldens/rte-rrtmgp-cpp/wur_case
+Duration shortwave solver: 1637.772705 (ms), 284.671000 Joule
+Duration shortwave solver: 948.565796 (ms), 225.193000 Joule
+Duration shortwave solver: 948.604248 (ms), 222.932000 Joule
+Duration shortwave solver: 948.601379 (ms), 220.855000 Joule
+Duration shortwave solver: 950.361389 (ms), 218.479000 Joule
+Duration shortwave solver: 948.356567 (ms), 241.924000 Joule
+Duration shortwave solver: 948.653748 (ms), 240.275000 Joule
+Duration shortwave solver: 948.478638 (ms), 237.848000 Joule
+Duration shortwave solver: 948.450012 (ms), 227.499000 Joule
+Duration shortwave solver: 949.461670 (ms), 225.195000 Joule
+Duration shortwave solver: 948.533203 (ms), 223.573000 Joule
+Duration shortwave solver: 948.563843 (ms), 221.744000 Joule
+Storing the shortwave output.
+###### Finished RTE+RRTMGP solver ######

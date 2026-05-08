@@ -1,0 +1,6 @@
+sending incremental file list
+
+sent 16,719 bytes  received 103 bytes  3,058.55 bytes/sec
+total size is 59,987,157  speedup is 3,565.99
+srun: error: Slurm job 21700905 has expired
+srun: Check SLURM_JOB_ID environment variable. Expired or invalid job 21700905

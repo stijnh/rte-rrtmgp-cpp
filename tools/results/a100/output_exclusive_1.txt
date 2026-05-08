@@ -1,0 +1,141 @@
+sending incremental file list
+
+sent 16,719 bytes  received 103 bytes  3,058.55 bytes/sec
+total size is 59,987,157  speedup is 3,565.99
+-- Accuracy level: 1
+-- CUDA: Enabled.
+-- CXX-compiler flags: -std=c++17 -fopenmp -Ofast
+-- Fortran-compiler flags: -std=c++17 -fopenmp -Ofast
+-- NVCC-compiler flags: -arch=sm_80 -std=c++17 -O3 --expt-relaxed-constexpr -DNDEBUG
+-- === Kernel Float ===
+-- Using GPU Language: CUDA
+-- Building Tests: OFF
+-- Building Examples: OFF
+-- Git hash not available
+fatal: not a git repository (or any parent up to mount point /gpfs)
+Stopping at filesystem boundary (GIT_DISCOVERY_ACROSS_FILESYSTEM not set).
+-- Configuring done (0.8s)
+-- Generating done (0.2s)
+-- Build files have been written to: /home/sheldens/rte-rrtmgp-cpp/build
+[  1%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/registry.cpp.o
+[  2%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/cuda.cpp.o
+[  3%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/internal/tokens.cpp.o
+[  4%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/internal/directives.cpp.o
+[  5%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/config.cpp.o
+[  6%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/arg.cpp.o
+[  7%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/internal/parser.cpp.o
+[  8%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/compiler.cpp.o
+[ 10%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/jitsafe_headers.cpp.o
+[ 11%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/pragma.cpp.o
+[ 12%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/utils.cpp.o
+[ 13%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/kernel.cpp.o
+[ 14%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/expr.cpp.o
+[ 15%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/value.cpp.o
+[ 17%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/fs.cpp.o
+[ 17%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/export.cpp.o
+[ 19%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/raytracer_kernels.cu.o
+[ 20%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/builder.cpp.o
+[ 21%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/gas_optics_rrtmgp_kernels_launchers_rt.cu.o
+[ 22%] Building CXX object external/kernel_launcher/CMakeFiles/kernel_launcher.dir/src/wisdom.cpp.o
+[ 23%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/optical_props_kernels_launchers_rt.cu.o
+[ 24%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/gpt_combine_kernels_launchers_rt.cu.o
+[ 25%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rte-frontend/mo_rte_kind.F90.o
+[ 26%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/rte_solver_kernels_launchers_rt.cu.o
+[ 28%] Building CUDA object src_kernels_cuda_rt/CMakeFiles/rte_rrtmgp_kernels_cuda_rt.dir/raytracer_kernels_bw.cu.o
+[ 29%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rte-kernels/mo_optical_props_kernels.F90.o
+[ 30%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rte-kernels/mo_fluxes_broadband_kernels.F90.o
+[ 31%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/mo_fluxes_byband_kernels.F90.o
+[ 32%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rte-kernels/mo_rte_util_array.F90.o
+[ 33%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rrtmgp-kernels/mo_gas_optics_rrtmgp_kernels.F90.o
+[ 34%] Building Fortran object src_kernels/CMakeFiles/rte_rrtmgp_kernels.dir/__/rte-rrtmgp/rte-kernels/mo_rte_solver_kernels.F90.o
+[ 35%] Linking Fortran static library librte_rrtmgp_kernels.a
+[ 35%] Built target rte_rrtmgp_kernels
+[ 37%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Aerosol_optics.cpp.o
+[ 38%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Cloud_optics.cpp.o
+[ 39%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Rte_sw.cpp.o
+[ 40%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Rte_lw.cpp.o
+[ 41%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Optical_props.cpp.o
+[ 42%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Fluxes.cpp.o
+[ 43%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Gas_optics_rrtmgp.cpp.o
+[ 44%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Gas_concs.cpp.o
+[ 46%] Building CXX object src/CMakeFiles/rte_rrtmgp.dir/Source_functions.cpp.o
+/home/sheldens/rte-rrtmgp-cpp/src_kernels_cuda_rt/rte_solver_kernels_rt.cu(315): warning #177-D: variable "idx_in" was declared but never referenced
+          const int idx_in = icol;
+                    ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+/home/sheldens/rte-rrtmgp-cpp/src_kernels_cuda_rt/raytracer_kernels_bw.cu(305): warning #940-D: missing return statement at end of non-void function "<unnamed>::probability_from_sun"
+      }
+      ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+[ 47%] Linking CXX static library libkernel_launcher.a
+[ 47%] Built target kernel_launcher
+[ 48%] Building CUDA object src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/fluxes_kernels_launchers.cu.o
+[ 49%] Building CUDA object src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/gas_optics_rrtmgp_kernels_launchers.cu.o
+[ 51%] Building CUDA object src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/subset_kernels_launchers.cu.o
+[ 52%] Building CUDA object src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/optical_props_kernels_launchers.cu.o
+[ 52%] Building CUDA object src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/rte_solver_kernels_launchers.cu.o
+[ 53%] Linking CXX static library librte_rrtmgp.a
+[ 53%] Built target rte_rrtmgp
+[ 55%] Building CXX object src_test/CMakeFiles/test_rte_rrtmgp.dir/Radiation_solver.cpp.o
+[ 56%] Building CXX object src_test/CMakeFiles/test_rte_rrtmgp.dir/test_rte_rrtmgp.cpp.o
+[ 57%] Linking CUDA static library librte_rrtmgp_kernels_cuda_rt.a
+[ 57%] Built target rte_rrtmgp_kernels_cuda_rt
+[ 58%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Cloud_optics_rt.cu.o
+[ 60%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Gas_concs_rt.cu.o
+[ 60%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Aerosol_optics_rt.cu.o
+[ 62%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Source_functions_rt.cu.o
+[ 62%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Gas_optics_rrtmgp_rt.cu.o
+[ 64%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Raytracer.cu.o
+[ 65%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Raytracer_bw.cu.o
+[ 66%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Rte_lw_rt.cu.o
+[ 67%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Fluxes_rt.cu.o
+[ 68%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Optical_props_rt.cu.o
+[ 69%] Building CUDA object src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Rte_sw_rt.cu.o
+/home/sheldens/rte-rrtmgp-cpp/src_kernels_cuda/rte_solver_kernels_launchers.cu(80): warning #177-D: variable "sfc_size" was declared but never referenced
+          const int sfc_size = ncol*ngpt;;
+                    ^
+
+Remark: The warnings can be suppressed with "-diag-suppress <warning-number>"
+
+[2026-04-09T14:43:54.035] error: *** STEP 21700905.11 ON gcn41 CANCELLED AT 2026-04-09T14:43:54 DUE to SIGNAL Terminated ***
+nvcc: Terminated
+nvcc: Terminated
+nvcc: Terminated
+nvcc: Terminatednvcc: nvcc: 
+nvcc: TerminatedTerminatednvcc: 
+nvcc: 
+TerminatedTerminatednvcc: nvcc: TerminatedTerminated
+
+
+Terminated
+nvcc: 
+Terminated
+nvcc: Terminated
+nvcc: Terminated
+make[2]: *** [src_test/CMakeFiles/test_rte_rrtmgp.dir/build.make:90: src_test/CMakeFiles/test_rte_rrtmgp.dir/test_rte_rrtmgp.cpp.o] Terminated
+make[2]: *** [src_test/CMakeFiles/test_rte_rrtmgp.dir/build.make:76: src_test/CMakeFiles/test_rte_rrtmgp.dir/Radiation_solver.cpp.o] Terminated
+make[1]: *** [CMakeFiles/Makefile2:558: src_test/CMakeFiles/test_rte_rrtmgp.dir/all] Terminated
+make[2]: *** [src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/build.make:122: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Gas_concs_rt.cu.o] Error 255
+make[2]: *** [src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/build.make:182: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Raytracer_bw.cu.o] Error 255
+make[2]: *** [src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/build.make:137: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Gas_optics_rrtmgp_rt.cu.o] Error 255
+make[2]: *** [src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/build.make:77: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Aerosol_optics_rt.cu.o] Error 255
+make[2]: *** [src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/build.make:107: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Fluxes_rt.cu.o] Error 255
+make[2]: *** [src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/build.make:227: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Source_functions_rt.cu.o] Error 255
+make[2]: *** [src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/build.make:92: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Cloud_optics_rt.cu.o] Error 255
+make[2]: *** [src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/build.make:212: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Rte_sw_rt.cu.o] Error 255
+make[2]: *** [src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/build.make:197: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Rte_lw_rt.cu.o] Error 255
+make[2]: *** [src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/build.make:167: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Raytracer.cu.o] Error 255
+make[2]: *** [src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/build.make:152: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/Optical_props_rt.cu.o] Error 255
+make[2]: *** [src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/build.make:92: src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/gas_optics_rrtmgp_kernels_launchers.cu.o] Error 255
+make[2]: *** [src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/build.make:107: src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/optical_props_kernels_launchers.cu.o] Error 255
+make[2]: *** [src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/build.make:122: src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/rte_solver_kernels_launchers.cu.o] Error 255
+make[1]: *** [CMakeFiles/Makefile2:407: src_cuda_rt/CMakeFiles/rte_rrtmgp_cuda_rt.dir/all] Terminated
+make[1]: *** [CMakeFiles/Makefile2:328: src_kernels_cuda/CMakeFiles/rte_rrtmgp_kernels_cuda.dir/all] Terminated
+make: *** [Makefile:91: all] Terminated
+srun: Job step aborted: Waiting up to 32 seconds for job step to finish.
+srun: error: gcn41: task 0: Terminated
+srun: Terminating StepId=21700905.11

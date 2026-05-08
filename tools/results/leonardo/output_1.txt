@@ -1,0 +1,48 @@
+###### Starting RTE+RRTMGP solver ######
+Solver settings:
+aerosol-optics       = false
+cloud-optics         = false
+delta-aerosol        = false
+delta-cloud          = true
+fluxes               = true
+longwave             = true
+output-bnd-fluxes    = false
+output-optical       = false
+shortwave            = true
+timings              = true
+Reading atmospheric input data from NetCDF.
+WARNING: Gas "cfc22" not available in input file.
+Preparing NetCDF output file.
+Initializing the longwave solver.
+Setting up CUDA mempool.
+Solving the longwave radiation.
+Constructing GPU tuner and loading kernel settings from disk
+Duration longwave solver: 4125.041504 (ms)
+Duration longwave solver: 1577.916382 (ms)
+Duration longwave solver: 1578.273804 (ms)
+Duration longwave solver: 1577.914429 (ms)
+Duration longwave solver: 1577.630737 (ms)
+Duration longwave solver: 1577.910278 (ms)
+Duration longwave solver: 1577.793579 (ms)
+Duration longwave solver: 1577.573364 (ms)
+Duration longwave solver: 1577.186279 (ms)
+Duration longwave solver: 1577.616333 (ms)
+Duration longwave solver: 1577.791504 (ms)
+Duration longwave solver: 1577.877563 (ms)
+Storing the longwave output.
+Initializing the shortwave solver.
+Solving the shortwave radiation.
+Duration shortwave solver: 2249.613525 (ms)
+Duration shortwave solver: 1006.575745 (ms)
+Duration shortwave solver: 1006.569275 (ms)
+Duration shortwave solver: 1006.443726 (ms)
+Duration shortwave solver: 1006.433228 (ms)
+Duration shortwave solver: 1006.516418 (ms)
+Duration shortwave solver: 1006.697021 (ms)
+Duration shortwave solver: 1006.562500 (ms)
+Duration shortwave solver: 1006.576111 (ms)
+Duration shortwave solver: 1006.478455 (ms)
+Duration shortwave solver: 1006.795593 (ms)
+Duration shortwave solver: 1006.655823 (ms)
+Storing the shortwave output.
+###### Finished RTE+RRTMGP solver ######

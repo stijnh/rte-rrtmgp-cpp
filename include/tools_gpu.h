@@ -112,5 +112,10 @@ namespace Tools_gpu
 
         return dim3(grid_x, grid_y, grid_z);
     }
+
+    /**
+     * Returns the energy usage since startup of the current GPU.
+     */
+    unsigned long long energy_usage_gpu();
 }
 #endif

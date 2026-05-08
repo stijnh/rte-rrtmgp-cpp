@@ -434,6 +434,7 @@ void solve_radiation(int argc, char** argv)
             cudaEventCreate(&start);
             cudaEventCreate(&stop);
 
+            auto before_mj = Tools_gpu::energy_usage_gpu();
             cudaEventRecord(start, 0);
 
             rad_lw.solve_gpu(
@@ -454,13 +455,15 @@ void solve_radiation(int argc, char** argv)
 
             cudaEventRecord(stop, 0);
             cudaEventSynchronize(stop);
+            auto after_mj = Tools_gpu::energy_usage_gpu();
             float duration = 0.f;
             cudaEventElapsedTime(&duration, start, stop);
 
             cudaEventDestroy(start);
             cudaEventDestroy(stop);
 
-            Status::print_message("Duration longwave solver: " + std::to_string(duration) + " (ms)");
+            Status::print_message("Duration longwave solver: " + std::to_string(duration) + " (ms), " +
+                                  std::to_string((after_mj - before_mj) / 1000.0) + " Joule");
         };
 
         // Tuning step;
@@ -648,6 +651,7 @@ void solve_radiation(int argc, char** argv)
             cudaEventCreate(&stop);
 
             cudaEventRecord(start, 0);
+            double before_mj = Tools_gpu::energy_usage_gpu();
 
             rad_sw.solve_gpu(
                     switch_fluxes,
@@ -676,13 +680,15 @@ void solve_radiation(int argc, char** argv)
 
             cudaEventRecord(stop, 0);
             cudaEventSynchronize(stop);
+            double after_mj = Tools_gpu::energy_usage_gpu();
             float duration = 0.f;
             cudaEventElapsedTime(&duration, start, stop);
 
             cudaEventDestroy(start);
             cudaEventDestroy(stop);
 
-            Status::print_message("Duration shortwave solver: " + std::to_string(duration) + " (ms)");
+            Status::print_message("Duration shortwave solver: " + std::to_string(duration) + " (ms), " +
+                std::to_string((after_mj - before_mj) / 1000.0) + " Joule");
         };
 
         // Tuning step;
